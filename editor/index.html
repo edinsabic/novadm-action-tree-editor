@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaDM Tree Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles/editor.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+</head>
+<body>
+
+<nav id="navbar">
+  <span class="nav-logo">NovaDM</span>
+  <div class="nav-links">
+    <a href="../index.html">Home</a>
+    <a href="index.html" class="active">Tree editor</a>
+    <a href="../examples/index.html">Examples</a>
+    <a href="../help/index.html">Help</a>
+  </div>
+</nav>
+
+<header id="toolbar">
+  <label>
+    Import .ndm file:
+    <input type="file" id="file-input" accept=".ndm,text/plain" />
+  </label>
+  <button id="load-example-btn" type="button" class="btn">Load example</button>
+  <button id="export-btn" type="button" class="btn">Export current tree (.ndm)</button>
+  <span id="scenario-count"></span>
+</header>
+
+<main>
+  <div id="tree-container"></div>
+
+  <div id="paste-panel">
+    <label for="ndm-textarea">Or paste .ndm text:</label>
+    <textarea id="ndm-textarea" spellcheck="false"
+      placeholder="+[subject: architectural_element = roof]
+ -[feature: roof_ventilation = (open; closed)]
+ ..."></textarea>
+    <div class="panel-buttons">
+      <button id="render-btn" type="button" class="btn btn-primary">Render tree</button>
+      <button id="clear-btn" type="button" class="btn">Clear</button>
+    </div>
+  </div>
+</main>
+
+<div id="status"></div>
+
+<!--
+  Everything below is inlined into this one file on purpose, rather than
+  loaded from src/*.js via <script src="../src/...">. 
+
+  This is the fix for "NovaDM is not defined" and "Load example does
+  nothing" (due to relative-path mismatch).
+-->
+
+<script>
+/* model.js: NodeType enum and the plain-object node shape */
+(function (global) {
+  'use strict';
+
+  const NodeType = Object.freeze({ AND: 'AND', XOR: 'XOR' });
+
+  let idCounter = 0;
+
+  function createNode({ name = '', nodeType = NodeType.AND, kind = null, label = null } = {}) {
+    idCounter += 1;
+    return {
+      id: idCounter,
+      name,
+      nodeType,
+      kind,
+      label,
+      children: [],
+      parent: null,
+      depth: 0,
+      _x: 0,
+      _y: 0,
+    };
+  }
+
+  function resetIdCounter() {
+    idCounter = 0;
+  }
+
+  function addChild(parent, child) {
+    child.parent = parent;
+    child.depth = parent.depth + 1;
+    parent.children.push(child);
+    return parent;
+  }
+
+  global.NovaDM = global.NovaDM || {};
+  global.NovaDM.model = { NodeType, createNode, addChild, resetIdCounter };
+})(window);
+</script>
+
+<script>
+/* parser.js: .ndm text to/from the tree */
+(function (global) {
+  'use strict';
+
+  const { NodeType, createNode, addChild, resetIdCounter } = global.NovaDM.model;
+
+  const LINE_RE = /^(\s*)([+-])\[(.*?)\]\s*$/;
+  const EXPANSION_RE = /^([^:]+):\s*([^=]+?)\s*=\s*\((.+)\)$/;
+  const PLAIN_RE = /^([^:]+):\s*(.+)$/;
+
+  function parseNdm(text) {
+    resetIdCounter();
+    const root = createNode({
+      name: 'ROOT',
+      nodeType: NodeType.AND,
+      kind: 'root',
+      label: 'Renovation project (all subjects)',
+    });
+    const stack = [{ indent: -1, node: root }];
+    const warnings = [];
+
+    const lines = String(text).split('\n');
+
+    lines.forEach((rawLine, i) => {
+      const line = rawLine.replace(/\r$/, '');
+      if (!line.trim()) return;
+
+      const match = LINE_RE.exec(line);
+      if (!match) {
+        warnings.push(`Line ${i + 1}: could not parse "${line.trim()}", skipped.`);
+        return;
+      }
+
+      const [, indentStr, symbol, rawContent] = match;
+      const indent = indentStr.length;
+      const nodeType = symbol === '+' ? NodeType.AND : NodeType.XOR;
+      const content = rawContent.trim();
+
+      let node;
+      let extraChildren = [];
+
+      if (content === '') {
+        node = createNode({ nodeType });
+      } else {
+        const expansion = EXPANSION_RE.exec(content);
+        if (expansion) {
+          const kind = expansion[1].trim().toLowerCase();
+          const name = expansion[2].trim();
+          const valuesRaw = expansion[3];
+          node = createNode({ name: `${kind}: ${name}`, nodeType, kind, label: name });
+          extraChildren = valuesRaw
+            .split(';')
+            .map((v) => v.trim())
+            .filter(Boolean)
+            .map((opt) =>
+              createNode({
+                name: opt,
+                nodeType: NodeType.AND,
+                kind,
+                label: `${name} = ${opt}`,
+              })
+            );
+        } else {
+          const plain = PLAIN_RE.exec(content);
+          if (plain) {
+            const kind = plain[1].trim().toLowerCase();
+            const label = plain[2].trim();
+            node = createNode({ name: `${kind}: ${label}`, nodeType, kind, label });
+          } else {
+            warnings.push(`Line ${i + 1}: unrecognised bracket content "${content}", kept as plain text.`);
+            node = createNode({ name: content, nodeType, label: content });
+          }
+        }
+      }
+
+      while (stack.length && stack[stack.length - 1].indent >= indent) {
+        stack.pop();
+      }
+      const parentEntry = stack[stack.length - 1];
+      addChild(parentEntry.node, node);
+      stack.push({ indent, node });
+
+      extraChildren.forEach((child) => addChild(node, child));
+    });
+
+    return { root, warnings };
+  }
+
+  function serialiseNdm(root) {
+    const lines = [];
+
+    function isAutoExpandedGroup(node) {
+      if (!node.children.length || !node.kind || !node.label) return false;
+      return node.children.every(
+        (c) => !c.children.length && c.kind === node.kind && c.label && c.label.startsWith(`${node.label} = `)
+      );
+    }
+
+    function walk(node, depth) {
+      if (node.kind === 'root') {
+        node.children.forEach((c) => walk(c, 0));
+        return;
+      }
+      const indent = ' '.repeat(depth);
+      const symbol = node.nodeType === NodeType.XOR ? '-' : '+';
+
+      if (isAutoExpandedGroup(node)) {
+        const options = node.children.map((c) => c.label.slice(node.label.length + 3));
+        lines.push(`${indent}${symbol}[${node.kind}: ${node.label} = (${options.join('; ')})]`);
+        return;
+      }
+
+      const bracket = node.kind ? `${node.kind}: ${node.label}` : '';
+      lines.push(`${indent}${symbol}[${bracket}]`);
+      node.children.forEach((c) => walk(c, depth + 1));
+    }
+
+    walk(root, 0);
+    return lines.join('\n');
+  }
+
+  global.NovaDM.parser = { parseNdm, serialiseNdm };
+})(window);
+</script>
+
+<script>
+/* scenario-utils.js: counting consistent scenarios encoded by a tree */
+(function (global) {
+  'use strict';
+
+  const { NodeType } = global.NovaDM.model;
+
+  function countScenarios(node) {
+    if (!node.children.length) return 1;
+    const counts = node.children.map(countScenarios);
+    if (node.nodeType === NodeType.AND) {
+      return counts.reduce((a, b) => a * b, 1);
+    }
+    return counts.reduce((a, b) => a + b, 0);
+  }
+
+  function countLeaves(node) {
+    if (!node.children.length) return 1;
+    return node.children.reduce((sum, c) => sum + countLeaves(c), 0);
+  }
+
+  function countNodes(node) {
+    return 1 + node.children.reduce((sum, c) => sum + countNodes(c), 0);
+  }
+
+  global.NovaDM.scenarioUtils = { countScenarios, countLeaves, countNodes };
+})(window);
+</script>
+
+<script>
+/* layout.js: d3-based tree layout, positions written back onto nodes */
+(function (global) {
+  'use strict';
+
+  function computeLayout(root, { nodeWidth = 170, nodeHeight = 56, siblingGap = 26, levelGap = 50 } = {}) {
+    const hierarchy = d3.hierarchy(root);
+    const treeLayout = d3.tree().nodeSize([nodeWidth + siblingGap, nodeHeight + levelGap]);
+    treeLayout(hierarchy);
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    hierarchy.each((d) => {
+      if (d.x < minX) minX = d.x;
+      if (d.x > maxX) maxX = d.x;
+      if (d.y > maxY) maxY = d.y;
+    });
+
+    const margin = 30;
+    const offsetX = -minX + nodeWidth / 2 + margin;
+
+    hierarchy.each((d) => {
+      d.data._x = d.x + offsetX;
+      d.data._y = d.y + nodeHeight / 2 + margin;
+    });
+
+    return {
+      width: (maxX - minX) + nodeWidth + margin * 2,
+      height: maxY + nodeHeight + margin * 2,
+    };
+  }
+
+  global.NovaDM = global.NovaDM || {};
+  global.NovaDM.layout = { computeLayout };
+})(window);
+</script>
+
+<script>
+/* canvas.js: SVG rendering with pan/zoom */
+(function (global) {
+  'use strict';
+
+  function nodeClass(node) {
+    const kind = node.kind || 'structural';
+    return `ndm-node ndm-node--${node.nodeType.toLowerCase()} ndm-node--${kind}`;
+  }
+
+  function nodeText(node) {
+    if (node.label) return node.label;
+    return node.nodeType === 'XOR' ? 'choose one of' : 'all of';
+  }
+
+  function flatten(node, list = []) {
+    list.push(node);
+    node.children.forEach((child) => flatten(child, list));
+    return list;
+  }
+
+  function collectEdges(node, list = []) {
+    node.children.forEach((child) => {
+      list.push({ source: node, target: child });
+      collectEdges(child, list);
+    });
+    return list;
+  }
+
+  function render(container, root, opts = {}) {
+    const nodeWidth = opts.nodeWidth || 170;
+    const nodeHeight = opts.nodeHeight || 56;
+
+    container.innerHTML = '';
+
+    const { width, height } = global.NovaDM.layout.computeLayout(root, { nodeWidth, nodeHeight });
+
+    const svg = d3
+      .select(container)
+      .append('svg')
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${Math.max(width, 200)} ${Math.max(height, 200)}`);
+
+    const zoomLayer = svg.append('g').attr('class', 'ndm-zoom-layer');
+
+    svg.call(
+      d3
+        .zoom()
+        .scaleExtent([0.25, 2.5])
+        .on('zoom', (event) => zoomLayer.attr('transform', event.transform))
+    );
+
+    const nodes = flatten(root);
+    const links = collectEdges(root);
+
+    zoomLayer
+      .append('g')
+      .attr('class', 'ndm-edges')
+      .selectAll('path')
+      .data(links)
+      .join('path')
+      .attr('class', 'ndm-edge')
+      .attr('d', (d) => {
+        const sx = d.source._x;
+        const sy = d.source._y + nodeHeight / 2;
+        const tx = d.target._x;
+        const ty = d.target._y - nodeHeight / 2;
+        const midY = (sy + ty) / 2;
+        return `M${sx},${sy} C${sx},${midY} ${tx},${midY} ${tx},${ty}`;
+      });
+
+    const nodeGroups = zoomLayer
+      .append('g')
+      .attr('class', 'ndm-nodes')
+      .selectAll('g')
+      .data(nodes)
+      .join('g')
+      .attr('class', nodeClass)
+      .attr('transform', (d) => `translate(${d._x - nodeWidth / 2}, ${d._y - nodeHeight / 2})`);
+
+    nodeGroups
+      .append('rect')
+      .attr('width', nodeWidth)
+      .attr('height', nodeHeight)
+      .attr('rx', 8);
+
+    nodeGroups
+      .append('text')
+      .attr('class', 'ndm-node-symbol')
+      .attr('x', 8)
+      .attr('y', 14)
+      .text((d) => (d.nodeType === 'XOR' ? '\u2212 XOR (choose one)' : '+ AND (all apply)'));
+
+    nodeGroups
+      .append('foreignObject')
+      .attr('x', 6)
+      .attr('y', 18)
+      .attr('width', nodeWidth - 12)
+      .attr('height', nodeHeight - 22)
+      .append('xhtml:div')
+      .attr('class', 'ndm-node-label')
+      .text(nodeText);
+
+    return { width, height };
+  }
+
+  global.NovaDM = global.NovaDM || {};
+  global.NovaDM.canvas = { render };
+})(window);
+</script>
+
+<script>
+/* file-io.js: reading uploads and downloading exported text */
+(function (global) {
+  'use strict';
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error || new Error('Could not read file.'));
+      reader.readAsText(file);
+    });
+  }
+
+  function downloadText(filename, text) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  global.NovaDM = global.NovaDM || {};
+  global.NovaDM.fileIO = { readFileAsText, downloadText };
+})(window);
+</script>
+
+<script>
+/* examples-data.js: the example tree, embedded so the demo works from disk */
+(function (global) {
+  'use strict';
+
+  const example = `+[subject: architectural_element = roof]
+ -[feature: roof_ventilation = (open; closed)]
+ -[feature: skylight_area = (A1; A2; A3; A4)]
++[subject: architectural_element = skylight]
+ -[feature: skylight_transparency = (clear; transparent)]
+ -[feature: skylight_insulation = (not_insulated; insulated)]
++[subject: architectural_element = roof_cladding]
+ -[feature: roof_cladding_insulation = (no_change; add_insulation)]
++[subject: architectural_element = window_frame]
+ -[feature: window_frame_ventilation = (open; closed)]
+ -[feature: window_frame_insulation = (not_insulated; insulated)]
++[subject: architectural_element = brick_facade]
+ -[feature: brick_facade_insulation = (no_change; add_insulation)]
++[subject: architectural_element = ground_floor]
+ -[feature: ground_floor_remove_area = (F1; F2; F3; F4)]
++[subject: architectural_element = original_floor]
+ -[feature: original_floor_refurbishment = (no change; level_or_regulate; add_insulation_and_floor)]
++[subject: architectural_element = stripped_terrain]
+ -[feature: stripped_terrain_new = (greenhouse; add_insulation_and_floor)]
++[subject: architectural_element = layout]
+ -[feature: layout_number_of_floors = (1; 2)]
+ -[]
+  +[feature: add_tinyhouses = no]
+  +[feature: add_tinyhouses = yes]
+   -[feature: tinyhouse_size = (T1; T2)]
+   -[feature: tinyhouse_number = (N1; N2)]
+   -[feature: tinyhouse_roof_accessible = (no; yes)]
+   -[feature: tinyhouse_roof_insulation = (no; yes)]`;
+
+  global.NovaDM = global.NovaDM || {};
+  global.NovaDM.examples = { example };
+})(window);
+</script>
+
+<script>
+/* wiring: connects the toolbar/panel controls to the modules above */
+(function () {
+  'use strict';
+
+  const container = document.getElementById('tree-container');
+  const textarea = document.getElementById('ndm-textarea');
+  const statusEl = document.getElementById('status');
+  const scenarioCountEl = document.getElementById('scenario-count');
+
+  let currentRoot = null;
+
+  function setStatus(message, isError) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle('error', Boolean(isError));
+  }
+
+  function renderFromText(text) {
+    if (!text || !text.trim()) {
+      setStatus('Nothing to render yet, import a file or paste .ndm text.');
+      return;
+    }
+    let parsed;
+    try {
+      parsed = NovaDM.parser.parseNdm(text);
+    } catch (err) {
+      console.error(err);
+      setStatus('Could not parse this text: ' + err.message, true);
+      return;
+    }
+
+    const { root, warnings } = parsed;
+    if (!root.children.length) {
+      setStatus('No recognisable .ndm lines found, check the format against the example.', true);
+      return;
+    }
+
+    currentRoot = root;
+    NovaDM.canvas.render(container, root);
+
+    const total = NovaDM.scenarioUtils.countScenarios(root);
+    scenarioCountEl.textContent = 'Consistent scenarios: ' + total.toLocaleString();
+
+    if (warnings.length) {
+      console.warn(warnings.join('\n'));
+      setStatus(warnings.length + ' line(s) skipped or ambiguous, see browser console for details.', true);
+    } else {
+      setStatus('Rendered successfully. Scroll to pan, pinch or use the wheel to zoom.');
+    }
+  }
+
+  document.getElementById('file-input').addEventListener('change', async function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      const text = await NovaDM.fileIO.readFileAsText(file);
+      textarea.value = text;
+      renderFromText(text);
+    } catch (err) {
+      setStatus('Could not read file: ' + err.message, true);
+    }
+  });
+
+  document.getElementById('render-btn').addEventListener('click', function () {
+    renderFromText(textarea.value);
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', function () {
+    textarea.value = '';
+    container.innerHTML = '';
+    scenarioCountEl.textContent = '';
+    currentRoot = null;
+    setStatus('Cleared.');
+  });
+
+  document.getElementById('load-example-btn').addEventListener('click', function () {
+    textarea.value = NovaDM.examples.example;
+    renderFromText(NovaDM.examples.example);
+  });
+
+  document.getElementById('export-btn').addEventListener('click', function () {
+    if (!currentRoot) {
+      setStatus('Render a tree first, then export it.', true);
+      return;
+    }
+    const text = NovaDM.parser.serialiseNdm(currentRoot);
+    NovaDM.fileIO.downloadText('tree.ndm', text);
+  });
+
+  setStatus('Import a .ndm file, paste text, or load the example to begin.');
+})();
+</script>
+
+</body>
+</html>
