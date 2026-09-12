@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaDM action tree editor</title>
+<link rel="stylesheet" href="../styles/editor.css" />
+</head>
+<body>
+
+<h1 id="page-title">NovaDM action tree editor</h1>
+
+<nav class="tabs" role="tablist" aria-label="Editor sections">
+	<button class="tab active" type="button" role="tab" aria-selected="true" data-tab="action-tree">Action tree</button>
+	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="version-history">Version history</button>
+	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="scenario-space">Scenario space</button>
+</nav>
+
+<main>
+
+	<section id="action-tree" class="tab-panel" role="tabpanel">
+
+		<div class="layout-toggle-row">
+			<span class="layout-label">Tree layout</span>
+			<div class="toggle-group" role="group" aria-label="Tree layout">
+				<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
+				<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
+			</div>
+		</div>
+
+		<div class="viewport-row">
+
+			<div class="viewport-box viewport-tree">
+				<div class="viewport-toolbar">
+					<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">-</button>
+					<span id="zoom-label">100%</span>
+					<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
+					<button id="zoom-reset-btn" type="button" class="btn">Reset</button>
+				</div>
+				<div id="tree-viewport-content" class="viewport-content"></div>
+			</div>
+
+			<div class="viewport-editor-col">
+				<span class="viewport-box-label">Editor panel</span>
+				<div class="viewport-box viewport-editor-panel">
+					<div class="viewport-content"></div>
+				</div>
+			</div>
+
+		</div>
+	</section>
+
+	<section id="version-history" class="tab-panel" role="tabpanel" hidden>
+		<div class="placeholder-panel">Version history.</div>
+	</section>
+
+	<section id="scenario-space" class="tab-panel" role="tabpanel" hidden>
+		<div class="placeholder-panel">Scenario space.</div>
+	</section>
+
+</main>
+
+<script>
+(function () {
+	'use strict';
+
+	/* Top-level tab switching: Action tree / Version history / Scenario space. */
+	const tabs = document.querySelectorAll('.tab');
+	const panels = document.querySelectorAll('.tab-panel');
+	tabs.forEach(function (tab) {
+		tab.addEventListener('click', function () {
+			tabs.forEach(function (t) {
+				t.classList.remove('active');
+				t.setAttribute('aria-selected', 'false');
+			});
+			panels.forEach(function (p) { p.hidden = true; });
+			tab.classList.add('active');
+			tab.setAttribute('aria-selected', 'true');
+			const target = document.getElementById(tab.dataset.tab);
+			if (target) target.hidden = false;
+		});
+	});
+
+	/* Directory / Traditional layout toggle. */
+	const layoutButtons = document.querySelectorAll('.toggle-btn');
+	layoutButtons.forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			layoutButtons.forEach(function (b) { b.classList.remove('active'); });
+			btn.classList.add('active');
+		});
+	});
+
+	/* Zoom controls for the tree viewport. */
+	const treeContent = document.getElementById('tree-viewport-content');
+	const zoomLabel = document.getElementById('zoom-label');
+	let zoomPercent = 100;
+
+	function applyZoom() {
+		treeContent.style.fontSize = (14 * zoomPercent / 100) + 'px';
+		zoomLabel.textContent = zoomPercent + '%';
+	}
+
+	document.getElementById('zoom-in-btn').addEventListener('click', function () {
+		zoomPercent = Math.min(160, zoomPercent + 10);
+		applyZoom();
+	});
+	document.getElementById('zoom-out-btn').addEventListener('click', function () {
+		zoomPercent = Math.max(70, zoomPercent - 10);
+		applyZoom();
+	});
+	document.getElementById('zoom-reset-btn').addEventListener('click', function () {
+		zoomPercent = 100;
+		applyZoom();
+	});
+})();
+</script>
+
+</body>
+</html>
