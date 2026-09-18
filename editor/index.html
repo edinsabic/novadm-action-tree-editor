@@ -12,7 +12,6 @@
 
 <nav class="tabs" role="tablist" aria-label="Editor sections">
 	<button class="tab active" type="button" role="tab" aria-selected="true" data-tab="action-tree">Action tree</button>
-	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="version-history">Version history</button>
 	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="scenario-space">Scenario space</button>
 </nav>
 
@@ -20,38 +19,94 @@
 
 	<section id="action-tree" class="tab-panel" role="tabpanel">
 
-		<div class="layout-toggle-row">
-			<span class="layout-label">Tree layout</span>
-			<div class="toggle-group" role="group" aria-label="Tree layout">
-				<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
-				<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
+		<div class="control-row">
+
+			<div class="control-left">
+				<span class="layout-label">Tree layout</span>
+				<div class="toggle-group" role="group" aria-label="Tree layout">
+					<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
+					<button class="toggle-btn" type="button" data-layout="traditional" disabled title="Coming next — same data, graph-style renderer">Traditional</button>
+				</div>
 			</div>
+
+			<div class="control-right">
+				<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
+				</button>
+				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
+				</button>
+			</div>
+
 		</div>
 
 		<div class="viewport-row">
 
 			<div class="viewport-box viewport-tree">
 				<div class="viewport-toolbar">
-					<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">-</button>
+					<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
 					<span id="zoom-label">100%</span>
 					<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
-					<button id="zoom-reset-btn" type="button" class="btn">Reset</button>
+					<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
+					<button id="load-example-btn" type="button" class="btn">Load example tree</button>
+					<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
 				</div>
 				<div id="tree-viewport-content" class="viewport-content"></div>
 			</div>
 
 			<div class="viewport-editor-col">
 				<span class="viewport-box-label">Editor panel</span>
-				<div class="viewport-box viewport-editor-panel">
-					<div class="viewport-content"></div>
+				<div class="viewport-box viewport-editor-panel" style="padding:0;">
+					<div class="palette">
+						<span class="palette-label">Drag onto the tree</span>
+						<div class="palette-item" draggable="true" data-new-kind="AND">
+							<span class="node-badge and">+</span>
+							<span>AND node</span>
+							<span class="hint">all children</span>
+						</div>
+						<div class="palette-item" draggable="true" data-new-kind="XOR">
+							<span class="node-badge xor">−</span>
+							<span>XOR node</span>
+							<span class="hint">one of</span>
+						</div>
+					</div>
+					<div id="editor-form-host"></div>
+				</div>
+			</div>
+
+			<div class="viewport-popover-layer">
+				<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
+					<ul class="popover-list">
+						<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
+						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
+						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
+					</ul>
+					<div class="popover-divider" role="separator"></div>
+					<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
+				</div>
+
+				<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
+					<ul class="popover-list">
+						<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
+						<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
+						<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
+					</ul>
+					<div class="popover-divider" role="separator"></div>
+					<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
 				</div>
 			</div>
 
 		</div>
-	</section>
 
-	<section id="version-history" class="tab-panel" role="tabpanel" hidden>
-		<div class="placeholder-panel">Version history.</div>
+		<div class="scenario-summary-bar">
+			<span class="scenario-summary-label">Scenario space (live)</span>
+			<div class="scenario-metrics">
+				<span class="metric"><span class="metric-label">Cost</span> <span class="metric-value">1.24M €</span></span>
+				<span class="metric"><span class="metric-label">CO&#8322;</span> <span class="metric-value">312 t</span></span>
+				<span class="metric"><span class="metric-label">Score</span> <span class="metric-value">0.78</span></span>
+			</div>
+			<button type="button" id="view-full-analysis-btn" class="scenario-summary-link">View full analysis &rarr;</button>
+		</div>
 	</section>
 
 	<section id="scenario-space" class="tab-panel" role="tabpanel" hidden>
@@ -60,57 +115,466 @@
 
 </main>
 
+<script src="sample-tree.js"></script>
 <script>
 (function () {
 	'use strict';
 
-	/* Top-level tab switching: Action tree / Version history / Scenario space. */
+	/* Top-level tab switching: Action tree / Scenario space. */
 	const tabs = document.querySelectorAll('.tab');
 	const panels = document.querySelectorAll('.tab-panel');
+	function activateTab(name) {
+		tabs.forEach(function (t) {
+			const isActive = t.dataset.tab === name;
+			t.classList.toggle('active', isActive);
+			t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+		});
+		panels.forEach(function (p) { p.hidden = p.id !== name; });
+	}
 	tabs.forEach(function (tab) {
 		tab.addEventListener('click', function () {
-			tabs.forEach(function (t) {
-				t.classList.remove('active');
-				t.setAttribute('aria-selected', 'false');
-			});
-			panels.forEach(function (p) { p.hidden = true; });
-			tab.classList.add('active');
-			tab.setAttribute('aria-selected', 'true');
-			const target = document.getElementById(tab.dataset.tab);
-			if (target) target.hidden = false;
+			activateTab(tab.dataset.tab);
 		});
 	});
 
-	/* Directory / Traditional layout toggle. */
-	const layoutButtons = document.querySelectorAll('.toggle-btn');
-	layoutButtons.forEach(function (btn) {
+	document.querySelectorAll('.toggle-btn').forEach(function (btn) {
+		if (btn.disabled) return;
 		btn.addEventListener('click', function () {
-			layoutButtons.forEach(function (b) { b.classList.remove('active'); });
+			document.querySelectorAll('.toggle-btn').forEach(function (b) { b.classList.remove('active'); });
 			btn.classList.add('active');
 		});
 	});
 
-	/* Zoom controls for the tree viewport. */
-	const treeContent = document.getElementById('tree-viewport-content');
-	const zoomLabel = document.getElementById('zoom-label');
-	let zoomPercent = 100;
+	/* ---------- Zoom ---------- */
+	var treeContent = document.getElementById('tree-viewport-content');
+	var zoomLabel = document.getElementById('zoom-label');
+	var zoomPercent = 100;
+	function applyZoom() { treeContent.style.fontSize = (14 * zoomPercent / 100) + 'px'; zoomLabel.textContent = zoomPercent + '%'; }
+	document.getElementById('zoom-in-btn').addEventListener('click', function () { zoomPercent = Math.min(160, zoomPercent + 10); applyZoom(); });
+	document.getElementById('zoom-out-btn').addEventListener('click', function () { zoomPercent = Math.max(70, zoomPercent - 10); applyZoom(); });
+	document.getElementById('zoom-reset-btn').addEventListener('click', function () { zoomPercent = 100; applyZoom(); });
 
-	function applyZoom() {
-		treeContent.style.fontSize = (14 * zoomPercent / 100) + 'px';
-		zoomLabel.textContent = zoomPercent + '%';
+	/* ==================================================================
+	   DATA MODEL
+	   node: { id, kind: 'AND'|'XOR', nodeClass: 'Subject'|'Approach'|'Feature'|'',
+	           label, value, expanded, children: [] }
+	   `root` is a virtual container; its children are the top-level nodes.
+	   RULE: all children of a given node (root included) must share the same kind.
+	   ================================================================== */
+	var nextId = 1;
+	function makeId() { return 'n' + (nextId++); }
+
+	var root = { id: 'root', children: [] };
+	var selectedId = null;
+
+	function findNode(node, id) {
+		if (node.id === id) return node;
+		for (var i = 0; i < node.children.length; i++) {
+			var found = findNode(node.children[i], id);
+			if (found) return found;
+		}
+		return null;
+	}
+	function findParent(node, id) {
+		for (var i = 0; i < node.children.length; i++) {
+			if (node.children[i].id === id) return node;
+			var found = findParent(node.children[i], id);
+			if (found) return found;
+		}
+		return null;
+	}
+	function isDescendant(ancestor, node) {
+		for (var i = 0; i < ancestor.children.length; i++) {
+			if (ancestor.children[i].id === node.id) return true;
+			if (isDescendant(ancestor.children[i], node)) return true;
+		}
+		return false;
+	}
+	function removeNode(id) {
+		var parent = findParent(root, id);
+		if (!parent) return;
+		parent.children = parent.children.filter(function (c) { return c.id !== id; });
 	}
 
-	document.getElementById('zoom-in-btn').addEventListener('click', function () {
-		zoomPercent = Math.min(160, zoomPercent + 10);
-		applyZoom();
+	// Same-level-same-kind rule: a kind can be added to parent's children
+	// only if parent has no children yet, or all existing children already have that kind.
+	function siblingKind(parentNode, excludeId) {
+		for (var i = 0; i < parentNode.children.length; i++) {
+			if (parentNode.children[i].id !== excludeId) return parentNode.children[i].kind;
+		}
+		return null;
+	}
+	function canAcceptKind(parentNode, kind, excludeId) {
+		var existing = siblingKind(parentNode, excludeId);
+		return existing === null || existing === kind;
+	}
+
+	function createNode(kind) {
+		return { id: makeId(), kind: kind, nodeClass: '', label: '', value: '', expanded: true, children: [] };
+	}
+
+	// Builds a live node (with generated id/expanded) from a plain data spec,
+	// e.g. the entries in sample-tree.js. Recurses into children.
+	function instantiateSampleNode(spec) {
+		var node = {
+			id: makeId(),
+			kind: spec.kind,
+			nodeClass: spec.nodeClass || '',
+			label: spec.label || '',
+			value: spec.value || '',
+			expanded: true,
+			children: (spec.children || []).map(instantiateSampleNode)
+		};
+		return node;
+	}
+
+	function loadSampleTree() {
+		if (typeof NOVADM_SAMPLE_TREE === 'undefined') {
+			alert('sample-tree.js was not found or did not load — check that it sits next to index.html.');
+			return;
+		}
+		root.children = NOVADM_SAMPLE_TREE.map(instantiateSampleNode);
+		selectedId = null;
+		renderTree(); renderEditorForm();
+	}
+
+	document.getElementById('load-example-btn').addEventListener('click', function () {
+		if (root.children.length === 0 || confirm('Replace the current tree with the example tree?')) {
+			loadSampleTree();
+		}
 	});
-	document.getElementById('zoom-out-btn').addEventListener('click', function () {
-		zoomPercent = Math.max(70, zoomPercent - 10);
-		applyZoom();
+	document.getElementById('clear-tree-btn').addEventListener('click', function () {
+		if (root.children.length === 0 || confirm('Clear the whole tree?')) {
+			root.children = [];
+			selectedId = null;
+			renderTree(); renderEditorForm();
+		}
 	});
-	document.getElementById('zoom-reset-btn').addEventListener('click', function () {
-		zoomPercent = 100;
-		applyZoom();
+
+	/* ---------- Rendering: directory layout ---------- */
+
+	// Badge/label color: 'Approach' class is always shown in green, regardless of AND/XOR;
+	// everything else is colored by its AND/XOR kind.
+	function colorClassFor(node) {
+		if (node.nodeClass === 'Approach') return 'approach';
+		return node.kind === 'AND' ? 'and' : 'xor';
+	}
+	function badgeHtml(node) {
+		var cls = colorClassFor(node);
+		var symbol = node.kind === 'AND' ? '+' : '\u2212';
+		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
+	}
+	function paletteBadgeHtml(kind) {
+		var cls = kind === 'AND' ? 'and' : 'xor';
+		var symbol = kind === 'AND' ? '+' : '\u2212';
+		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
+	}
+
+	function nodeLabelHtml(node) {
+		var cls = colorClassFor(node);
+		var parts = '<span class="node-kind-label ' + cls + '">' + (node.nodeClass || node.kind) + '</span>';
+		if (node.label) {
+			parts += '<span class="node-text">: ' + escapeHtml(node.label) +
+				(node.value ? ' <span class="node-value">= ' + escapeHtml(node.value) + '</span>' : '') + '</span>';
+		} else {
+			parts += '<span class="node-placeholder"> — untitled, click to edit</span>';
+		}
+		return parts;
+	}
+
+	function escapeHtml(s) {
+		return String(s).replace(/[&<>"']/g, function (c) {
+			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+		});
+	}
+
+	function renderTree() {
+		var html = '<div class="root-drop-zone" data-root-drop="true"></div>';
+		treeContent.classList.toggle('empty-hint', root.children.length === 0);
+		if (root.children.length === 0) {
+			html += '<div style="text-align:center; color:var(--color-ink-muted); padding: 20px 0;">No nodes yet.<br>Drag an AND or XOR node from the editor panel, or click "Load example tree".</div>';
+		} else {
+			html += '<ul class="tree-list">' + root.children.map(renderNode).join('') + '</ul>';
+		}
+		treeContent.innerHTML = html;
+		highlightSelected();
+	}
+
+	function renderNode(node) {
+		var hasChildren = node.children.length > 0;
+		var html = '<li class="tree-node" data-id="' + node.id + '">';
+		html += '<div class="tree-row" data-id="' + node.id + '" draggable="true">';
+		html += '<button class="disclosure' + (hasChildren ? '' : ' leaf') + '" data-toggle="' + node.id + '">' +
+			(hasChildren ? (node.expanded ? '\u25BE' : '\u25B8') : '') + '</button>';
+		html += badgeHtml(node);
+		html += nodeLabelHtml(node);
+		html += '</div>';
+		if (hasChildren && node.expanded) {
+			html += '<ul class="tree-children">' + node.children.map(renderNode).join('') + '</ul>';
+		}
+		html += '</li>';
+		return html;
+	}
+
+	function highlightSelected() {
+		treeContent.querySelectorAll('.tree-row').forEach(function (row) {
+			row.classList.toggle('selected', row.getAttribute('data-id') === selectedId);
+		});
+	}
+
+	/* ---------- Delegated tree interaction (single set of listeners, attached once) ---------- */
+
+	function rowAt(target) { return target.closest('.tree-row'); }
+	function rootZoneAt(target) { return target.closest('[data-root-drop]'); }
+
+	treeContent.addEventListener('click', function (e) {
+		var toggleBtn = e.target.closest('[data-toggle]');
+		if (toggleBtn) {
+			var tNode = findNode(root, toggleBtn.getAttribute('data-toggle'));
+			if (tNode) { tNode.expanded = !tNode.expanded; renderTree(); }
+			return;
+		}
+		var row = rowAt(e.target);
+		if (row) { selectedId = row.getAttribute('data-id'); renderTree(); renderEditorForm(); }
+	});
+
+	treeContent.addEventListener('dragstart', function (e) {
+		var row = rowAt(e.target);
+		if (!row) return;
+		e.dataTransfer.setData('application/x-move-node', row.getAttribute('data-id'));
+		e.dataTransfer.effectAllowed = 'move';
+	});
+
+	var lastDropEl = null;
+	treeContent.addEventListener('dragover', function (e) {
+		e.preventDefault();
+		var row = rowAt(e.target);
+		var el = row || rootZoneAt(e.target) || null;
+		if (lastDropEl && lastDropEl !== el) {
+			lastDropEl.classList.remove('drop-target', 'drop-invalid');
+		}
+		if (el) { el.classList.add('drop-target'); lastDropEl = el; }
+	});
+	treeContent.addEventListener('dragleave', function (e) {
+		var row = rowAt(e.target) || rootZoneAt(e.target);
+		if (row) row.classList.remove('drop-target', 'drop-invalid');
+	});
+
+	treeContent.addEventListener('drop', function (e) {
+		e.preventDefault();
+		var row = rowAt(e.target);
+		var rootZone = rootZoneAt(e.target);
+		if (row) row.classList.remove('drop-target', 'drop-invalid');
+		if (rootZone) rootZone.classList.remove('drop-target', 'drop-invalid');
+
+		var targetNode = row ? findNode(root, row.getAttribute('data-id')) : root;
+		if (!targetNode) return;
+
+		var newKind = e.dataTransfer.getData('application/x-new-node');
+		if (newKind) {
+			if (!canAcceptKind(targetNode, newKind, null)) {
+				flashInvalid(row || rootZone);
+				return;
+			}
+			var node = createNode(newKind);
+			targetNode.children.push(node);
+			targetNode.expanded = true;
+			selectedId = node.id;
+			renderTree(); renderEditorForm();
+			return;
+		}
+
+		var movedId = e.dataTransfer.getData('application/x-move-node');
+		if (movedId && movedId !== targetNode.id) {
+			var movedNode = findNode(root, movedId);
+			if (!movedNode) return;
+			if (isDescendant(movedNode, targetNode)) return; // can't drop into own subtree
+			if (!canAcceptKind(targetNode, movedNode.kind, movedId)) {
+				flashInvalid(row || rootZone);
+				return;
+			}
+			removeNode(movedId);
+			targetNode.children.push(movedNode);
+			targetNode.expanded = true;
+			renderTree(); renderEditorForm();
+		}
+	});
+
+	function flashInvalid(el) {
+		if (!el) return;
+		el.classList.remove('drop-target');
+		el.classList.add('drop-invalid');
+		setTimeout(function () { el.classList.remove('drop-invalid'); }, 400);
+	}
+
+	/* ---------- Palette drag sources ---------- */
+	document.querySelectorAll('.palette-item').forEach(function (item) {
+		item.addEventListener('dragstart', function (e) {
+			e.dataTransfer.setData('application/x-new-node', item.getAttribute('data-new-kind'));
+			e.dataTransfer.effectAllowed = 'copy';
+			item.classList.add('dragging');
+		});
+		item.addEventListener('dragend', function () { item.classList.remove('dragging'); });
+	});
+
+	/* ---------- Editor panel: selected-node form ---------- */
+	var formHost = document.getElementById('editor-form-host');
+
+	function renderEditorForm() {
+		var node = selectedId ? findNode(root, selectedId) : null;
+		if (!node) {
+			formHost.innerHTML = '<div class="editor-empty">Select a node in the tree to edit it, or drag a new AND/XOR node in.</div>';
+			return;
+		}
+		var classOptions = ['', 'Subject', 'Approach', 'Feature'].map(function (c) {
+			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' + (c || '(none)') + '</option>';
+		}).join('');
+
+		var canAddAnd = canAcceptKind(node, 'AND', null);
+		var canAddXor = canAcceptKind(node, 'XOR', null);
+		var lockedKind = siblingKind(node, null);
+
+		formHost.innerHTML =
+			'<div class="editor-form">' +
+			'<div class="field-row">' +
+				'<div class="field"><label>Kind</label>' +
+					'<div style="display:flex;align-items:center;gap:6px;">' + badgeHtml(node) +
+					'<strong style="font-size:0.85rem;">' + node.kind + '</strong></div>' +
+				'</div>' +
+				'<div class="field"><label>Class</label>' +
+					'<select id="f-class">' + classOptions + '</select>' +
+				'</div>' +
+			'</div>' +
+			'<div class="field"><label>Label</label><input id="f-label" type="text" placeholder="e.g. structural_element" value="' + escapeHtml(node.label) + '" /></div>' +
+			'<div class="field"><label>Value / options</label><input id="f-value" type="text" placeholder="e.g. keep_current; replace" value="' + escapeHtml(node.value) + '" /></div>' +
+			'<div class="editor-add-row">' +
+				'<button class="btn" id="add-and-child" type="button"' + (canAddAnd ? '' : ' disabled') + '>+ AND child</button>' +
+				'<button class="btn" id="add-xor-child" type="button"' + (canAddXor ? '' : ' disabled') + '>\u2212 XOR child</button>' +
+			'</div>' +
+			(lockedKind ? '<div class="sibling-note">Children are locked to ' + lockedKind + ' — all siblings must match.</div>' : '') +
+			'<div class="editor-actions">' +
+				'<button class="btn danger" id="delete-node" type="button">Delete node' + (node.children.length ? ' &amp; ' + node.children.length + ' child' + (node.children.length > 1 ? 'ren' : '') : '') + '</button>' +
+			'</div>' +
+			'</div>';
+
+		document.getElementById('f-class').addEventListener('change', function (e) { node.nodeClass = e.target.value; renderTree(); renderEditorForm(); });
+		document.getElementById('f-label').addEventListener('input', function (e) { node.label = e.target.value; renderTree(); });
+		document.getElementById('f-value').addEventListener('input', function (e) { node.value = e.target.value; renderTree(); });
+		document.getElementById('add-and-child').addEventListener('click', function () { addChildTo(node, 'AND'); });
+		document.getElementById('add-xor-child').addEventListener('click', function () { addChildTo(node, 'XOR'); });
+		document.getElementById('delete-node').addEventListener('click', function () {
+			removeNode(node.id);
+			selectedId = null;
+			renderTree(); renderEditorForm();
+		});
+	}
+
+	function addChildTo(parentNode, kind) {
+		if (!canAcceptKind(parentNode, kind, null)) return;
+		var child = createNode(kind);
+		parentNode.children.push(child);
+		parentNode.expanded = true;
+		selectedId = child.id;
+		renderTree(); renderEditorForm();
+	}
+
+		/* ---------- Initial render: pre-load the example tree if available ---------- */
+	if (typeof NOVADM_SAMPLE_TREE !== 'undefined') {
+		root.children = NOVADM_SAMPLE_TREE.map(instantiateSampleNode);
+	}
+	renderTree();
+	renderEditorForm();
+
+	/* Profile & Version popovers. */
+	const PROFILES = ['Wood-only', 'Baseline', 'Low-carbon'];
+	const VERSIONS = [
+		{ number: 12, time: '3m ago' },
+		{ number: 11, time: '1h ago' },
+		{ number: 10, time: 'yesterday' }
+	];
+
+	const profileBtn = document.getElementById('profile-btn');
+	const versionBtn = document.getElementById('version-btn');
+	const profilePopover = document.getElementById('profile-popover');
+	const versionPopover = document.getElementById('version-popover');
+	const profileNameEl = document.getElementById('profile-btn-name');
+
+	let openPopover = null; /* 'profile' | 'version' | null */
+
+	function closeAllPopovers() {
+		profilePopover.hidden = true;
+		versionPopover.hidden = true;
+		profileBtn.setAttribute('aria-expanded', 'false');
+		versionBtn.setAttribute('aria-expanded', 'false');
+		profileBtn.classList.remove('is-open');
+		versionBtn.classList.remove('is-open');
+		openPopover = null;
+	}
+
+	function togglePopover(name) {
+		if (openPopover === name) {
+			closeAllPopovers();
+			return;
+		}
+		closeAllPopovers();
+		openPopover = name;
+		const popover = name === 'profile' ? profilePopover : versionPopover;
+		const btn = name === 'profile' ? profileBtn : versionBtn;
+		popover.hidden = false;
+		btn.setAttribute('aria-expanded', 'true');
+		btn.classList.add('is-open');
+	}
+
+	profileBtn.addEventListener('click', function (e) {
+		e.stopPropagation();
+		togglePopover('profile');
+	});
+	versionBtn.addEventListener('click', function (e) {
+		e.stopPropagation();
+		togglePopover('version');
+	});
+
+	profilePopover.addEventListener('click', function (e) { e.stopPropagation(); });
+	versionPopover.addEventListener('click', function (e) { e.stopPropagation(); });
+
+	document.addEventListener('click', function () {
+		if (openPopover !== null) closeAllPopovers();
+	});
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape' && openPopover !== null) closeAllPopovers();
+	});
+
+	profilePopover.querySelectorAll('.popover-item[data-profile]').forEach(function (item) {
+		item.addEventListener('click', function () {
+			profilePopover.querySelectorAll('.popover-item[data-profile]').forEach(function (other) {
+				other.classList.remove('active');
+				other.setAttribute('aria-checked', 'false');
+			});
+			item.classList.add('active');
+			item.setAttribute('aria-checked', 'true');
+			profileNameEl.textContent = item.dataset.profile;
+			closeAllPopovers();
+		});
+	});
+
+	versionPopover.querySelectorAll('.popover-list .popover-item').forEach(function (item) {
+		item.addEventListener('click', function () {
+			console.log('Version selected (stub):', item.textContent.trim());
+			closeAllPopovers();
+		});
+	});
+
+	document.getElementById('save-profile-btn').addEventListener('click', function () {
+		console.log('Save current as profile (stub)');
+		closeAllPopovers();
+	});
+	document.getElementById('save-version-btn').addEventListener('click', function () {
+		console.log('Save current version (stub)');
+		closeAllPopovers();
+	});
+
+	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
+		activateTab('scenario-space');
 	});
 })();
 </script>
