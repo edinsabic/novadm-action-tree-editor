@@ -451,3 +451,5 @@ main { padding-top: 18px; }
 .root-drop-zone { min-height: 24px; border-radius: var(--radius-sm); margin: 2px 0; }
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
 .root-drop-zone.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; background: #FBEDEC; }
+/* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
+.viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
