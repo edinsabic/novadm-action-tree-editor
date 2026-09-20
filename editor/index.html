@@ -29,12 +29,34 @@
 			</div>
 
 			<div class="control-right">
-				<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
-				</button>
-				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
-				</button>
+				<div class="pill-wrap">
+					<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
+					</button>
+					<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
+						<ul class="popover-list">
+							<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
+							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
+							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
+						</ul>
+						<div class="popover-divider" role="separator"></div>
+						<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
+					</div>
+				</div>
+				<div class="pill-wrap">
+					<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
+					</button>
+					<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
+						<ul class="popover-list">
+							<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
+							<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
+							<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
+						</ul>
+						<div class="popover-divider" role="separator"></div>
+						<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
+					</div>
+				</div>
 			</div>
 
 		</div>
@@ -59,12 +81,12 @@
 					<div class="palette">
 						<span class="palette-label">Drag onto the tree</span>
 						<div class="palette-item" draggable="true" data-new-kind="AND">
-							<span class="node-badge and">+</span>
+							<span class="node-badge neutral">+</span>
 							<span>AND node</span>
 							<span class="hint">all children</span>
 						</div>
 						<div class="palette-item" draggable="true" data-new-kind="XOR">
-							<span class="node-badge xor">−</span>
+							<span class="node-badge neutral">−</span>
 							<span>XOR node</span>
 							<span class="hint">one of</span>
 						</div>
@@ -73,29 +95,8 @@
 				</div>
 			</div>
 
-			<div class="viewport-popover-layer">
-				<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
-					<ul class="popover-list">
-						<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
-						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
-						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
-					</ul>
-					<div class="popover-divider" role="separator"></div>
-					<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
-				</div>
-
-				<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
-					<ul class="popover-list">
-						<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
-						<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
-						<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
-					</ul>
-					<div class="popover-divider" role="separator"></div>
-					<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
-				</div>
-			</div>
-
 		</div>
+
 
 		<div class="scenario-summary-bar">
 			<span class="scenario-summary-label">Scenario space (live)</span>
@@ -252,20 +253,18 @@
 
 	/* ---------- Rendering: directory layout ---------- */
 
-	// Badge/label color: 'Approach' class is always shown in green, regardless of AND/XOR;
-	// everything else is colored by its AND/XOR kind.
+	// Badge/label color is driven by the node's domain class, NOT by AND/XOR:
+	// Subject / Feature / Approach each get their own color; a node with no
+	// class set yet renders neutral (black). Kind (AND/XOR) only sets the +/− symbol.
 	function colorClassFor(node) {
+		if (node.nodeClass === 'Subject') return 'subject';
+		if (node.nodeClass === 'Feature') return 'feature';
 		if (node.nodeClass === 'Approach') return 'approach';
-		return node.kind === 'AND' ? 'and' : 'xor';
+		return 'neutral';
 	}
 	function badgeHtml(node) {
 		var cls = colorClassFor(node);
 		var symbol = node.kind === 'AND' ? '+' : '\u2212';
-		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
-	}
-	function paletteBadgeHtml(kind) {
-		var cls = kind === 'AND' ? 'and' : 'xor';
-		var symbol = kind === 'AND' ? '+' : '\u2212';
 		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
 	}
 
