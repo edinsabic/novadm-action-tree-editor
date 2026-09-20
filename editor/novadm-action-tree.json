@@ -1,0 +1,81 @@
+{
+	"format": "novadm-action-tree",
+	"version": 2,
+	"tree": [
+		{
+			"kind": "AND",
+			"nodeClass": "Subject",
+			"label": "system",
+			"value": [
+				"heating"
+			],
+			"children": [
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "thermostat",
+					"value": [
+						"manual",
+						"smart"
+					],
+					"children": []
+				},
+				{
+					"kind": "XOR",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"kind": "AND",
+							"nodeClass": "Approach",
+							"label": "upgrade_boiler",
+							"value": [],
+							"children": [
+								{
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "boiler_type",
+									"value": [
+										"condensing",
+										"biomass"
+									],
+									"children": []
+								}
+							]
+						},
+						{
+							"kind": "AND",
+							"nodeClass": "Approach",
+							"label": "install_heat_pump",
+							"value": [],
+							"children": [
+								{
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "source",
+									"value": [
+										"air",
+										"ground"
+									],
+									"children": []
+								},
+								{
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "buffer_tank",
+									"value": [
+										"none",
+										"200L",
+										"500L"
+									],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
