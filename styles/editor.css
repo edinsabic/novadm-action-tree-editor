@@ -8,9 +8,12 @@
 	--color-accent: #6B2737;
 	--color-accent-light: #F5ECED;
 
-	--and-color: #C1440E;
-	--xor-color: #1F6FEB;
+	/* Node color is driven by domain class (Subject/Feature/Approach), not AND/XOR kind.
+	   A node with no class set renders --neutral-color. */
+	--subject-color: #C1440E;
+	--feature-color: #1F6FEB;
 	--approach-color: #1E8E5A;
+	--neutral-color: var(--color-ink);
 
 	--font-display: Georgia, 'Times New Roman', serif;
 	--font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -21,6 +24,17 @@
 	--radius-lg: 14px;
 
 	--shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+
+	/* Tree viewport / editor panel widths — must sum to 100%.
+	   Both .viewport-tree, .viewport-editor-col, and the popover offset read from these,
+	   so changing a value here keeps everything in sync (see Viewports section below). */
+	--tree-width: 68%;
+	--editor-width: 32%;
+	/* Floor, not a fixed height: the panels stretch to fill whatever vertical space
+	   is left after the title/tabs/controls/summary bar, so the whole app fits one
+	   screen with no page scrollbar. This only kicks in if the window gets too short
+	   for everything to fit -- below it, the page scrolls instead of crushing the panels. */
+	--panels-min-height: 320px;
 }
 
 * { box-sizing: border-box; }
@@ -35,6 +49,11 @@ body {
 	font-size: 14px;
 	-webkit-font-smoothing: antialiased;
 	letter-spacing: -0.01em;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;  /* fallback for browsers without dvh support */
+	height: 100dvh; /* accounts for mobile browser chrome; desktop treats this the same as 100vh */
+	overflow-y: auto; /* only scrolls if --panels-min-height can't be honored (very short window) */
 }
 
 button { font: inherit; cursor: pointer; }
@@ -45,6 +64,7 @@ input, select { font: inherit; }
 	font-weight: 600;
 	font-size: 1.4rem;
 	margin: 0 0 18px;
+	flex-shrink: 0;
 }
 
 /* --- Top-level tabs --- */
@@ -53,6 +73,7 @@ input, select { font: inherit; }
 	display: flex;
 	gap: 6px;
 	border-bottom: 1px solid var(--color-border);
+	flex-shrink: 0;
 }
 
 .tab {
@@ -77,7 +98,22 @@ input, select { font: inherit; }
 	font-weight: 600;
 }
 
-main { padding-top: 18px; }
+main {
+	padding-top: 18px;
+	flex: 1;
+	min-height: 0; /* required for a flex child to actually shrink instead of overflowing */
+	display: flex;
+	flex-direction: column;
+}
+
+/* Whichever section is visible (not [hidden]) fills all of main's remaining height. */
+.tab-panel {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+.tab-panel[hidden] { display: none; } /* our own display:flex above would otherwise override the browser's default [hidden] rule */
 
 /* --- Control row: layout toggle + profile/version buttons --- */
 
@@ -87,6 +123,7 @@ main { padding-top: 18px; }
 	justify-content: space-between;
 	gap: 10px;
 	margin-bottom: 14px;
+	flex-shrink: 0;
 }
 
 .control-left {
@@ -99,6 +136,11 @@ main { padding-top: 18px; }
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.pill-wrap {
+	position: relative; /* anchors this button's popover directly below it */
+	display: inline-flex;
 }
 
 .layout-label {
@@ -164,7 +206,9 @@ main { padding-top: 18px; }
 	position: relative;
 	display: flex;
 	gap: 28px;
-	align-items: flex-start;
+	align-items: stretch; /* both columns stretch to the row's full height, so their bottoms always line up */
+	flex: 1;
+	min-height: var(--panels-min-height);
 }
 
 .viewport-box {
@@ -174,11 +218,15 @@ main { padding-top: 18px; }
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	display: flex;
 	flex-direction: column;
-	min-height: 420px;
+	min-height: 0; /* lets it shrink to the stretched height instead of growing past it */
+	overflow: hidden; /* only the inner content areas scroll, not the box or the page */
 }
-.viewport-tree { flex: 1; min-width: 0; }
-.viewport-editor-col { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
-.viewport-editor-panel { min-height: 340px; align-items: stretch; padding: 12px; }
+.viewport-tree { flex: 1 1 var(--tree-width); max-width: var(--tree-width); min-width: 0; }
+.viewport-editor-col { flex: 1 1 var(--editor-width); max-width: var(--editor-width); min-width: 240px; display: flex; flex-direction: column; gap: 10px; }
+/* The label sits above the editor's box, so the box itself is shorter at the top —
+   flex:1 makes it absorb exactly (row height − label height − gap), so its bottom
+   still lands on the same line as the tree box's bottom. */
+.viewport-editor-panel { flex: 1; min-height: 0; align-items: stretch; padding: 0; }
 .viewport-box-label {
 	align-self: flex-start;
 	padding: 5px 12px;
@@ -215,13 +263,10 @@ main { padding-top: 18px; }
 
 .viewport-content {
 	flex: 1;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--color-ink-muted);
-	font-size: 0.85rem;
-	padding: 20px;
-	text-align: center;
+	overflow-y: auto;
+	font-size: 0.88rem;
+	padding: 14px 10px;
+	text-align: left;
 }
 
 .viewport-content.empty-hint {
@@ -231,29 +276,21 @@ main { padding-top: 18px; }
 	color: var(--color-ink-muted);
 	text-align: center;
 	padding: 20px;
+	font-size: 0.85rem;
 }
 
-/* --- Popovers --- */
-
-.viewport-popover-layer {
-	position: absolute;
-	top: 0;
-	right: 260px; /* width of the editor column */
-	width: 0;
-	pointer-events: none;
-}
+/* --- Popovers: each lives inside its own .pill-wrap, positioned directly below its button --- */
 
 .popover {
 	position: absolute;
-	top: 48px;
-	right: 14px; /* sit inside the gap, just left of the editor panel */
+	top: calc(100% + 6px);
+	right: 0; /* right-align to the button so it doesn't overhang the page edge */
 	min-width: 220px;
 	background-color: var(--color-surface);
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-lg);
 	box-shadow: var(--shadow-popover);
 	padding: 6px;
-	pointer-events: auto;
 	z-index: 20;
 }
 
@@ -305,6 +342,7 @@ main { padding-top: 18px; }
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	flex-wrap: nowrap;
 	overflow-x: auto;
+	flex-shrink: 0;
 }
 
 .scenario-summary-label {
@@ -359,7 +397,8 @@ main { padding-top: 18px; }
 .scenario-summary-link:hover { text-decoration: underline; }
 
 .placeholder-panel {
-	min-height: 420px;
+	flex: 1;
+	min-height: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -370,7 +409,8 @@ main { padding-top: 18px; }
 	font-size: 0.85rem;
 }
 
-.palette { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-bottom: 1px solid var(--color-border); }
+.palette { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+#editor-form-host { flex: 1; overflow-y: auto; }
 .palette-label { font-size: 0.75rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
 .palette-item {
 	display: flex; align-items: center; gap: 8px; padding: 8px 10px;
@@ -386,9 +426,10 @@ main { padding-top: 18px; }
 	display: flex; align-items: center; justify-content: center;
 	font-weight: 700; font-size: 13px; border: 2px solid currentColor; background: var(--color-surface);
 }
-.node-badge.and { color: var(--and-color); }
-.node-badge.xor { color: var(--xor-color); }
+.node-badge.subject { color: var(--subject-color); }
+.node-badge.feature { color: var(--feature-color); }
 .node-badge.approach { color: var(--approach-color); }
+.node-badge.neutral { color: var(--neutral-color); }
 
 .editor-form { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .editor-form label { font-size: 0.72rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -429,9 +470,10 @@ main { padding-top: 18px; }
 .tree-row .node-badge { width: 18px; height: 18px; font-size: 11px; }
 
 .node-kind-label { font-weight: 700; font-size: 0.78rem; }
-.node-kind-label.and { color: var(--and-color); }
-.node-kind-label.xor { color: var(--xor-color); }
+.node-kind-label.subject { color: var(--subject-color); }
+.node-kind-label.feature { color: var(--feature-color); }
 .node-kind-label.approach { color: var(--approach-color); }
+.node-kind-label.neutral { color: var(--neutral-color); }
 .node-text { color: var(--color-ink); }
 .node-text .node-value { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 0.82rem; }
 .node-placeholder { color: var(--color-ink-muted); font-style: italic; }
@@ -439,3 +481,5 @@ main { padding-top: 18px; }
 .root-drop-zone { min-height: 24px; border-radius: var(--radius-sm); margin: 2px 0; }
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
 .root-drop-zone.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; background: #FBEDEC; }
+/* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
+.viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }

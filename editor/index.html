@@ -18,9 +18,8 @@
 <main>
 
 	<section id="action-tree" class="tab-panel" role="tabpanel">
-
+		
 		<div class="control-row">
-
 			<div class="control-left">
 				<span class="layout-label">Tree layout</span>
 				<div class="toggle-group" role="group" aria-label="Tree layout">
@@ -30,12 +29,34 @@
 			</div>
 
 			<div class="control-right">
-				<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
-				</button>
-				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
-				</button>
+				<div class="pill-wrap">
+					<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
+					</button>
+					<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
+						<ul class="popover-list">
+							<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
+							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
+							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
+						</ul>
+						<div class="popover-divider" role="separator"></div>
+						<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
+					</div>
+				</div>
+				<div class="pill-wrap">
+					<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
+					</button>
+					<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
+						<ul class="popover-list">
+							<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
+							<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
+							<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
+						</ul>
+						<div class="popover-divider" role="separator"></div>
+						<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
+					</div>
+				</div>
 			</div>
 
 		</div>
@@ -50,6 +71,9 @@
 					<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
 					<button id="load-example-btn" type="button" class="btn">Load example tree</button>
 					<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
+				<button id="import-tree-btn" type="button" class="btn">Import tree</button>
+				<button id="export-tree-btn" type="button" class="btn">Export tree</button>
+				<input id="import-file-input" type="file" hidden />
 				</div>
 				<div id="tree-viewport-content" class="viewport-content"></div>
 			</div>
@@ -60,12 +84,12 @@
 					<div class="palette">
 						<span class="palette-label">Drag onto the tree</span>
 						<div class="palette-item" draggable="true" data-new-kind="AND">
-							<span class="node-badge and">+</span>
+							<span class="node-badge neutral">+</span>
 							<span>AND node</span>
 							<span class="hint">all children</span>
 						</div>
 						<div class="palette-item" draggable="true" data-new-kind="XOR">
-							<span class="node-badge xor">−</span>
+							<span class="node-badge neutral">−</span>
 							<span>XOR node</span>
 							<span class="hint">one of</span>
 						</div>
@@ -74,29 +98,8 @@
 				</div>
 			</div>
 
-			<div class="viewport-popover-layer">
-				<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
-					<ul class="popover-list">
-						<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
-						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
-						<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
-					</ul>
-					<div class="popover-divider" role="separator"></div>
-					<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
-				</div>
-
-				<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
-					<ul class="popover-list">
-						<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
-						<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
-						<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
-					</ul>
-					<div class="popover-divider" role="separator"></div>
-					<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
-				</div>
-			</div>
-
 		</div>
+
 
 		<div class="scenario-summary-bar">
 			<span class="scenario-summary-label">Scenario space (live)</span>
@@ -158,9 +161,19 @@
 	   DATA MODEL
 	   node: { id, kind: 'AND'|'XOR', nodeClass: 'Subject'|'Approach'|'Feature'|'',
 	           label, value, expanded, children: [] }
+	   `value` is an ARRAY of strings: the possible options for the node (empty = none).
 	   `root` is a virtual container; its children are the top-level nodes.
-	   RULE: all children of a given node (root included) must share the same kind.
+	   RULE 1: all children of a given node (root included) must share the same kind.
+	   RULE 2: the project root is implicitly an AND node (formal action-tree spec),
+	           so every top-level node must be AND. See TOP_LEVEL_KIND below.
 	   ================================================================== */
+	var KINDS = ['AND', 'XOR'];
+	var NODE_CLASSES = ['', 'Subject', 'Approach', 'Feature'];
+	// `root` below stands in for the implicit AND root of the renovation project.
+	// It is never drawn or saved; the rule it imposes is that its direct children
+	// (the top-level nodes) can only be AND. Change this one constant to relax/alter it.
+	var TOP_LEVEL_KIND = 'AND';
+
 	var nextId = 1;
 	function makeId() { return 'n' + (nextId++); }
 
@@ -205,25 +218,49 @@
 		return null;
 	}
 	function canAcceptKind(parentNode, kind, excludeId) {
+		if (parentNode === root && kind !== TOP_LEVEL_KIND) return false; // implicit AND root
 		var existing = siblingKind(parentNode, excludeId);
 		return existing === null || existing === kind;
 	}
 
 	function createNode(kind) {
-		return { id: makeId(), kind: kind, nodeClass: '', label: '', value: '', expanded: true, children: [] };
+		return { id: makeId(), kind: kind, nodeClass: '', label: '', value: [], expanded: true, children: [] };
+	}
+
+	/* ---------- Node values: text <-> array ---------- */
+
+	// Turns whatever we're given into a clean array of option strings.
+	//  - text (typed in the editor, or an old-style file/sample tree): options may be
+	//    separated by ";" or ","; a single pair of wrapping parentheses is ignored, so
+	//    "a; b", "a, b" and "(a; b)" all give ['a', 'b']. Blank entries are dropped.
+	//  - an array: each entry is trimmed and blanks are dropped (entries are NOT split further).
+	function parseValues(input) {
+		if (Array.isArray(input)) {
+			return input.map(function (v) { return String(v).trim(); }).filter(Boolean);
+		}
+		var text = String(input === undefined || input === null ? '' : input).trim();
+		var wrapped = /^\(([^()]*)\)$/.exec(text);
+		if (wrapped) text = wrapped[1];
+		return text.split(/[;,]/).map(function (v) { return v.trim(); }).filter(Boolean);
+	}
+
+	// How a value list is shown in the tree: one option as-is, several as "(a; b; c)".
+	function formatValues(values) {
+		if (!values || values.length === 0) return '';
+		return values.length === 1 ? values[0] : '(' + values.join('; ') + ')';
 	}
 
 	// Builds a live node (with generated id/expanded) from a plain data spec,
-	// e.g. the entries in sample-tree.js. Recurses into children.
-	function instantiateSampleNode(spec) {
+	// e.g. the entries in sample-tree.js or an imported file. Recurses into children.
+	function instantiateNode(spec) {
 		var node = {
 			id: makeId(),
 			kind: spec.kind,
 			nodeClass: spec.nodeClass || '',
 			label: spec.label || '',
-			value: spec.value || '',
+			value: parseValues(spec.value),
 			expanded: true,
-			children: (spec.children || []).map(instantiateSampleNode)
+			children: (spec.children || []).map(instantiateNode)
 		};
 		return node;
 	}
@@ -233,7 +270,12 @@
 			alert('sample-tree.js was not found or did not load — check that it sits next to index.html.');
 			return;
 		}
-		root.children = NOVADM_SAMPLE_TREE.map(instantiateSampleNode);
+		replaceTree(NOVADM_SAMPLE_TREE);
+	}
+
+	// Replaces the whole tree with the given plain node specs and redraws.
+	function replaceTree(specs) {
+		root.children = specs.map(instantiateNode);
 		selectedId = null;
 		renderTree(); renderEditorForm();
 	}
@@ -251,22 +293,171 @@
 		}
 	});
 
+	/* ==================================================================
+	   FILE FORMAT  — the ONLY place that knows how a tree looks on disk.
+	   The rest of the editor works with "specs": a plain array of
+	   { kind, nodeClass, label, value, children } objects (same shape as
+	   sample-tree.js; `value` is an array of strings, but text is accepted too). To switch to the team's own file type, edit this
+	   object: change extension / mimeType / defaultName and rewrite
+	   serialize() and parse(). Nothing else needs to change.
+	     serialize(specs) -> string   text to write to the file
+	     parse(text)      -> specs    must THROW an Error with a readable message
+	                                  if the text isn't a tree file
+	   (If the new format is binary, change reader.readAsText / new Blob in the
+	   import/export handlers below accordingly.)
+	   ================================================================== */
+	var TREE_FILE_FORMAT = {
+		id: 'novadm-action-tree',
+		version: 2, // 2: `value` is an array of strings (files with version 1 and text values still import)
+		extension: '.json',
+		mimeType: 'application/json',
+		defaultName: 'novadm-action-tree',
+
+		serialize: function (specs) {
+			return JSON.stringify({
+				format: TREE_FILE_FORMAT.id,
+				version: TREE_FILE_FORMAT.version,
+				tree: specs
+			}, null, '\t');
+		},
+
+		parse: function (text) {
+			var data;
+			try {
+				data = JSON.parse(text.replace(/^\uFEFF/, '')); // tolerate a UTF-8 BOM
+			} catch (err) {
+				throw new Error('The file is not valid JSON (' + err.message + ').');
+			}
+			// A bare array of nodes (like sample-tree.js, as JSON) is accepted too.
+			if (Array.isArray(data)) return data;
+			if (!data || data.format !== TREE_FILE_FORMAT.id) {
+				throw new Error('This does not look like a NovaDM action tree file.');
+			}
+			if (typeof data.version !== 'number' || data.version > TREE_FILE_FORMAT.version) {
+				throw new Error('This file was saved by a newer version of the editor (file version ' + data.version + ').');
+			}
+			return data.tree;
+		}
+	};
+
+	/* Live tree -> specs (ids and expanded-state are editor-only and not saved). */
+	function nodeToSpec(node) {
+		return {
+			kind: node.kind,
+			nodeClass: node.nodeClass,
+			label: node.label,
+			value: node.value.slice(),
+			children: node.children.map(nodeToSpec)
+		};
+	}
+
+	/* Checks specs against the structural rules before they touch the live tree.
+	   Returns a readable problem description, or null if everything is fine. */
+	function validateSpecs(specs) {
+		if (!Array.isArray(specs)) return 'The tree data is not a list of nodes.';
+		return validateSiblingSpecs(specs, 'Top level', true);
+	}
+	function validateSiblingSpecs(list, where, isTopLevel) {
+		var seenKind = null;
+		for (var i = 0; i < list.length; i++) {
+			var spec = list[i];
+			var here = where + ' > node #' + (i + 1);
+			if (!spec || typeof spec !== 'object') return here + ' is not a node.';
+			if (KINDS.indexOf(spec.kind) === -1) {
+				return here + ' has an unknown kind (' + JSON.stringify(spec.kind) + '); expected ' + KINDS.join(' or ') + '.';
+			}
+			if (isTopLevel && spec.kind !== TOP_LEVEL_KIND) {
+				return here + ' is ' + spec.kind + ', but top-level nodes must be ' + TOP_LEVEL_KIND + ' (the project root is an implicit ' + TOP_LEVEL_KIND + ').';
+			}
+			if (seenKind !== null && spec.kind !== seenKind) {
+				return here + ' is ' + spec.kind + ', but its siblings are ' + seenKind + ' (all siblings must share the same kind).';
+			}
+			seenKind = spec.kind;
+			if (spec.nodeClass !== undefined && NODE_CLASSES.indexOf(spec.nodeClass) === -1) {
+				return here + ' has an unknown class (' + JSON.stringify(spec.nodeClass) + '); expected one of: ' + NODE_CLASSES.filter(Boolean).join(', ') + ' or empty.';
+			}
+			if (spec.label !== undefined && typeof spec.label !== 'string') {
+				return here + ' has a label that is not text.';
+			}
+			if (spec.value !== undefined && typeof spec.value !== 'string' &&
+				!(Array.isArray(spec.value) && spec.value.every(function (v) { return typeof v === 'string'; }))) {
+				return here + ' has a value that is neither text nor a list of text.';
+			}
+			if (spec.children !== undefined && !Array.isArray(spec.children)) {
+				return here + ' has children that are not a list.';
+			}
+			var problem = validateSiblingSpecs(spec.children || [], here, false);
+			if (problem) return problem;
+		}
+		return null;
+	}
+
+	/* ---------- Export / Import buttons ---------- */
+	var exportBtn = document.getElementById('export-tree-btn');
+	var importBtn = document.getElementById('import-tree-btn');
+	var importInput = document.getElementById('import-file-input');
+	importInput.accept = TREE_FILE_FORMAT.extension;
+	exportBtn.title = 'Save the current tree as a ' + TREE_FILE_FORMAT.extension + ' file';
+	importBtn.title = 'Load a tree from a ' + TREE_FILE_FORMAT.extension + ' file on your computer';
+
+	exportBtn.addEventListener('click', function () {
+		var text = TREE_FILE_FORMAT.serialize(root.children.map(nodeToSpec));
+		var blob = new Blob([text], { type: TREE_FILE_FORMAT.mimeType });
+		var url = URL.createObjectURL(blob);
+		var link = document.createElement('a');
+		link.href = url;
+		link.download = TREE_FILE_FORMAT.defaultName + TREE_FILE_FORMAT.extension;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+	});
+
+	importBtn.addEventListener('click', function () { importInput.click(); });
+
+	importInput.addEventListener('change', function () {
+		var file = importInput.files && importInput.files[0];
+		if (!file) return;
+		var reader = new FileReader();
+		reader.onerror = function () {
+			importInput.value = '';
+			alert('Could not read "' + file.name + '".');
+		};
+		reader.onload = function () {
+			importInput.value = ''; // so picking the same file again still fires "change"
+			var specs;
+			try {
+				specs = TREE_FILE_FORMAT.parse(String(reader.result));
+			} catch (err) {
+				alert('Could not import "' + file.name + '":\n' + err.message);
+				return;
+			}
+			var problem = validateSpecs(specs);
+			if (problem) {
+				alert('Could not import "' + file.name + '":\n' + problem);
+				return;
+			}
+			if (root.children.length === 0 || confirm('Replace the current tree with "' + file.name + '"?')) {
+				replaceTree(specs);
+			}
+		};
+		reader.readAsText(file);
+	});
+
 	/* ---------- Rendering: directory layout ---------- */
 
-	// Badge/label color: 'Approach' class is always shown in green, regardless of AND/XOR;
-	// everything else is colored by its AND/XOR kind.
+	// Badge/label color is driven by the node's domain class, NOT by AND/XOR:
+	// Subject / Feature / Approach each get their own color; a node with no
+	// class set yet renders neutral (black). Kind (AND/XOR) only sets the +/− symbol.
 	function colorClassFor(node) {
+		if (node.nodeClass === 'Subject') return 'subject';
+		if (node.nodeClass === 'Feature') return 'feature';
 		if (node.nodeClass === 'Approach') return 'approach';
-		return node.kind === 'AND' ? 'and' : 'xor';
+		return 'neutral';
 	}
 	function badgeHtml(node) {
 		var cls = colorClassFor(node);
 		var symbol = node.kind === 'AND' ? '+' : '\u2212';
-		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
-	}
-	function paletteBadgeHtml(kind) {
-		var cls = kind === 'AND' ? 'and' : 'xor';
-		var symbol = kind === 'AND' ? '+' : '\u2212';
 		return '<span class="node-badge ' + cls + '">' + symbol + '</span>';
 	}
 
@@ -275,9 +466,12 @@
 		var parts = '<span class="node-kind-label ' + cls + '">' + (node.nodeClass || node.kind) + '</span>';
 		if (node.label) {
 			parts += '<span class="node-text">: ' + escapeHtml(node.label) +
-				(node.value ? ' <span class="node-value">= ' + escapeHtml(node.value) + '</span>' : '') + '</span>';
-		} else {
-			parts += '<span class="node-placeholder"> — untitled, click to edit</span>';
+				(node.value.length ? ' <span class="node-value">= ' + escapeHtml(formatValues(node.value)) + '</span>' : '') + '</span>';
+		} else if (node.children.length > 0) {
+			parts += '<span class="node-placeholder"> </span>';
+		} 
+		else {
+			parts += '<span class="node-placeholder"> – untitled, click to edit</span>';
 		}
 		return parts;
 	}
@@ -289,10 +483,11 @@
 	}
 
 	function renderTree() {
-		var html = '<div class="root-drop-zone" data-root-drop="true"></div>';
+		var html = '<div class="root-drop-zone" data-root-drop="true" title="The project root is an implicit ' + TOP_LEVEL_KIND + ' node, so top-level nodes must be ' + TOP_LEVEL_KIND + '"></div>';
 		treeContent.classList.toggle('empty-hint', root.children.length === 0);
+		exportBtn.disabled = root.children.length === 0;
 		if (root.children.length === 0) {
-			html += '<div style="text-align:center; color:var(--color-ink-muted); padding: 20px 0;">No nodes yet.<br>Drag an AND or XOR node from the editor panel, or click "Load example tree".</div>';
+			html += '<div style="text-align:center; color:var(--color-ink-muted); padding: 20px 0;">No nodes yet.<br>Drag an ' + TOP_LEVEL_KIND + ' node from the editor panel (the project root is an implicit ' + TOP_LEVEL_KIND + ', so top-level nodes are always ' + TOP_LEVEL_KIND + '), or click "Load example tree" / "Import tree\u2026".</div>';
 		} else {
 			html += '<ul class="tree-list">' + root.children.map(renderNode).join('') + '</ul>';
 		}
@@ -373,7 +568,7 @@
 		var newKind = e.dataTransfer.getData('application/x-new-node');
 		if (newKind) {
 			if (!canAcceptKind(targetNode, newKind, null)) {
-				flashInvalid(row || rootZone);
+				flashInvalid(row || rootZone || treeContent);
 				return;
 			}
 			var node = createNode(newKind);
@@ -390,7 +585,7 @@
 			if (!movedNode) return;
 			if (isDescendant(movedNode, targetNode)) return; // can't drop into own subtree
 			if (!canAcceptKind(targetNode, movedNode.kind, movedId)) {
-				flashInvalid(row || rootZone);
+				flashInvalid(row || rootZone || treeContent);
 				return;
 			}
 			removeNode(movedId);
@@ -426,7 +621,7 @@
 			formHost.innerHTML = '<div class="editor-empty">Select a node in the tree to edit it, or drag a new AND/XOR node in.</div>';
 			return;
 		}
-		var classOptions = ['', 'Subject', 'Approach', 'Feature'].map(function (c) {
+		var classOptions = NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' + (c || '(none)') + '</option>';
 		}).join('');
 
@@ -446,7 +641,7 @@
 				'</div>' +
 			'</div>' +
 			'<div class="field"><label>Label</label><input id="f-label" type="text" placeholder="e.g. structural_element" value="' + escapeHtml(node.label) + '" /></div>' +
-			'<div class="field"><label>Value / options</label><input id="f-value" type="text" placeholder="e.g. keep_current; replace" value="' + escapeHtml(node.value) + '" /></div>' +
+			'<div class="field"><label>Value / options</label><input id="f-value" type="text" placeholder="e.g. keep_current; replace" title="Separate several options with ; or ," value="' + escapeHtml(node.value.join('; ')) + '" /></div>' +
 			'<div class="editor-add-row">' +
 				'<button class="btn" id="add-and-child" type="button"' + (canAddAnd ? '' : ' disabled') + '>+ AND child</button>' +
 				'<button class="btn" id="add-xor-child" type="button"' + (canAddXor ? '' : ' disabled') + '>\u2212 XOR child</button>' +
@@ -459,7 +654,7 @@
 
 		document.getElementById('f-class').addEventListener('change', function (e) { node.nodeClass = e.target.value; renderTree(); renderEditorForm(); });
 		document.getElementById('f-label').addEventListener('input', function (e) { node.label = e.target.value; renderTree(); });
-		document.getElementById('f-value').addEventListener('input', function (e) { node.value = e.target.value; renderTree(); });
+		document.getElementById('f-value').addEventListener('input', function (e) { node.value = parseValues(e.target.value); renderTree(); });
 		document.getElementById('add-and-child').addEventListener('click', function () { addChildTo(node, 'AND'); });
 		document.getElementById('add-xor-child').addEventListener('click', function () { addChildTo(node, 'XOR'); });
 		document.getElementById('delete-node').addEventListener('click', function () {
@@ -477,13 +672,6 @@
 		selectedId = child.id;
 		renderTree(); renderEditorForm();
 	}
-
-		/* ---------- Initial render: pre-load the example tree if available ---------- */
-	if (typeof NOVADM_SAMPLE_TREE !== 'undefined') {
-		root.children = NOVADM_SAMPLE_TREE.map(instantiateSampleNode);
-	}
-	renderTree();
-	renderEditorForm();
 
 	/* Profile & Version popovers. */
 	const PROFILES = ['Wood-only', 'Baseline', 'Low-carbon'];
@@ -576,6 +764,13 @@
 	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
 		activateTab('scenario-space');
 	});
+
+	/* ---------- Initial render: pre-load the example tree if available ---------- */
+	if (typeof NOVADM_SAMPLE_TREE !== 'undefined') {
+		root.children = NOVADM_SAMPLE_TREE.map(instantiateNode);
+	}
+	renderTree();
+	renderEditorForm();
 })();
 </script>
 
