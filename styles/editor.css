@@ -30,7 +30,11 @@
 	   so changing a value here keeps everything in sync (see Viewports section below). */
 	--tree-width: 68%;
 	--editor-width: 32%;
-	--panels-height: 480px;
+	/* Floor, not a fixed height: the panels stretch to fill whatever vertical space
+	   is left after the title/tabs/controls/summary bar, so the whole app fits one
+	   screen with no page scrollbar. This only kicks in if the window gets too short
+	   for everything to fit -- below it, the page scrolls instead of crushing the panels. */
+	--panels-min-height: 320px;
 }
 
 * { box-sizing: border-box; }
@@ -45,6 +49,11 @@ body {
 	font-size: 14px;
 	-webkit-font-smoothing: antialiased;
 	letter-spacing: -0.01em;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;  /* fallback for browsers without dvh support */
+	height: 100dvh; /* accounts for mobile browser chrome; desktop treats this the same as 100vh */
+	overflow-y: auto; /* only scrolls if --panels-min-height can't be honored (very short window) */
 }
 
 button { font: inherit; cursor: pointer; }
@@ -55,6 +64,7 @@ input, select { font: inherit; }
 	font-weight: 600;
 	font-size: 1.4rem;
 	margin: 0 0 18px;
+	flex-shrink: 0;
 }
 
 /* --- Top-level tabs --- */
@@ -63,6 +73,7 @@ input, select { font: inherit; }
 	display: flex;
 	gap: 6px;
 	border-bottom: 1px solid var(--color-border);
+	flex-shrink: 0;
 }
 
 .tab {
@@ -87,7 +98,22 @@ input, select { font: inherit; }
 	font-weight: 600;
 }
 
-main { padding-top: 18px; }
+main {
+	padding-top: 18px;
+	flex: 1;
+	min-height: 0; /* required for a flex child to actually shrink instead of overflowing */
+	display: flex;
+	flex-direction: column;
+}
+
+/* Whichever section is visible (not [hidden]) fills all of main's remaining height. */
+.tab-panel {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+.tab-panel[hidden] { display: none; } /* our own display:flex above would otherwise override the browser's default [hidden] rule */
 
 /* --- Control row: layout toggle + profile/version buttons --- */
 
@@ -97,6 +123,7 @@ main { padding-top: 18px; }
 	justify-content: space-between;
 	gap: 10px;
 	margin-bottom: 14px;
+	flex-shrink: 0;
 }
 
 .control-left {
@@ -180,7 +207,8 @@ main { padding-top: 18px; }
 	display: flex;
 	gap: 28px;
 	align-items: stretch; /* both columns stretch to the row's full height, so their bottoms always line up */
-	height: var(--panels-height);
+	flex: 1;
+	min-height: var(--panels-min-height);
 }
 
 .viewport-box {
@@ -314,6 +342,7 @@ main { padding-top: 18px; }
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 	flex-wrap: nowrap;
 	overflow-x: auto;
+	flex-shrink: 0;
 }
 
 .scenario-summary-label {
@@ -368,7 +397,8 @@ main { padding-top: 18px; }
 .scenario-summary-link:hover { text-decoration: underline; }
 
 .placeholder-panel {
-	min-height: 420px;
+	flex: 1;
+	min-height: 0;
 	display: flex;
 	align-items: center;
 	justify-content: center;
