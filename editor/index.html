@@ -24,39 +24,17 @@
 				<span class="layout-label">Tree layout</span>
 				<div class="toggle-group" role="group" aria-label="Tree layout">
 					<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
-					<button class="toggle-btn" type="button" data-layout="traditional" disabled title="Coming next — same data, graph-style renderer">Traditional</button>
+					<button class="toggle-btn" type="button" data-layout="traditional" disabled title="Coming next – same data, graph-style renderer">Traditional</button>
 				</div>
 			</div>
 
 			<div class="control-right">
-				<div class="pill-wrap">
-					<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-						<span class="pill-btn-label">Profile: <span id="profile-btn-name">Wood-only</span></span>
-					</button>
-					<div id="profile-popover" class="popover" role="menu" aria-label="Profiles" hidden>
-						<ul class="popover-list">
-							<li><button type="button" class="popover-item active" role="menuitemradio" aria-checked="true" data-profile="Wood-only">Wood-only</button></li>
-							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Baseline">Baseline</button></li>
-							<li><button type="button" class="popover-item" role="menuitemradio" aria-checked="false" data-profile="Low-carbon">Low-carbon</button></li>
-						</ul>
-						<div class="popover-divider" role="separator"></div>
-						<button type="button" id="save-profile-btn" class="popover-item popover-action" role="menuitem">+ Save current as profile</button>
-					</div>
-				</div>
-				<div class="pill-wrap">
-					<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-						<span class="pill-btn-label">v<span id="version-btn-number">12</span> &middot; saved <span id="version-btn-time">3m</span> ago</span>
-					</button>
-					<div id="version-popover" class="popover" role="menu" aria-label="Versions" hidden>
-						<ul class="popover-list">
-							<li><button type="button" class="popover-item" role="menuitem">v12 &middot; 3m ago</button></li>
-							<li><button type="button" class="popover-item" role="menuitem">v11 &middot; 1h ago</button></li>
-							<li><button type="button" class="popover-item" role="menuitem">v10 &middot; yesterday</button></li>
-						</ul>
-						<div class="popover-divider" role="separator"></div>
-						<button type="button" id="save-version-btn" class="popover-item popover-action" role="menuitem">Save current version</button>
-					</div>
-				</div>
+				<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<span class="pill-btn-label">Create or select profile</span>
+				</button>
+				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<span class="pill-btn-label">Save or update version</span>
+				</button>
 			</div>
 
 		</div>
@@ -95,6 +73,23 @@
 						</div>
 					</div>
 					<div id="editor-form-host"></div>
+				</div>
+			</div>
+
+			<div class="viewport-popover-layer">
+				<div id="flyout" class="flyout" role="dialog" aria-label="Profile and version history" hidden>
+					<div class="flyout-header">
+						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
+							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-tab="profile">Profile</button>
+							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-tab="version">Version</button>
+						</div>
+						<button type="button" id="flyout-close-btn" class="flyout-close" aria-label="Close">&times;</button>
+					</div>
+
+					<div class="flyout-body">
+						<div class="flyout-pane" data-flyout-pane="profile" role="menu" aria-label="Profiles"></div>
+						<div class="flyout-pane" data-flyout-pane="version" role="menu" aria-label="Versions" hidden></div>
+					</div>
 				</div>
 			</div>
 
@@ -673,29 +668,34 @@
 		renderTree(); renderEditorForm();
 	}
 
-	/* Profile & Version popovers. */
-	const PROFILES = ['Wood-only', 'Baseline', 'Low-carbon'];
-	const VERSIONS = [
-		{ number: 12, time: '3m ago' },
-		{ number: 11, time: '1h ago' },
-		{ number: 10, time: 'yesterday' }
-	];
-
 	const profileBtn = document.getElementById('profile-btn');
 	const versionBtn = document.getElementById('version-btn');
-	const profilePopover = document.getElementById('profile-popover');
-	const versionPopover = document.getElementById('version-popover');
+	const flyout = document.getElementById('flyout');
+	const flyoutTabs = flyout.querySelectorAll('.flyout-tab');
+	const flyoutPanes = flyout.querySelectorAll('.flyout-pane');
 	const profileNameEl = document.getElementById('profile-btn-name');
 
 	let openPopover = null; /* 'profile' | 'version' | null */
 
+	function showFlyoutTab(name) {
+		flyoutTabs.forEach(function (t) {
+			const isActive = t.dataset.flyoutTab === name;
+			t.classList.toggle('active', isActive);
+			t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+		});
+		flyoutPanes.forEach(function (p) { p.hidden = p.dataset.flyoutPane !== name; });
+	}
+
+	function setActivePill(name) {
+		profileBtn.classList.toggle('is-open', name === 'profile');
+		versionBtn.classList.toggle('is-open', name === 'version');
+		profileBtn.setAttribute('aria-expanded', name === 'profile' ? 'true' : 'false');
+		versionBtn.setAttribute('aria-expanded', name === 'version' ? 'true' : 'false');
+	}
+
 	function closeAllPopovers() {
-		profilePopover.hidden = true;
-		versionPopover.hidden = true;
-		profileBtn.setAttribute('aria-expanded', 'false');
-		versionBtn.setAttribute('aria-expanded', 'false');
-		profileBtn.classList.remove('is-open');
-		versionBtn.classList.remove('is-open');
+		flyout.hidden = true;
+		setActivePill(null);
 		openPopover = null;
 	}
 
@@ -704,13 +704,10 @@
 			closeAllPopovers();
 			return;
 		}
-		closeAllPopovers();
 		openPopover = name;
-		const popover = name === 'profile' ? profilePopover : versionPopover;
-		const btn = name === 'profile' ? profileBtn : versionBtn;
-		popover.hidden = false;
-		btn.setAttribute('aria-expanded', 'true');
-		btn.classList.add('is-open');
+		showFlyoutTab(name);
+		flyout.hidden = false;
+		setActivePill(name);
 	}
 
 	profileBtn.addEventListener('click', function (e) {
@@ -722,43 +719,28 @@
 		togglePopover('version');
 	});
 
-	profilePopover.addEventListener('click', function (e) { e.stopPropagation(); });
-	versionPopover.addEventListener('click', function (e) { e.stopPropagation(); });
+	flyoutTabs.forEach(function (t) {
+		t.addEventListener('click', function (e) {
+			e.stopPropagation();
+			openPopover = t.dataset.flyoutTab;
+			showFlyoutTab(openPopover);
+			setActivePill(openPopover);
+		});
+	});
+
+	document.getElementById('flyout-close-btn').addEventListener('click', function (e) {
+		e.stopPropagation();
+		closeAllPopovers();
+	});
+
+	// Clicks inside the flyout should not close it; clicks outside should close it.
+	flyout.addEventListener('click', function (e) { e.stopPropagation(); });
 
 	document.addEventListener('click', function () {
 		if (openPopover !== null) closeAllPopovers();
 	});
 	document.addEventListener('keydown', function (e) {
 		if (e.key === 'Escape' && openPopover !== null) closeAllPopovers();
-	});
-
-	profilePopover.querySelectorAll('.popover-item[data-profile]').forEach(function (item) {
-		item.addEventListener('click', function () {
-			profilePopover.querySelectorAll('.popover-item[data-profile]').forEach(function (other) {
-				other.classList.remove('active');
-				other.setAttribute('aria-checked', 'false');
-			});
-			item.classList.add('active');
-			item.setAttribute('aria-checked', 'true');
-			profileNameEl.textContent = item.dataset.profile;
-			closeAllPopovers();
-		});
-	});
-
-	versionPopover.querySelectorAll('.popover-list .popover-item').forEach(function (item) {
-		item.addEventListener('click', function () {
-			console.log('Version selected (stub):', item.textContent.trim());
-			closeAllPopovers();
-		});
-	});
-
-	document.getElementById('save-profile-btn').addEventListener('click', function () {
-		console.log('Save current as profile (stub)');
-		closeAllPopovers();
-	});
-	document.getElementById('save-version-btn').addEventListener('click', function () {
-		console.log('Save current version (stub)');
-		closeAllPopovers();
 	});
 
 	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
