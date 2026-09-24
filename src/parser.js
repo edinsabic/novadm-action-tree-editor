@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* NovaDM tree file format: the ONLY place that knows how a tree looks on
+/**
+ * NovaDM tree file format: the ONLY place that knows how a tree looks on
  * disk. Format background and version history: ../spec/action-tree-grammar.md
  * To switch to a different file type, edit TREE_FILE_FORMAT below
  * (extension / mimeType / defaultName) and rewrite serialize()/parse();
@@ -11,7 +12,7 @@ NovaDM.Parser = (function (Model) {
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 2, // 2 – array of strings; files with '1' and text values still import
+		version: 2, /* 2 – array of strings; files with '1' and text values still import */
 		extension: '.json',
 		mimeType: 'application/json',
 		defaultName: 'novadm-action-tree',

@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* Renders the live tree (directory layout) into #tree-viewport-content,
+/**
+ * Renders the live tree (directory layout) into #tree-viewport-content,
  * and the shared HTML-escaping/badge helpers other modules reuse.
  */
 NovaDM.Render = (function (Model) {
@@ -9,7 +10,8 @@ NovaDM.Render = (function (Model) {
 	var treeContent = document.getElementById('tree-viewport-content');
 	var exportBtn = document.getElementById('export-tree-btn');
 
-	/* Badge/label colour is driven by the node's domain class, NOT by
+	/**
+	 * Badge/label colour is driven by the node's domain class, NOT by
 	 * AND/XOR: Subject / Feature / Approach each get their own colour; a
 	 * node with no class set yet renders neutral (black). Kind (AND/XOR)
 	 * only sets the +/− symbol.

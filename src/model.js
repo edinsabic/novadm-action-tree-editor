@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* NovaDM action-tree data model: node shape, tree queries/mutations, and
+/**
+ * NovaDM action-tree data model: node shape, tree queries/mutations, and
  * value (de)serialisation. No DOM references live here – render.js and
  * the interaction modules read/write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
@@ -10,8 +11,7 @@ NovaDM.Model = (function () {
 
 	var KINDS = ['AND', 'XOR'];
 	var NODE_CLASSES = ['', 'Subject', 'Approach', 'Feature'];
-	// The project root is an implicit AND node (see spec for details).
-	var TOP_LEVEL_KIND = 'AND';
+	var TOP_LEVEL_KIND = 'AND'; /* Root is an implicit AND node (see spec for details). */
 
 	var nextId = 1;
 	function makeId() { return 'n' + (nextId++); }

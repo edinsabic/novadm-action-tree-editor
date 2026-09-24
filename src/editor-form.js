@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* Editor panel: the form for the currently-selected node (kind, class,
+/**
+ * Editor panel: the form for the currently-selected node (kind, class,
  * label, value, add-child, delete).
  */
 NovaDM.EditorForm = (function (Model, Render) {

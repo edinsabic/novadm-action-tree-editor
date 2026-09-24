@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* Profile / version-history flyout, opened from the pill buttons in the
+/**
+ * Profile / version-history flyout, opened from the pill buttons in the
  * control row above the tree.
  */
 NovaDM.Popovers = (function () {

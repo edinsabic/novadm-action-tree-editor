@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* App shell: top-level tab switching, the layout toggle, zoom controls,
+/**
+ * App shell: top-level tab switching, the layout toggle, zoom controls,
  * and the initial render. Runs last, after every other src/ module.
  */
 (function (Model, Render, EditorForm) {

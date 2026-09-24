@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* Delegated interaction inside the rendered tree: expand/collapse, select,
+/**
+ * Delegated interaction inside the rendered tree: expand/collapse, select,
  * and drag-and-drop (moving existing nodes, and dropping new AND/XOR nodes
  * from the palette). One set of listeners, attached once.
  */
