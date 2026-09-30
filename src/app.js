@@ -4,7 +4,7 @@ window.NovaDM = window.NovaDM || {};
  * App shell: top-level tab switching, the layout toggle, zoom controls,
  * and the initial render. Runs last, after every other src/ module.
  */
-(function (Model, Render, EditorForm) {
+(function (Model, Render, EditorForm, Popovers) {
 	'use strict';
 
 	/* ---------- Top-level tab switching ---------- */
@@ -45,10 +45,18 @@ window.NovaDM = window.NovaDM || {};
 		activateTab('scenario-space');
 	});
 
-	/* ---------- Initial render: pre-load the example tree (if available) ---------- */
-	if (typeof NOVADM_SAMPLE_TREE !== 'undefined') {
-		Model.root.children = NOVADM_SAMPLE_TREE.map(Model.instantiateNode);
-	}
+	/* ---------- Initial render: seed a fresh project (version a1, default profile) ---------- */
+	(function seed() {
+		var seedSpecs = (typeof NOVADM_SAMPLE_TREE !== 'undefined') ? NOVADM_SAMPLE_TREE : [];
+		Model.initProject(
+			[{ name: 'default-profile' }],
+			'default-profile',
+			'a1',
+			[{ id: 'a1', parents: [], comments: {}, createdAt: new Date().toISOString(), tree: seedSpecs }]
+		);
+	})();
 	Render.renderTree();
 	EditorForm.renderEditorForm();
-})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm);
+	Popovers.renderFlyout();
+	Popovers.updatePillLabels();
+})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers);

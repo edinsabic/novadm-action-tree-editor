@@ -23,6 +23,78 @@ NovaDM.Model = (function () {
 	var root = { id: 'root', children: [] };
 	var selectedId = null;
 
+	/* ---------- Profiles & versions ---------- */
+	var profiles = [{ name: 'default-profile' }];
+	var activeProfile = 'default-profile';
+	var versions = [];
+	var activeVersionId = null;
+
+	function makeVersionId() {
+		var n = 1;
+		while (versions.some(function (v) { return v.id === 'a' + n; })) n++;
+		return 'a' + n;
+	}
+	function uniqueVersionId(wanted) {
+		var id = (wanted || '').trim();
+		if (!id) return makeVersionId();
+		if (!versions.some(function (v) { return v.id === id; })) return id;
+		var base = id.replace(/\d+$/, '') || 'v';
+		var i = 1;
+		while (versions.some(function (v) { return v.id === base + i; })) i++;
+		return base + i;
+	}
+	function getVersion(id) {
+		for (var i = 0; i < versions.length; i++) if (versions[i].id === id) return versions[i];
+		return null;
+	}
+	function snapshotActiveVersion() {
+		var v = getVersion(activeVersionId);
+		if (v) v.tree = root.children.map(nodeToSpec);
+	}
+	function loadVersionIntoEditor(id) {
+		if (id === activeVersionId) return;
+		snapshotActiveVersion();
+		activeVersionId = id;
+		var v = getVersion(id);
+		root.children = v ? v.tree.map(instantiateNode) : [];
+		selectedId = null;
+	}
+	function initProject(profileList, activeProf, activeVer, versionList) {
+		profiles = (profileList && profileList.length) ? profileList : [{ name: 'default-profile' }];
+		activeProfile = (activeProf && profiles.some(function (p) { return p.name === activeProf; }))
+			? activeProf : profiles[0].name;
+		versions = (versionList && versionList.length) ? versionList : [];
+		if (versions.length === 0) {
+			versions.push({ id: 'a1', parents: [], comments: {}, createdAt: new Date().toISOString(), tree: [] });
+		}
+		activeVersionId = (activeVer && getVersion(activeVer)) ? activeVer : versions[0].id;
+		root.children = getVersion(activeVersionId).tree.map(instantiateNode);
+		selectedId = null;
+	}
+	function saveNewVersion(comment, wantedId) {
+		if (!activeVersionId) return null;
+		snapshotActiveVersion();
+		var parentId = activeVersionId;
+		var id = uniqueVersionId(wantedId);
+		var comments = {};
+		if (comment && comment.trim()) comments[parentId] = comment.trim();
+		var parentSpecs = getVersion(parentId).tree;
+		versions.push({
+			id: id,
+			parents: [parentId],
+			comments: comments,
+			createdAt: new Date().toISOString(),
+			tree: JSON.parse(JSON.stringify(parentSpecs))
+		});
+		activeVersionId = id;
+		root.children = getVersion(id).tree.map(instantiateNode);
+		selectedId = null;
+		return id;
+	}
+	function projectHasContent() {
+		return root.children.length > 0 || versions.some(function (v) { return (v.tree || []).length > 0; });
+	}
+
 	function findNode(node, id) {
 		if (node.id === id) return node;
 		for (var i = 0; i < node.children.length; i++) {
@@ -51,10 +123,6 @@ NovaDM.Model = (function () {
 		if (!parent) return;
 		parent.children = parent.children.filter(function (c) { return c.id !== id; });
 	}
-	/**
-	 * Same-level-same-kind rule: a kind can be added to parent's children
-	 * only if parent has no children yet, or all existing children already have that kind.
-	 */
 	function siblingKind(parentNode, excludeId) {
 		for (var i = 0; i < parentNode.children.length; i++) {
 			if (parentNode.children[i].id !== excludeId) return parentNode.children[i].kind;
@@ -71,10 +139,6 @@ NovaDM.Model = (function () {
 		return { id: makeId(), kind: kind, nodeClass: '', label: '', value: [], expanded: true, children: [] };
 	}
 
-	/**
-	 * Text <-> array of option strings; see spec for the exact splitting
-	 * rules (";"/"," separators, an optional wrapping "(...)", blanks dropped).
-	 */
 	function parseValues(input) {
 		if (Array.isArray(input)) {
 			return input.map(function (v) { return String(v).trim(); }).filter(Boolean);
@@ -85,19 +149,11 @@ NovaDM.Model = (function () {
 		return text.split(/[;,]/).map(function (v) { return v.trim(); }).filter(Boolean);
 	}
 
-	/**
-	 * How a value list is shown in the tree: one option as-is, several as "(a; b; c)".
-	 */
 	function formatValues(values) {
 		if (!values || values.length === 0) return '';
 		return values.length === 1 ? values[0] : '(' + values.join('; ') + ')';
 	}
 
-	/**
-	 * Builds a live node (with generated id/expanded) from a plain data
-	 * spec, e.g. an entry in examples/sample-tree.js or an imported file.
-	 * Recurses into children.
-	 */
 	function instantiateNode(spec) {
 		return {
 			id: makeId(),
@@ -110,10 +166,6 @@ NovaDM.Model = (function () {
 		};
 	}
 
-	/**
-	 * Converts a live tree to a list of plain node specs.
-	 * ids and expanded-state are editor-only and not saved.
-	 */
 	function nodeToSpec(node) {
 		return {
 			kind: node.kind,
@@ -124,13 +176,10 @@ NovaDM.Model = (function () {
 		};
 	}
 
-	/**
-	 * Replaces the whole tree with the given plain node specs. Does not
-	 * redraw – callers re-render afterwards (see tree-io.js).
-	 */
 	function replaceTree(specs) {
 		root.children = specs.map(instantiateNode);
 		selectedId = null;
+		snapshotActiveVersion();
 	}
 
 	return {
@@ -151,6 +200,19 @@ NovaDM.Model = (function () {
 		formatValues: formatValues,
 		instantiateNode: instantiateNode,
 		nodeToSpec: nodeToSpec,
-		replaceTree: replaceTree
+		replaceTree: replaceTree,
+		getProfiles: function () { return profiles; },
+		getActiveProfile: function () { return activeProfile; },
+		setActiveProfile: function (name) {
+			if (profiles.some(function (p) { return p.name === name; })) activeProfile = name;
+		},
+		getVersions: function () { return versions; },
+		getActiveVersionId: function () { return activeVersionId; },
+		getVersion: getVersion,
+		snapshotActiveVersion: snapshotActiveVersion,
+		loadVersionIntoEditor: loadVersionIntoEditor,
+		initProject: initProject,
+		saveNewVersion: saveNewVersion,
+		projectHasContent: projectHasContent
 	};
 })();

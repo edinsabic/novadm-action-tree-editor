@@ -24,6 +24,11 @@
 	--radius-lg: 14px;
 
 	--shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+	--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+	--color-danger: #B3261E;
+	--color-danger-border: #E7C4C1;
+	--color-danger-light: #FBEDEC;
 
 	/* Tree viewport / editor panel widths — must sum to 100%.
 	   Both .viewport-tree, .viewport-editor-col, and the popover offset read from these,
@@ -210,7 +215,7 @@ main {
 	background-color: var(--color-surface);
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-md);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: var(--shadow-card);
 	display: flex;
 	flex-direction: column;
 	min-height: 0; /* lets it shrink to the stretched height instead of growing past it */
@@ -274,7 +279,7 @@ main {
 	font-size: 0.85rem;
 }
 
-/* --- Shared Profile / Version flyout --- */
+/* --- Profile / Version (independent) flyouts --- */
 .viewport-popover-layer {
 	position: absolute;
 	top: 0;
@@ -405,7 +410,45 @@ main {
 
 .popover-action { color: var(--color-accent); }
 
-/* --- Scenario space summary bar --- */
+.version-new {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 4px 6px;
+}
+
+.version-label {
+	font-size: 0.72rem;
+	color: var(--color-ink-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.version-new input {
+	padding: 6px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface);
+	color: var(--color-ink);
+	font-size: 0.85rem;
+}
+
+.version-new .btn {
+	margin-top: 4px;
+	text-align: center;
+}
+
+.version-meta {
+	color: var(--color-ink-muted);
+	font-size: 0.78rem;
+}
+
+.version-comment {
+	color: var(--color-ink-muted);
+	font-size: 0.78rem;
+	font-style: italic;
+	margin-top: 2px;
+}
 
 .scenario-summary-bar {
 	display: flex;
@@ -416,7 +459,7 @@ main {
 	background-color: var(--color-surface);
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-md);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: var(--shadow-card);
 	flex-wrap: nowrap;
 	overflow-x: auto;
 	flex-shrink: 0;
@@ -503,10 +546,12 @@ main {
 	display: flex; align-items: center; justify-content: center;
 	font-weight: 700; font-size: 13px; border: 2px solid currentColor; background: var(--color-surface);
 }
-.node-badge.subject { color: var(--subject-color); }
-.node-badge.feature { color: var(--feature-color); }
-.node-badge.approach { color: var(--approach-color); }
-.node-badge.neutral { color: var(--neutral-color); }
+/* Node colour is driven by domain class (Subject/Feature/Approach), not
+   AND/XOR kind — shared by the tree badge and the inline kind label. */
+.node-badge.subject, .node-kind-label.subject { color: var(--subject-color); }
+.node-badge.feature, .node-kind-label.feature { color: var(--feature-color); }
+.node-badge.approach, .node-kind-label.approach { color: var(--approach-color); }
+.node-badge.neutral, .node-kind-label.neutral { color: var(--neutral-color); }
 
 .editor-form { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .editor-form label { font-size: 0.72rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -520,8 +565,8 @@ main {
 .editor-empty { color: var(--color-ink-muted); font-size: 0.85rem; padding: 12px; text-align: center; }
 .editor-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
 .editor-actions .btn { text-align: left; padding: 7px 10px; }
-.editor-actions .btn.danger { color: #B3261E; border-color: #E7C4C1; }
-.editor-actions .btn.danger:hover { background: #FBEDEC; border-color: #B3261E; }
+.editor-actions .btn.danger { color: var(--color-danger); border-color: var(--color-danger-border); }
+.editor-actions .btn.danger:hover { background: var(--color-danger-light); border-color: var(--color-danger); }
 .editor-add-row { display: flex; gap: 6px; }
 .editor-add-row .btn { flex: 1; text-align: center; }
 .sibling-note { font-size: 0.72rem; color: var(--color-ink-muted); }
@@ -536,7 +581,7 @@ main {
 .tree-row:hover { background: var(--color-bg); }
 .tree-row.selected { background: var(--color-accent-light); border-color: var(--color-accent); }
 .tree-row.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; }
-.tree-row.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
+.tree-row.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; }
 
 .disclosure {
 	width: 14px; height: 14px; flex-shrink: 0; border: none; background: none; color: var(--color-ink-muted);
@@ -547,16 +592,12 @@ main {
 .tree-row .node-badge { width: 18px; height: 18px; font-size: 11px; }
 
 .node-kind-label { font-weight: 700; font-size: 0.78rem; }
-.node-kind-label.subject { color: var(--subject-color); }
-.node-kind-label.feature { color: var(--feature-color); }
-.node-kind-label.approach { color: var(--approach-color); }
-.node-kind-label.neutral { color: var(--neutral-color); }
 .node-text { color: var(--color-ink); }
 .node-text .node-value { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 0.82rem; }
 .node-placeholder { color: var(--color-ink-muted); font-style: italic; }
 
 .root-drop-zone { min-height: 24px; border-radius: var(--radius-sm); margin: 2px 0; }
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
-.root-drop-zone.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; background: #FBEDEC; }
+.root-drop-zone.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; background: var(--color-danger-light); }
 /* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
-.viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
+.viewport-content.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; }
