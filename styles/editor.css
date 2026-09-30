@@ -268,7 +268,7 @@ main {
 	flex: 1;
 	overflow-y: auto;
 	font-size: 0.88rem;
-	padding: 4px 10px;
+	padding: 4px 10px 14px;
 	text-align: left;
 }
 
@@ -591,4 +591,50 @@ main {
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
 .root-drop-zone.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; background: var(--color-danger-light); }
 /* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
-.viewport-content.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; }
+.viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
+
+/* --- Traditional layout --- */
+.viewport-content.tt-mode { overflow-x: auto; }
+
+.tt-canvas { position: relative; }
+
+.tt-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+.tt-edge { stroke: var(--color-border); stroke-width: 1.5; }
+
+.tt-root-dot {
+	position: absolute;
+	width: 10px; height: 10px;
+	margin-left: -5px; /* centers the dot on its x, since left:Npx marks its center */
+	border-radius: 50%;
+	background: var(--color-ink-muted);
+	cursor: default;
+}
+.tt-root-dot.drop-target { outline: 2px dashed var(--color-accent); outline-offset: 3px; background: var(--color-accent-light); }
+.tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
+
+/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order - fixed pixel height
+   matters here since render.js's edge math assumes it exactly. */
+.tree-row.tt-node-box {
+	position: absolute;
+	height: 56px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	padding: 4px 8px;
+	background: var(--color-surface);
+	overflow: hidden;
+}
+/* Row 1: circle + Subject/Feature/Approach text, centered as one group. */
+.tt-node-top { display: flex; align-items: center; gap: 4px; }
+.tt-node-top .disclosure { width: 12px; height: 12px; font-size: 10px; }
+/* Row 2: the label/value detail line, below and centered. */
+.tt-node-bottom {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.78rem;
+}
+.tt-node-box .node-badge { flex-shrink: 0; }

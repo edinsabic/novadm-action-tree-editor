@@ -29,6 +29,8 @@ window.NovaDM = window.NovaDM || {};
 		btn.addEventListener('click', function () {
 			document.querySelectorAll('.toggle-btn').forEach(function (b) { b.classList.remove('active'); });
 			btn.classList.add('active');
+			Render.setLayout(btn.dataset.layout);
+			Render.renderTree();
 		});
 	});
 
@@ -36,9 +38,12 @@ window.NovaDM = window.NovaDM || {};
 	var treeContent = Render.treeContent;
 	var zoomLabel = document.getElementById('zoom-label');
 	var zoomPercent = 100;
-	function applyZoom() { treeContent.style.fontSize = (14 * zoomPercent / 100) + 'px'; zoomLabel.textContent = zoomPercent + '%'; }
-	document.getElementById('zoom-in-btn').addEventListener('click', function () { zoomPercent = Math.min(160, zoomPercent + 10); applyZoom(); });
-	document.getElementById('zoom-out-btn').addEventListener('click', function () { zoomPercent = Math.max(70, zoomPercent - 10); applyZoom(); });
+	/**
+	 * CSS `zoom` (not `transform: scale`) scales everything inside treeContent as one unit
+	 */
+	function applyZoom() { treeContent.style.zoom = zoomPercent / 100; zoomLabel.textContent = zoomPercent + '%'; }
+	document.getElementById('zoom-in-btn').addEventListener('click', function () { zoomPercent = Math.min(200, zoomPercent + 10); applyZoom(); });
+	document.getElementById('zoom-out-btn').addEventListener('click', function () { zoomPercent = Math.max(30, zoomPercent - 10); applyZoom(); });
 	document.getElementById('zoom-reset-btn').addEventListener('click', function () { zoomPercent = 100; applyZoom(); });
 
 	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
