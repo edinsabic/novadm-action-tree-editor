@@ -1,6 +1,7 @@
 window.NovaDM = window.NovaDM || {};
 
-/* Getting a tree in and out of the live model: the example/clear buttons,
+/**
+ * Getting a tree in and out of the live model: the example/clear buttons,
  * and file import/export (via parser.js's TREE_FILE_FORMAT).
  */
 NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {

@@ -45,7 +45,7 @@ window.NovaDM = window.NovaDM || {};
 		activateTab('scenario-space');
 	});
 
-	/* ---------- Initial render: pre-load the example tree if available ---------- */
+	/* ---------- Initial render: pre-load the example tree (if available) ---------- */
 	if (typeof NOVADM_SAMPLE_TREE !== 'undefined') {
 		Model.root.children = NOVADM_SAMPLE_TREE.map(Model.instantiateNode);
 	}

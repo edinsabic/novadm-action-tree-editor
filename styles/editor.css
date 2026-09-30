@@ -565,9 +565,6 @@ main {
 }
 .disclosure.leaf { visibility: hidden; }
 
-/* Profile node-constraint dot: default (white/hollow) -> always (green,
-   filled) -> never (red, filled) -> default. Independent of node-class
-   colour (the badge) and of row selection. */
 .constraint-dot {
 	width: 12px;
 	height: 12px;
