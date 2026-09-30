@@ -21,84 +21,70 @@ NovaDM.Popovers = (function (Model, Render, EditorForm) {
 	/* ---------- Flyout contents: profiles & versions ---------- */
 
 	function updatePillLabels() {
-		profileBtn.querySelector('.pill-btn-label').textContent = Model.getActiveProfile();
-		var v = Model.getVersion(Model.getActiveVersionId());
-		versionBtn.querySelector('.pill-btn-label').textContent = v ? ('Version ' + v.id) : 'Save or update version';
+		var active = Model.getActiveProfileName();
+		profileBtn.querySelector('.pill-btn-label').textContent = active || 'Create or select profile';
 	}
 
 	function renderFlyout() { renderProfilePane(); renderVersionPane(); }
 
 	function renderProfilePane() {
-		var activeProfile = Model.getActiveProfile();
-		var html = '<ul class="popover-list">';
-		Model.getProfiles().forEach(function (p) {
-			html += '<li><button type="button" class="popover-item' + (p.name === activeProfile ? ' active' : '') +
-				'" data-profile="' + Render.escapeHtml(p.name) + '">' + Render.escapeHtml(p.name) + '</button></li>';
-		});
-		html += '</ul><div class="popover-divider"></div>' +
-			'<button type="button" class="popover-item popover-action" id="new-profile-btn">+ New profile\u2026</button>';
+		var activeName = Model.getActiveProfileName();
+		var html = '<div class="editor-add-row">' +
+			'<button type="button" class="btn" id="save-profile-btn">Save profile</button>' +
+			'<button type="button" class="btn" id="reset-profile-btn">Reset</button>' +
+			'</div><div class="popover-divider"></div>';
+
+		var profiles = Model.getProfiles();
+		if (profiles.length === 0) {
+			html += '<div class="editor-empty">No profiles saved yet \u2013 click nodes in the tree to mark them as always/never, then Save profile.</div>';
+		} else {
+			html += '<ul class="popover-list">';
+			profiles.forEach(function (p) {
+				html += '<li class="profile-row">' +
+					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') +
+					'" data-load-profile="' + Render.escapeHtml(p.name) + '">' + Render.escapeHtml(p.name) + '</button>' +
+					'<button type="button" class="profile-delete-btn" data-delete-profile="' + Render.escapeHtml(p.name) + '" aria-label="Delete profile" title="Delete profile">&times;</button>' +
+					'</li>';
+			});
+			html += '</ul>';
+		}
 		profilePane.innerHTML = html;
 
-		profilePane.querySelectorAll('[data-profile]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				Model.setActiveProfile(b.getAttribute('data-profile'));
-				updatePillLabels(); renderProfilePane();
-			});
-		});
-		document.getElementById('new-profile-btn').addEventListener('click', function () {
-			var name = (prompt('New profile name:', '') || '').trim();
+		document.getElementById('save-profile-btn').addEventListener('click', function () {
+			if (!Model.hasNodeConstraints()) {
+				alert('Colour at least one node (click its dot in the tree) before saving a profile.');
+				return;
+			}
+			var name = (prompt('Profile name:', '') || '').trim();
 			if (!name) return;
-			if (Model.getProfiles().some(function (p) { return p.name === name; })) {
+			if (!Model.saveProfile(name)) {
 				alert('A profile called "' + name + '" already exists.');
 				return;
 			}
-			Model.getProfiles().push({ name: name });
-			Model.setActiveProfile(name);
 			updatePillLabels(); renderProfilePane();
+		});
+		document.getElementById('reset-profile-btn').addEventListener('click', function () {
+			if (!Model.hasNodeConstraints() || confirm('Reset every node back to default (white)?')) {
+				Model.resetNodeConstraints();
+				Render.renderTree(); updatePillLabels(); renderProfilePane();
+			}
+		});
+		profilePane.querySelectorAll('[data-load-profile]').forEach(function (b) {
+			b.addEventListener('click', function () {
+				Model.loadProfile(b.getAttribute('data-load-profile'));
+				Render.renderTree(); updatePillLabels(); renderProfilePane();
+			});
+		});
+		profilePane.querySelectorAll('[data-delete-profile]').forEach(function (b) {
+			b.addEventListener('click', function () {
+				Model.deleteProfile(b.getAttribute('data-delete-profile'));
+				updatePillLabels(); renderProfilePane();
+			});
 		});
 	}
 
 	function renderVersionPane() {
-		var activeVersionId = Model.getActiveVersionId();
-		var cur = Model.getVersion(activeVersionId);
-		var html = '';
-
-		html += '<div class="version-new">' +
-			'<label class="version-label">Comment for the new version (optional)</label>' +
-			'<input id="version-comment-input" type="text" placeholder="e.g. switch to biomass boiler" />' +
-			'<label class="version-label">Version id (optional)</label>' +
-			'<input id="version-id-input" type="text" placeholder="auto (a2, a3, \u2026)" />' +
-			'<button type="button" class="btn" id="save-version-btn"' + (cur ? '' : ' disabled') + '>' +
-				'Save as successor of ' + (cur ? Render.escapeHtml(cur.id) : '\u2013') + '</button>' +
-			'</div><div class="popover-divider"></div>';
-
-		html += '<ul class="popover-list">';
-		Model.getVersions().forEach(function (v) {
-			var parents = v.parents.length ? v.parents.join(', ') : '\u2013';
-			var comment = (v.parents[0] && v.comments && v.comments[v.parents[0]]) || '';
-			html += '<li><button type="button" class="popover-item' + (v.id === activeVersionId ? ' active' : '') +
-				'" data-version="' + Render.escapeHtml(v.id) + '">' +
-				'<strong>' + Render.escapeHtml(v.id) + '</strong>' +
-				'<span class="version-meta"> \u2190 ' + Render.escapeHtml(parents) + '</span>' +
-				(comment ? '<div class="version-comment">' + Render.escapeHtml(comment) + '</div>' : '') +
-				'</button></li>';
-		});
-		html += '</ul>';
-		versionPane.innerHTML = html;
-
-		versionPane.querySelectorAll('[data-version]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				Model.loadVersionIntoEditor(b.getAttribute('data-version'));
-				Render.renderTree(); EditorForm.renderEditorForm(); renderFlyout(); updatePillLabels();
-			});
-		});
-		var saveBtn = document.getElementById('save-version-btn');
-		if (saveBtn) saveBtn.addEventListener('click', function () {
-			var comment = document.getElementById('version-comment-input').value;
-			var wantedId = document.getElementById('version-id-input').value;
-			Model.saveNewVersion(comment, wantedId);
-			Render.renderTree(); EditorForm.renderEditorForm(); renderFlyout(); updatePillLabels();
-		});
+		versionPane.innerHTML = '<div class="editor-empty">Version history is coming soon \u2013 planned as a visual, diagrammatic view of how versions branch, not a plain list.</div>';
 	}
 
 	/* ---------- Open/close/switch plumbing ---------- */

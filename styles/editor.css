@@ -30,6 +30,9 @@
 	--color-danger-border: #E7C4C1;
 	--color-danger-light: #FBEDEC;
 
+	--color-always: #2E7D32;
+	--color-never: #B3261E;
+
 	/* Tree viewport / editor panel widths — must sum to 100%.
 	   Both .viewport-tree, .viewport-editor-col, and the popover offset read from these,
 	   so changing a value here keeps everything in sync (see Viewports section below). */
@@ -408,47 +411,20 @@ main {
 	background-color: var(--color-border-soft);
 }
 
-.popover-action { color: var(--color-accent); }
-
-.version-new {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	padding: 4px 4px 6px;
-}
-
-.version-label {
-	font-size: 0.72rem;
+.profile-row { display: flex; align-items: stretch; gap: 4px; }
+.profile-row .popover-item { flex: 1; }
+.profile-delete-btn {
+	flex-shrink: 0;
+	width: 22px;
+	border: none;
+	background: none;
 	color: var(--color-ink-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
-}
-
-.version-new input {
-	padding: 6px 8px;
-	border: 1px solid var(--color-border);
+	cursor: pointer;
 	border-radius: var(--radius-sm);
-	background: var(--color-surface);
-	color: var(--color-ink);
-	font-size: 0.85rem;
+	font-size: 1rem;
+	line-height: 1;
 }
-
-.version-new .btn {
-	margin-top: 4px;
-	text-align: center;
-}
-
-.version-meta {
-	color: var(--color-ink-muted);
-	font-size: 0.78rem;
-}
-
-.version-comment {
-	color: var(--color-ink-muted);
-	font-size: 0.78rem;
-	font-style: italic;
-	margin-top: 2px;
-}
+.profile-delete-btn:hover { background: var(--color-danger-light); color: var(--color-danger); }
 
 .scenario-summary-bar {
 	display: flex;
@@ -588,6 +564,24 @@ main {
 	display: flex; align-items: center; justify-content: center; padding: 0;
 }
 .disclosure.leaf { visibility: hidden; }
+
+/* Profile node-constraint dot: default (white/hollow) -> always (green,
+   filled) -> never (red, filled) -> default. Independent of node-class
+   colour (the badge) and of row selection. */
+.constraint-dot {
+	width: 12px;
+	height: 12px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	border: 2px solid var(--color-border);
+	background-color: var(--color-surface);
+	padding: 0;
+	cursor: pointer;
+	margin-right: 2px;
+}
+.constraint-dot:hover { border-color: var(--color-ink-muted); }
+.constraint-dot.always { border-color: var(--color-always); background-color: var(--color-always); }
+.constraint-dot.never { border-color: var(--color-never); background-color: var(--color-never); }
 
 .tree-row .node-badge { width: 18px; height: 18px; font-size: 11px; }
 

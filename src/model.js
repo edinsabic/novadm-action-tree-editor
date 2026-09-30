@@ -23,76 +23,58 @@ NovaDM.Model = (function () {
 	var root = { id: 'root', children: [] };
 	var selectedId = null;
 
-	/* ---------- Profiles & versions ---------- */
-	var profiles = [{ name: 'default-profile' }];
-	var activeProfile = 'default-profile';
-	var versions = [];
-	var activeVersionId = null;
+	var nodeConstraints = {}; // nodeId -> 'always' | 'never'
+	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'} }
+	var activeProfileName = null; // name of the profile currently loaded, or null
 
-	function makeVersionId() {
-		var n = 1;
-		while (versions.some(function (v) { return v.id === 'a' + n; })) n++;
-		return 'a' + n;
+	function getNodeConstraint(nodeId) { return nodeConstraints[nodeId] || 'default'; }
+
+	function cycleNodeConstraint(nodeId) {
+		var cur = nodeConstraints[nodeId];
+		if (cur === undefined) nodeConstraints[nodeId] = 'always';
+		else if (cur === 'always') nodeConstraints[nodeId] = 'never';
+		else delete nodeConstraints[nodeId];
 	}
-	function uniqueVersionId(wanted) {
-		var id = (wanted || '').trim();
-		if (!id) return makeVersionId();
-		if (!versions.some(function (v) { return v.id === id; })) return id;
-		var base = id.replace(/\d+$/, '') || 'v';
-		var i = 1;
-		while (versions.some(function (v) { return v.id === base + i; })) i++;
-		return base + i;
+
+	function hasNodeConstraints() { return Object.keys(nodeConstraints).length > 0; }
+
+	function resetNodeConstraints() {
+		nodeConstraints = {};
+		activeProfileName = null;
 	}
-	function getVersion(id) {
-		for (var i = 0; i < versions.length; i++) if (versions[i].id === id) return versions[i];
-		return null;
+
+	function getActiveProfileName() { return activeProfileName; }
+	function getProfiles() { return profiles; }
+
+	function saveProfile(name) {
+		if (profiles.some(function (p) { return p.name === name; })) return false;
+		profiles.push({ name: name, constraints: JSON.parse(JSON.stringify(nodeConstraints)) });
+		activeProfileName = name;
+		return true;
 	}
-	function snapshotActiveVersion() {
-		var v = getVersion(activeVersionId);
-		if (v) v.tree = root.children.map(nodeToSpec);
+
+	function deleteProfile(name) {
+		profiles = profiles.filter(function (p) { return p.name !== name; });
+		if (activeProfileName === name) activeProfileName = null;
 	}
-	function loadVersionIntoEditor(id) {
-		if (id === activeVersionId) return;
-		snapshotActiveVersion();
-		activeVersionId = id;
-		var v = getVersion(id);
-		root.children = v ? v.tree.map(instantiateNode) : [];
-		selectedId = null;
+
+	function loadProfile(name) {
+		var p = profiles.filter(function (pr) { return pr.name === name; })[0];
+		if (!p) return;
+		nodeConstraints = JSON.parse(JSON.stringify(p.constraints));
+		activeProfileName = name;
 	}
-	function initProject(profileList, activeProf, activeVer, versionList) {
-		profiles = (profileList && profileList.length) ? profileList : [{ name: 'default-profile' }];
-		activeProfile = (activeProf && profiles.some(function (p) { return p.name === activeProf; }))
-			? activeProf : profiles[0].name;
-		versions = (versionList && versionList.length) ? versionList : [];
-		if (versions.length === 0) {
-			versions.push({ id: 'a1', parents: [], comments: {}, createdAt: new Date().toISOString(), tree: [] });
+
+	function scenarioSpaceSize() {
+		function countSubtree(node) {
+			if (nodeConstraints[node.id] === 'never') return 0;
+			var total = 1;
+			node.children.forEach(function (c) { total += countSubtree(c); });
+			return total;
 		}
-		activeVersionId = (activeVer && getVersion(activeVer)) ? activeVer : versions[0].id;
-		root.children = getVersion(activeVersionId).tree.map(instantiateNode);
-		selectedId = null;
-	}
-	function saveNewVersion(comment, wantedId) {
-		if (!activeVersionId) return null;
-		snapshotActiveVersion();
-		var parentId = activeVersionId;
-		var id = uniqueVersionId(wantedId);
-		var comments = {};
-		if (comment && comment.trim()) comments[parentId] = comment.trim();
-		var parentSpecs = getVersion(parentId).tree;
-		versions.push({
-			id: id,
-			parents: [parentId],
-			comments: comments,
-			createdAt: new Date().toISOString(),
-			tree: JSON.parse(JSON.stringify(parentSpecs))
-		});
-		activeVersionId = id;
-		root.children = getVersion(id).tree.map(instantiateNode);
-		selectedId = null;
-		return id;
-	}
-	function projectHasContent() {
-		return root.children.length > 0 || versions.some(function (v) { return (v.tree || []).length > 0; });
+		var total = 0;
+		root.children.forEach(function (top) { total += countSubtree(top); });
+		return total;
 	}
 
 	function findNode(node, id) {
@@ -179,7 +161,6 @@ NovaDM.Model = (function () {
 	function replaceTree(specs) {
 		root.children = specs.map(instantiateNode);
 		selectedId = null;
-		snapshotActiveVersion();
 	}
 
 	return {
@@ -201,18 +182,15 @@ NovaDM.Model = (function () {
 		instantiateNode: instantiateNode,
 		nodeToSpec: nodeToSpec,
 		replaceTree: replaceTree,
-		getProfiles: function () { return profiles; },
-		getActiveProfile: function () { return activeProfile; },
-		setActiveProfile: function (name) {
-			if (profiles.some(function (p) { return p.name === name; })) activeProfile = name;
-		},
-		getVersions: function () { return versions; },
-		getActiveVersionId: function () { return activeVersionId; },
-		getVersion: getVersion,
-		snapshotActiveVersion: snapshotActiveVersion,
-		loadVersionIntoEditor: loadVersionIntoEditor,
-		initProject: initProject,
-		saveNewVersion: saveNewVersion,
-		projectHasContent: projectHasContent
+		getNodeConstraint: getNodeConstraint,
+		cycleNodeConstraint: cycleNodeConstraint,
+		hasNodeConstraints: hasNodeConstraints,
+		resetNodeConstraints: resetNodeConstraints,
+		getActiveProfileName: getActiveProfileName,
+		getProfiles: getProfiles,
+		saveProfile: saveProfile,
+		deleteProfile: deleteProfile,
+		loadProfile: loadProfile,
+		scenarioSpaceSize: scenarioSpaceSize
 	};
 })();

@@ -6,29 +6,25 @@ window.NovaDM = window.NovaDM || {};
  * To switch to a different file type, edit TREE_FILE_FORMAT below
  * (extension / mimeType / defaultName) and rewrite serialize()/parse();
  * nothing else needs to change.
+ *
+ * Profiles (node constraints) aren't part of this file format yet – only
+ * the tree itself is saved/loaded. See model.js.
  */
 NovaDM.Parser = (function (Model) {
 	'use strict';
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 3, /* 3: multi-version project { profiles, activeProfile, activeVersion, versions[] }; versions before 3 are no longer accepted */
+		version: 2, // 2: `value` is an array of strings (files with version 1 and text values still import)
 		extension: '.json',
 		mimeType: 'application/json',
 		defaultName: 'novadm-action-tree',
 
-		/**
-		 * `project` is { profiles, activeProfile, activeVersion, versions } –
-		 * see tree-io.js for how it's assembled from the live model.
-		 */
-		serialize: function (project) {
+		serialize: function (specs) {
 			return JSON.stringify({
 				format: TREE_FILE_FORMAT.id,
 				version: TREE_FILE_FORMAT.version,
-				profiles: project.profiles,
-				activeProfile: project.activeProfile,
-				activeVersion: project.activeVersion,
-				versions: project.versions
+				tree: specs
 			}, null, '\t');
 		},
 
@@ -39,26 +35,15 @@ NovaDM.Parser = (function (Model) {
 			} catch (err) {
 				throw new Error('The file is not valid JSON (' + err.message + ').');
 			}
-			if (!data || typeof data !== 'object' || Array.isArray(data) || data.format !== TREE_FILE_FORMAT.id) {
+			// A bare array of nodes (like examples/sample-tree.js, as JSON) is accepted too.
+			if (Array.isArray(data)) return data;
+			if (!data || data.format !== TREE_FILE_FORMAT.id) {
 				throw new Error('This does not look like a NovaDM action tree file.');
 			}
 			if (typeof data.version !== 'number' || data.version > TREE_FILE_FORMAT.version) {
 				throw new Error('This file was saved by a newer version of the editor (file version ' + data.version + ').');
 			}
-			if (data.version < 3) {
-				throw new Error('This file is in the old (pre-versioning) format and cannot be opened by this build.');
-			}
-			if (!Array.isArray(data.versions) || data.versions.length === 0) {
-				throw new Error('The file has no versions.');
-			}
-			var problem = validateProject(data);
-			if (problem) throw new Error(problem);
-			return {
-				profiles: data.profiles,
-				activeProfile: data.activeProfile,
-				activeVersion: data.activeVersion,
-				versions: data.versions
-			};
+			return data.tree;
 		}
 	};
 
@@ -105,55 +90,8 @@ NovaDM.Parser = (function (Model) {
 		return null;
 	}
 
-	function validateProject(data) {
-		if (!Array.isArray(data.profiles) || data.profiles.length === 0) {
-			return 'The file has no profiles.';
-		}
-		for (var p = 0; p < data.profiles.length; p++) {
-			var prof = data.profiles[p];
-			if (!prof || typeof prof.name !== 'string' || !prof.name.trim()) {
-				return 'Profile #' + (p + 1) + ' has no name.';
-			}
-		}
-		if (data.activeProfile !== undefined && !data.profiles.some(function (x) { return x.name === data.activeProfile; })) {
-			return 'The active profile "' + data.activeProfile + '" is not in the profile list.';
-		}
-
-		var seen = {};
-		for (var i = 0; i < data.versions.length; i++) {
-			var v = data.versions[i];
-			var where = 'Version #' + (i + 1);
-			if (!v || typeof v !== 'object') return where + ' is not a version.';
-			if (typeof v.id !== 'string' || !v.id.trim()) return where + ' has no id.';
-			if (seen[v.id]) return 'Duplicate version id "' + v.id + '".';
-			seen[v.id] = true;
-			if (!Array.isArray(v.parents)) return where + ' ("' + v.id + '") has no parents list.';
-			if (v.comments !== undefined && (typeof v.comments !== 'object' || v.comments === null || Array.isArray(v.comments))) {
-				return where + ' ("' + v.id + '") has a malformed comments map.';
-			}
-			var treeProblem = validateSpecs(v.tree || []);
-			if (treeProblem) return where + ' ("' + v.id + '"): ' + treeProblem;
-		}
-		/**
-		 * Second pass to check that all parents (and the active version) exist.
-		 */
-		for (var j = 0; j < data.versions.length; j++) {
-			var vv = data.versions[j];
-			for (var k = 0; k < vv.parents.length; k++) {
-				if (!seen[vv.parents[k]]) {
-					return 'Version "' + vv.id + '" lists a parent "' + vv.parents[k] + '" that does not exist.';
-				}
-			}
-		}
-		if (data.activeVersion !== undefined && !seen[data.activeVersion]) {
-			return 'The active version "' + data.activeVersion + '" is not in the version list.';
-		}
-		return null;
-	}
-
 	return {
 		TREE_FILE_FORMAT: TREE_FILE_FORMAT,
-		validateSpecs: validateSpecs,
-		validateProject: validateProject
+		validateSpecs: validateSpecs
 	};
 })(NovaDM.Model);
