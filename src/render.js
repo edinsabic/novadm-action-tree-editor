@@ -106,10 +106,10 @@ NovaDM.Render = (function (Model) {
 	/**
 	 * Traditional layout; Each node gets a real (x, y) pixel position.
 	 */
-	var TT_SLOT_WIDTH = 240; /* horizontal space claimed per leaf */
-	var TT_ROW_HEIGHT = 120; /* vertical space per depth level */
+	var TT_SLOT_WIDTH = 240; /* Horizontal space claimed per leaf. */
+	var TT_ROW_HEIGHT = 120; /* Vertical space per depth level. */
 	var TT_BOX_WIDTH = 200;
-	var TT_BOX_HEIGHT = 56; /* must match the fixed height in editor.css's .tt-node-box, so edges meet the box exactly */
+	var TT_BOX_HEIGHT = 56; /* Must match the fixed height in editor.css's .tt-node-box, so edges meet the box exactly. */
 
 	function layoutTraditional(topNodes) {
 		var positions = {};
@@ -141,7 +141,6 @@ NovaDM.Render = (function (Model) {
 		};
 	}
 
-	/** Plain-text version of a node's label, for the box's title tooltip (text can be ellipsis-truncated visually). */
 	function plainNodeText(node) {
 		var text = node.nodeClass || node.kind;
 		if (node.label) {

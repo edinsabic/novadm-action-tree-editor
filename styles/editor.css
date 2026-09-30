@@ -587,7 +587,7 @@ main {
 .node-text .node-value { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 0.82rem; }
 .node-placeholder { color: var(--color-ink-muted); font-style: italic; }
 
-.root-drop-zone { min-height: 8px; border-radius: var(--radius-sm); margin: 0 0 2px; }
+.root-drop-zone { min-height: 2px; border-radius: var(--radius-sm); margin: 0 0 2px; }
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
 .root-drop-zone.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; background: var(--color-danger-light); }
 /* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
@@ -604,7 +604,7 @@ main {
 .tt-root-dot {
 	position: absolute;
 	width: 10px; height: 10px;
-	margin-left: -5px; /* centers the dot on its x, since left:Npx marks its center */
+	margin-left: -5px; /* Centers the dot on its x, since left:Npx marks its center. */
 	border-radius: 50%;
 	background: var(--color-ink-muted);
 	cursor: default;
@@ -612,8 +612,8 @@ main {
 .tt-root-dot.drop-target { outline: 2px dashed var(--color-accent); outline-offset: 3px; background: var(--color-accent-light); }
 .tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
 
-/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order - fixed pixel height
-   matters here since render.js's edge math assumes it exactly. */
+/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order – 
+   fixed pixel height matters here since render.js's edge math assumes it exactly. */
 .tree-row.tt-node-box {
 	position: absolute;
 	height: 56px;

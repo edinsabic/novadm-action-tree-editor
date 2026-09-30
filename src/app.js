@@ -37,10 +37,8 @@ window.NovaDM = window.NovaDM || {};
 	/* ---------- Zoom ---------- */
 	var treeContent = Render.treeContent;
 	var zoomLabel = document.getElementById('zoom-label');
-	var zoomPercent = 100;
-	/**
-	 * CSS `zoom` (not `transform: scale`) scales everything inside treeContent as one unit
-	 */
+	var zoomPercent = 100; /* CSS `zoom` (not `transform: scale`) scales everything inside treeContent as one unit. */
+
 	function applyZoom() { treeContent.style.zoom = zoomPercent / 100; zoomLabel.textContent = zoomPercent + '%'; }
 	document.getElementById('zoom-in-btn').addEventListener('click', function () { zoomPercent = Math.min(200, zoomPercent + 10); applyZoom(); });
 	document.getElementById('zoom-out-btn').addEventListener('click', function () { zoomPercent = Math.max(30, zoomPercent - 10); applyZoom(); });
