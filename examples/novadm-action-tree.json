@@ -5,18 +5,78 @@
 		{
 			"kind": "AND",
 			"nodeClass": "Subject",
-			"label": "system",
+			"label": "structural_element",
 			"value": [
-				"heating"
+				"windows"
 			],
 			"children": [
 				{
 					"kind": "XOR",
 					"nodeClass": "Feature",
-					"label": "thermostat",
+					"label": "windows_glazing",
 					"value": [
-						"manual",
-						"smart"
+						"keep_double",
+						"replace_triple"
+					],
+					"children": []
+				}
+			]
+		},
+		{
+			"kind": "AND",
+			"nodeClass": "Subject",
+			"label": "structural_element",
+			"value": [
+				"outer_doors"
+			],
+			"children": [
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "outer_doors_replacement",
+					"value": [
+						"keep_current",
+						"replace"
+					],
+					"children": []
+				},
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "outer_doors_material",
+					"value": [
+						"keep_current",
+						"replace_to_wood"
+					],
+					"children": []
+				}
+			]
+		},
+		{
+			"kind": "AND",
+			"nodeClass": "Subject",
+			"label": "structural_element",
+			"value": [
+				"facade"
+			],
+			"children": [
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "facade_surface",
+					"value": [
+						"keep_current",
+						"paint"
+					],
+					"children": []
+				},
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "facade_insulation",
+					"value": [
+						"keep_current",
+						"add_insulation"
 					],
 					"children": []
 				},
@@ -29,51 +89,91 @@
 						{
 							"kind": "AND",
 							"nodeClass": "Approach",
-							"label": "upgrade_boiler",
+							"label": "replace_brick_facade",
 							"value": [],
-							"children": [
-								{
-									"kind": "XOR",
-									"nodeClass": "Feature",
-									"label": "boiler_type",
-									"value": [
-										"condensing",
-										"biomass"
-									],
-									"children": []
-								}
-							]
+							"children": []
 						},
 						{
 							"kind": "AND",
 							"nodeClass": "Approach",
-							"label": "install_heat_pump",
+							"label": "keep_current_brick_facade",
 							"value": [],
 							"children": [
 								{
 									"kind": "XOR",
 									"nodeClass": "Feature",
-									"label": "source",
+									"label": "brick_replacement",
 									"value": [
-										"air",
-										"ground"
-									],
-									"children": []
-								},
-								{
-									"kind": "XOR",
-									"nodeClass": "Feature",
-									"label": "buffer_tank",
-									"value": [
-										"none",
-										"200L",
-										"500L"
+										"0%",
+										"7.5%",
+										"15%",
+										"30%"
 									],
 									"children": []
 								}
 							]
 						}
 					]
+				}
+			]
+		},
+		{
+			"kind": "AND",
+			"nodeClass": "Subject",
+			"label": "structural_element",
+			"value": [
+				"roof"
+			],
+			"children": [
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "roof_replacement",
+					"value": [
+						"keep_current",
+						"replace"
+					],
+					"children": []
+				},
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "roof_insulation",
+					"value": [
+						"keep_current",
+						"add_insulation"
+					],
+					"children": []
+				}
+			]
+		},
+		{
+			"kind": "AND",
+			"nodeClass": "Subject",
+			"label": "structural_element",
+			"value": [
+				"ground_floor"
+			],
+			"children": [
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "ground_floor_replacement",
+					"value": [
+						"keep_current",
+						"replace"
+					],
+					"children": []
+				},
+				{
+					"kind": "XOR",
+					"nodeClass": "Feature",
+					"label": "ground_floor_insulation",
+					"value": [
+						"keep_current",
+						"add_insulation"
+					],
+					"children": []
 				}
 			]
 		}

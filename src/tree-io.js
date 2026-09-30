@@ -13,6 +13,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 			return;
 		}
 		Model.replaceTree(NOVADM_SAMPLE_TREE);
+		Model.resetNodeConstraints();
 		Render.renderTree(); EditorForm.renderEditorForm();
 	}
 
@@ -25,6 +26,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 		if (Model.root.children.length === 0 || confirm('Clear the whole tree?')) {
 			Model.root.children = [];
 			Model.setSelectedId(null);
+			Model.resetNodeConstraints();
 			Render.renderTree(); EditorForm.renderEditorForm();
 		}
 	});
@@ -76,6 +78,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 			}
 			if (Model.root.children.length === 0 || confirm('Replace the current tree with "' + file.name + '"?')) {
 				Model.replaceTree(specs);
+				Model.resetNodeConstraints();
 				Render.renderTree(); EditorForm.renderEditorForm();
 			}
 		};

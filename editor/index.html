@@ -33,7 +33,7 @@
 					<span class="pill-btn-label">Create or select profile</span>
 				</button>
 				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">Save or update version</span>
+					<span class="pill-btn-label">Version history</span>
 				</button>
 			</div>
 
@@ -77,18 +77,29 @@
 			</div>
 
 			<div class="viewport-popover-layer">
-				<div id="flyout" class="flyout" role="dialog" aria-label="Profile and version history" hidden>
+				<div id="profile-flyout" class="flyout" role="dialog" aria-label="Profiles" hidden>
 					<div class="flyout-header">
 						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
-							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-tab="profile">Profile</button>
-							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-tab="version">Version</button>
+							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-switch="profile">Profile</button>
+							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-switch="version">Version</button>
 						</div>
-						<button type="button" id="flyout-close-btn" class="flyout-close" aria-label="Close">&times;</button>
+						<button type="button" class="flyout-close" data-flyout-close="profile" aria-label="Close">&times;</button>
 					</div>
-
 					<div class="flyout-body">
-						<div class="flyout-pane" data-flyout-pane="profile" role="menu" aria-label="Profiles"></div>
-						<div class="flyout-pane" data-flyout-pane="version" role="menu" aria-label="Versions" hidden></div>
+						<div class="flyout-pane" id="profile-pane" role="menu" aria-label="Profiles"></div>
+					</div>
+				</div>
+
+				<div id="version-flyout" class="flyout" role="dialog" aria-label="Version history" hidden>
+					<div class="flyout-header">
+						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
+							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-switch="profile">Profile</button>
+							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-switch="version">Version</button>
+						</div>
+						<button type="button" class="flyout-close" data-flyout-close="version" aria-label="Close">&times;</button>
+					</div>
+					<div class="flyout-body">
+						<div class="flyout-pane" id="version-pane" role="menu" aria-label="Versions"></div>
 					</div>
 				</div>
 			</div>
@@ -99,6 +110,7 @@
 		<div class="scenario-summary-bar">
 			<span class="scenario-summary-label">Scenario space (live)</span>
 			<div class="scenario-metrics">
+				<span class="metric"><span class="metric-label">Size</span> <span class="metric-value" id="scenario-space-size-value">0</span></span>
 				<span class="metric"><span class="metric-label">Cost</span> <span class="metric-value">1.24M €</span></span>
 				<span class="metric"><span class="metric-label">CO&#8322;</span> <span class="metric-value">312 t</span></span>
 				<span class="metric"><span class="metric-label">Score</span> <span class="metric-value">0.78</span></span>

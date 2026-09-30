@@ -23,6 +23,60 @@ NovaDM.Model = (function () {
 	var root = { id: 'root', children: [] };
 	var selectedId = null;
 
+	var nodeConstraints = {}; // nodeId -> 'always' | 'never'
+	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'} }
+	var activeProfileName = null; // name of the profile currently loaded, or null
+
+	function getNodeConstraint(nodeId) { return nodeConstraints[nodeId] || 'default'; }
+
+	function cycleNodeConstraint(nodeId) {
+		var cur = nodeConstraints[nodeId];
+		if (cur === undefined) nodeConstraints[nodeId] = 'always';
+		else if (cur === 'always') nodeConstraints[nodeId] = 'never';
+		else delete nodeConstraints[nodeId];
+	}
+
+	function hasNodeConstraints() { return Object.keys(nodeConstraints).length > 0; }
+
+	function resetNodeConstraints() {
+		nodeConstraints = {};
+		activeProfileName = null;
+	}
+
+	function getActiveProfileName() { return activeProfileName; }
+	function getProfiles() { return profiles; }
+
+	function saveProfile(name) {
+		if (profiles.some(function (p) { return p.name === name; })) return false;
+		profiles.push({ name: name, constraints: JSON.parse(JSON.stringify(nodeConstraints)) });
+		activeProfileName = name;
+		return true;
+	}
+
+	function deleteProfile(name) {
+		profiles = profiles.filter(function (p) { return p.name !== name; });
+		if (activeProfileName === name) activeProfileName = null;
+	}
+
+	function loadProfile(name) {
+		var p = profiles.filter(function (pr) { return pr.name === name; })[0];
+		if (!p) return;
+		nodeConstraints = JSON.parse(JSON.stringify(p.constraints));
+		activeProfileName = name;
+	}
+
+	function scenarioSpaceSize() {
+		function countSubtree(node) {
+			if (nodeConstraints[node.id] === 'never') return 0;
+			var total = 1;
+			node.children.forEach(function (c) { total += countSubtree(c); });
+			return total;
+		}
+		var total = 0;
+		root.children.forEach(function (top) { total += countSubtree(top); });
+		return total;
+	}
+
 	function findNode(node, id) {
 		if (node.id === id) return node;
 		for (var i = 0; i < node.children.length; i++) {
@@ -51,10 +105,6 @@ NovaDM.Model = (function () {
 		if (!parent) return;
 		parent.children = parent.children.filter(function (c) { return c.id !== id; });
 	}
-	/**
-	 * Same-level-same-kind rule: a kind can be added to parent's children
-	 * only if parent has no children yet, or all existing children already have that kind.
-	 */
 	function siblingKind(parentNode, excludeId) {
 		for (var i = 0; i < parentNode.children.length; i++) {
 			if (parentNode.children[i].id !== excludeId) return parentNode.children[i].kind;
@@ -71,10 +121,6 @@ NovaDM.Model = (function () {
 		return { id: makeId(), kind: kind, nodeClass: '', label: '', value: [], expanded: true, children: [] };
 	}
 
-	/**
-	 * Text <-> array of option strings; see spec for the exact splitting
-	 * rules (";"/"," separators, an optional wrapping "(...)", blanks dropped).
-	 */
 	function parseValues(input) {
 		if (Array.isArray(input)) {
 			return input.map(function (v) { return String(v).trim(); }).filter(Boolean);
@@ -85,19 +131,11 @@ NovaDM.Model = (function () {
 		return text.split(/[;,]/).map(function (v) { return v.trim(); }).filter(Boolean);
 	}
 
-	/**
-	 * How a value list is shown in the tree: one option as-is, several as "(a; b; c)".
-	 */
 	function formatValues(values) {
 		if (!values || values.length === 0) return '';
 		return values.length === 1 ? values[0] : '(' + values.join('; ') + ')';
 	}
 
-	/**
-	 * Builds a live node (with generated id/expanded) from a plain data
-	 * spec, e.g. an entry in examples/sample-tree.js or an imported file.
-	 * Recurses into children.
-	 */
 	function instantiateNode(spec) {
 		return {
 			id: makeId(),
@@ -110,10 +148,6 @@ NovaDM.Model = (function () {
 		};
 	}
 
-	/**
-	 * Converts a live tree to a list of plain node specs.
-	 * ids and expanded-state are editor-only and not saved.
-	 */
 	function nodeToSpec(node) {
 		return {
 			kind: node.kind,
@@ -124,10 +158,6 @@ NovaDM.Model = (function () {
 		};
 	}
 
-	/**
-	 * Replaces the whole tree with the given plain node specs. Does not
-	 * redraw – callers re-render afterwards (see tree-io.js).
-	 */
 	function replaceTree(specs) {
 		root.children = specs.map(instantiateNode);
 		selectedId = null;
@@ -151,6 +181,16 @@ NovaDM.Model = (function () {
 		formatValues: formatValues,
 		instantiateNode: instantiateNode,
 		nodeToSpec: nodeToSpec,
-		replaceTree: replaceTree
+		replaceTree: replaceTree,
+		getNodeConstraint: getNodeConstraint,
+		cycleNodeConstraint: cycleNodeConstraint,
+		hasNodeConstraints: hasNodeConstraints,
+		resetNodeConstraints: resetNodeConstraints,
+		getActiveProfileName: getActiveProfileName,
+		getProfiles: getProfiles,
+		saveProfile: saveProfile,
+		deleteProfile: deleteProfile,
+		loadProfile: loadProfile,
+		scenarioSpaceSize: scenarioSpaceSize
 	};
 })();

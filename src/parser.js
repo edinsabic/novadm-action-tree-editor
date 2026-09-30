@@ -6,13 +6,16 @@ window.NovaDM = window.NovaDM || {};
  * To switch to a different file type, edit TREE_FILE_FORMAT below
  * (extension / mimeType / defaultName) and rewrite serialize()/parse();
  * nothing else needs to change.
+ *
+ * Profiles (node constraints) aren't part of this file format yet – only
+ * the tree itself is saved/loaded. See model.js.
  */
 NovaDM.Parser = (function (Model) {
 	'use strict';
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 2, /* 2 – array of strings; files with '1' and text values still import */
+		version: 2, // 2: `value` is an array of strings (files with version 1 and text values still import)
 		extension: '.json',
 		mimeType: 'application/json',
 		defaultName: 'novadm-action-tree',

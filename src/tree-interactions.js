@@ -21,6 +21,12 @@ NovaDM.TreeInteractions = (function (Model, Render, EditorForm) {
 	}
 
 	treeContent.addEventListener('click', function (e) {
+		var constraintBtn = e.target.closest('[data-constraint-toggle]');
+		if (constraintBtn) {
+			Model.cycleNodeConstraint(constraintBtn.getAttribute('data-constraint-toggle'));
+			Render.renderTree();
+			return;
+		}
 		var toggleBtn = e.target.closest('[data-toggle]');
 		if (toggleBtn) {
 			var tNode = Model.findNode(Model.root, toggleBtn.getAttribute('data-toggle'));

@@ -4,7 +4,7 @@ window.NovaDM = window.NovaDM || {};
  * App shell: top-level tab switching, the layout toggle, zoom controls,
  * and the initial render. Runs last, after every other src/ module.
  */
-(function (Model, Render, EditorForm) {
+(function (Model, Render, EditorForm, Popovers) {
 	'use strict';
 
 	/* ---------- Top-level tab switching ---------- */
@@ -51,4 +51,6 @@ window.NovaDM = window.NovaDM || {};
 	}
 	Render.renderTree();
 	EditorForm.renderEditorForm();
-})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm);
+	Popovers.renderFlyout();
+	Popovers.updatePillLabels();
+})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers);
