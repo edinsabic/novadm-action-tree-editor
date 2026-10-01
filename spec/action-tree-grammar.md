@@ -67,25 +67,58 @@ is built for it yet.
 
 ## File format (`.json`, format id `novadm-action-tree`)
 
-`parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a tree
-looks on disk. The rest of the editor works with "specs": a plain array
-of `{ kind, nodeClass, label, value, children }` objects – the same shape
-as `examples/sample-tree.js` (`value` as an array of strings, though text
-is still accepted for backwards compatibility).
+`parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a
+document looks on disk. The rest of the editor works with "specs" (a
+plain array of `{ id, kind, nodeClass, label, value, children }` objects,
+`id` optional) and a small document wrapper: `{ tree, profile, history }`.
 
-- `version: 2` – `value` is an array of strings. Files saved as
-  `version: 1`, or with a text `value`, still import (see `parseValues`
-  in `model.js`).
-- A bare array of nodes (no `format`/`version` wrapper) is accepted too.
-- Profiles (node constraints) are not part of this file format – only
-  the tree itself is saved/loaded.
-- To switch to a different file type: edit `extension` / `mimeType` /
-  `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
-  `parse()`. `parse()` must throw an `Error` with a readable message if
-  the text isn't a tree file. Nothing else in the editor needs to
-  change. (If the new format is binary, the `reader.readAsText` / `new
-  Blob` calls in `tree-io.js`'s import/export handlers need to change
-  too.)
+A version 3 file has three sections, always in this order (blank lines
+between them are valid JSON and are written on purpose):
+
+```
+{
+	"format": "novadm-action-tree",
+	"version": 3,
+
+	"versionControl": { "head": "Add scaffolding", "edges": [
+		{ "from": "Initial version", "to": "Add scaffolding", "comment": "..." } ] },
+
+	"profile": { "active": null, "current": { "<nodeId>": "always" },
+		"saved": [ { "name": "Budget", "constraints": { "<nodeId>": "never" } } ] },
+
+	"actionTree": [ { "id": "Initial version", "tree": [ ... ] },
+	                { "id": "Add scaffolding", "tree": [ ... ] } ]
+}
+```
+
+- **`actionTree`** – the snapshots: a list of `{ id, tree }`. A snapshot id
+  is free text (git-style, e.g. "Add scaffolding"). The editor loads the
+  snapshot named by `versionControl.head` (default: the last one).
+- **`versionControl`** – `head` and `edges` (`from` -> `to`, optional
+  `comment`; branches are just two edges leaving the same snapshot).
+  Version history isn't editable yet: the editor holds whatever the file
+  contained and writes it back unchanged, except that the live tree
+  replaces the head snapshot. A fresh document has one snapshot called
+  "Initial version" and no edges.
+- **`profile`** – `current` is the always/never map on screen now,
+  `saved` the named profiles, `active` the loaded one (or `null`).
+  Constraints are keyed by node `id`, which is why saved nodes now carry
+  an `id` (unique within a snapshot; kept on load, so profiles keep
+  pointing at the same nodes). Constraints naming ids that aren't in the
+  loaded tree are dropped silently.
+- Each section is read by its own small function in `parser.js`, and
+  `validateDocument()` checks all of them before the live editor is touched.
+
+Older files still import: `version: 2` / `1` (a single `tree` key, no
+profiles, no history) and a bare array of nodes. In both cases profiles
+are reset and history starts empty.
+
+To switch to a different file type: edit `extension` / `mimeType` /
+`defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
+`parse()`. `parse()` must throw an `Error` with a readable message if
+the text isn't a NovaDM file. (If the new format is binary, the
+`reader.readAsText` / `new Blob` calls in `tree-io.js`'s import/export
+handlers need to change too.)
 
 ## Example trees
 

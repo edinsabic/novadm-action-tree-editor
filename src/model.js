@@ -14,7 +14,13 @@ NovaDM.Model = (function () {
 	var TOP_LEVEL_KIND = 'AND'; /* Root is an implicit AND node (see spec for details). */
 
 	var nextId = 1;
-	function makeId() { return 'n' + (nextId++); }
+	var usedIds = {}; /* every id currently in use (or promised by a file being loaded), so makeId never collides */
+	function makeId() {
+		var id;
+		do { id = 'n' + (nextId++); } while (usedIds[id]);
+		usedIds[id] = true;
+		return id;
+	}
 
 	/**
 	 * `root` is a virtual container; its children are the top-level nodes.
@@ -63,6 +69,34 @@ NovaDM.Model = (function () {
 		if (!p) return;
 		nodeConstraints = JSON.parse(JSON.stringify(p.constraints));
 		activeProfileName = name;
+	}
+
+	function getProfileState() {
+		return {
+			active: activeProfileName,
+			current: JSON.parse(JSON.stringify(nodeConstraints)),
+			saved: JSON.parse(JSON.stringify(profiles))
+		};
+	}
+
+	function applyProfileState(state) {
+		var valid = collectNodeIds(root, {});
+		function prune(constraints) {
+			var out = {};
+			Object.keys(constraints || {}).forEach(function (id) {
+				if (valid[id] && (constraints[id] === 'always' || constraints[id] === 'never')) out[id] = constraints[id];
+			});
+			return out;
+		}
+		state = state || {};
+		nodeConstraints = prune(state.current);
+		profiles = (state.saved || []).map(function (p) { return { name: p.name, constraints: prune(p.constraints) }; });
+		activeProfileName = profiles.some(function (p) { return p.name === state.active; }) ? state.active : null;
+	}
+
+	function resetProfiles() {
+		profiles = [];
+		resetNodeConstraints();
 	}
 
 	function scenarioSpaceSize() {
@@ -138,7 +172,7 @@ NovaDM.Model = (function () {
 
 	function instantiateNode(spec) {
 		return {
-			id: makeId(),
+			id: spec.id ? spec.id : makeId(),
 			kind: spec.kind,
 			nodeClass: spec.nodeClass || '',
 			label: spec.label || '',
@@ -150,6 +184,7 @@ NovaDM.Model = (function () {
 
 	function nodeToSpec(node) {
 		return {
+			id: node.id,
 			kind: node.kind,
 			nodeClass: node.nodeClass,
 			label: node.label,
@@ -158,9 +193,23 @@ NovaDM.Model = (function () {
 		};
 	}
 
+	function reserveSpecIds(specs) {
+		specs.forEach(function (spec) {
+			if (spec.id) usedIds[spec.id] = true;
+			reserveSpecIds(spec.children || []);
+		});
+	}
+
 	function replaceTree(specs) {
+		usedIds = {};
+		reserveSpecIds(specs);
 		root.children = specs.map(instantiateNode);
 		selectedId = null;
+	}
+
+	function collectNodeIds(node, into) {
+		node.children.forEach(function (c) { into[c.id] = true; collectNodeIds(c, into); });
+		return into;
 	}
 
 	return {
@@ -186,6 +235,9 @@ NovaDM.Model = (function () {
 		cycleNodeConstraint: cycleNodeConstraint,
 		hasNodeConstraints: hasNodeConstraints,
 		resetNodeConstraints: resetNodeConstraints,
+		resetProfiles: resetProfiles,
+		getProfileState: getProfileState,
+		applyProfileState: applyProfileState,
 		getActiveProfileName: getActiveProfileName,
 		getProfiles: getProfiles,
 		saveProfile: saveProfile,
