@@ -1,11 +1,24 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Getting a tree in and out of the live model: the example/clear buttons,
- * and file import/export (via parser.js's TREE_FILE_FORMAT).
+ * Getting a document in and out of the live model: the example/clear buttons,
+ * and file import/export (via parser.js's TREE_FILE_FORMAT). A document is
+ * the tree, the profiles and the version history (see parser.js).
  */
-NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
+NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 	'use strict';
+
+	/**
+	 * Version history is not editable yet, so whatever an imported file
+	 * carried is held here and written back on export, with the live tree
+	 * standing in for the head snapshot.
+	 */
+	var history = Parser.emptyHistory();
+
+	function refreshAll() {
+		Render.renderTree(); EditorForm.renderEditorForm();
+		Popovers.updatePillLabels(); Popovers.renderFlyout();
+	}
 
 	function loadSampleTree() {
 		if (typeof NOVADM_SAMPLE_TREE === 'undefined') {
@@ -13,8 +26,9 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 			return;
 		}
 		Model.replaceTree(NOVADM_SAMPLE_TREE);
-		Model.resetNodeConstraints();
-		Render.renderTree(); EditorForm.renderEditorForm();
+		Model.resetProfiles();
+		history = Parser.emptyHistory();
+		refreshAll();
 	}
 
 	document.getElementById('load-example-btn').addEventListener('click', function () {
@@ -26,8 +40,9 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 		if (Model.root.children.length === 0 || confirm('Clear the whole tree?')) {
 			Model.root.children = [];
 			Model.setSelectedId(null);
-			Model.resetNodeConstraints();
-			Render.renderTree(); EditorForm.renderEditorForm();
+			Model.resetProfiles();
+			history = Parser.emptyHistory();
+			refreshAll();
 		}
 	});
 
@@ -40,7 +55,11 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 	importBtn.title = 'Load a tree from a ' + Parser.TREE_FILE_FORMAT.extension + ' file on your computer';
 
 	exportBtn.addEventListener('click', function () {
-		var text = Parser.TREE_FILE_FORMAT.serialize(Model.root.children.map(Model.nodeToSpec));
+		var text = Parser.TREE_FILE_FORMAT.serialize({
+			tree: Model.root.children.map(Model.nodeToSpec),
+			profile: Model.getProfileState(),
+			history: history
+		});
 		var blob = new Blob([text], { type: Parser.TREE_FILE_FORMAT.mimeType });
 		var url = URL.createObjectURL(blob);
 		var link = document.createElement('a');
@@ -64,26 +83,27 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Parser) {
 		};
 		reader.onload = function () {
 			importInput.value = ''; // so picking the same file again still fires "change"
-			var specs;
+			var doc;
 			try {
-				specs = Parser.TREE_FILE_FORMAT.parse(String(reader.result));
+				doc = Parser.TREE_FILE_FORMAT.parse(String(reader.result));
 			} catch (err) {
 				alert('Could not import "' + file.name + '":\n' + err.message);
 				return;
 			}
-			var problem = Parser.validateSpecs(specs);
+			var problem = Parser.validateDocument(doc);
 			if (problem) {
 				alert('Could not import "' + file.name + '":\n' + problem);
 				return;
 			}
 			if (Model.root.children.length === 0 || confirm('Replace the current tree with "' + file.name + '"?')) {
-				Model.replaceTree(specs);
-				Model.resetNodeConstraints();
-				Render.renderTree(); EditorForm.renderEditorForm();
+				Model.replaceTree(doc.tree);
+				Model.applyProfileState(doc.profile);
+				history = doc.history;
+				refreshAll();
 			}
 		};
 		reader.readAsText(file);
 	});
 
 	return { loadSampleTree: loadSampleTree };
-})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm, NovaDM.Parser);
+})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.Parser);

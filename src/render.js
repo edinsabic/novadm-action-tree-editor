@@ -163,6 +163,7 @@ NovaDM.Render = (function (Model) {
 			boxes.push(
 				'<div class="tree-row tt-node-box" data-id="' + node.id + '" draggable="true" title="' + escapeHtml(plainNodeText(node)) + '" style="left:' + (pos.x - TT_BOX_WIDTH / 2) + 'px; top:' + pos.y + 'px; width:' + TT_BOX_WIDTH + 'px;">' +
 					'<div class="tt-node-top">' +
+						constraintDotHtml(node) +
 						(hasChildren ? '<button class="disclosure" data-toggle="' + node.id + '">' + (node.expanded ? '\u25BE' : '\u25B8') + '</button>' : '') +
 						badgeHtml(node) + kindLabelHtml(node) +
 					'</div>' +
