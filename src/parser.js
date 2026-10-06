@@ -74,6 +74,7 @@ NovaDM.Parser = (function (Model) {
 				return {
 					active: section.active === undefined ? null : section.active,
 					current: section.current === undefined ? {} : section.current,
+					currentValues: section.currentValues === undefined ? {} : section.currentValues,
 					saved: section.saved === undefined ? [] : section.saved
 				};
 			},
@@ -86,7 +87,8 @@ NovaDM.Parser = (function (Model) {
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 3, /* 3: versionControl / profile / actionTree sections. 
+		version: 4, /* 4: profiles also hold per-value constraints (currentValues / valueConstraints).
+					** 3: versionControl / profile / actionTree sections. 
 					** 2: single `tree`, value is an array of strings. 
 					** 1: text values. Older files still import. */
 		extension: '.json',
@@ -108,7 +110,7 @@ NovaDM.Parser = (function (Model) {
 				format: TREE_FILE_FORMAT.id,
 				version: TREE_FILE_FORMAT.version,
 				versionControl: { head: head, edges: history.edges },
-				profile: doc.profile || { active: null, current: {}, saved: [] },
+				profile: doc.profile || { active: null, current: {}, currentValues: {}, saved: [] },
 				actionTree: snapshots
 			}) + '\n';
 		},
@@ -168,6 +170,8 @@ NovaDM.Parser = (function (Model) {
 		if (profile.active !== null && typeof profile.active !== 'string') return 'Profile: "active" must be a profile name or null.';
 		var problem = validateConstraints(profile.current, 'Profile > current');
 		if (problem) return problem;
+		problem = validateValueConstraints(profile.currentValues, 'Profile > currentValues');
+		if (problem) return problem;
 		if (!Array.isArray(profile.saved)) return 'Profile: "saved" is not a list.';
 		var names = {};
 		for (var i = 0; i < profile.saved.length; i++) {
@@ -177,6 +181,20 @@ NovaDM.Parser = (function (Model) {
 			if (names[p.name]) return here + ': there are two profiles called ' + JSON.stringify(p.name) + '.';
 			names[p.name] = true;
 			problem = validateConstraints(p.constraints, here);
+			if (problem) return problem;
+			problem = validateValueConstraints(p.valueConstraints, here + ' > valueConstraints');
+			if (problem) return problem;
+		}
+		return null;
+	}
+
+	/* Per-value constraints: { nodeId: { valueText: "always" | "never" } }. Optional, so files without it still import. */
+	function validateValueConstraints(byNode, where) {
+		if (byNode === undefined) return null;
+		if (!byNode || typeof byNode !== 'object' || Array.isArray(byNode)) return where + ' is not a map of node id to {value: "always"/"never"}.';
+		var ids = Object.keys(byNode);
+		for (var i = 0; i < ids.length; i++) {
+			var problem = validateConstraints(byNode[ids[i]], where + ' > node ' + JSON.stringify(ids[i]));
 			if (problem) return problem;
 		}
 		return null;

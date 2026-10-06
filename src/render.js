@@ -34,10 +34,30 @@ NovaDM.Render = (function (Model) {
 		return '<span class="node-kind-label ' + cls + '">' + (node.nodeClass || node.kind) + '</span>';
 	}
 
+	/**
+	 * One chip per value. Interactive chips are buttons that cycle that value through
+	 * default / always / never; read-only chips (traditional layout, where the box is too
+	 * small to click into) show the same state as plain spans.
+	 */
+	function valueChipsHtml(node, interactive) {
+		return node.value.map(function (v) {
+			var state = Model.getValueConstraint(node.id, v); // 'default' | 'always' | 'never'
+			if (!interactive) return '<span class="value-chip ' + state + '">' + escapeHtml(v) + '</span>';
+			return '<button type="button" class="value-chip ' + state + '" data-value-toggle="' + node.id + '" data-value="' + escapeHtml(v) + '"' +
+				' title="Click to cycle this option: default / always / never" aria-label="Constraint for option ' + escapeHtml(v) + ': ' + state + '">' + escapeHtml(v) + '</button>';
+		}).join('; ');
+	}
+
+	/** A node with several values is drawn as (chip; chip; ...). A single value (e.g. a Subject's name) stays plain text. */
+	function valuesHtml(node, interactive) {
+		if (node.value.length < 2) return escapeHtml(Model.formatValues(node.value));
+		return '(' + valueChipsHtml(node, interactive) + ')';
+	}
+
 	function detailHtml(node, standalone) {
 		if (node.label) {
 			return '<span class="node-text">' + (standalone ? '' : ': ') + escapeHtml(node.label) +
-				(node.value.length ? ' <span class="node-value">= ' + escapeHtml(Model.formatValues(node.value)) + '</span>' : '') + '</span>';
+				(node.value.length ? ' <span class="node-value">= ' + valuesHtml(node, !standalone) + '</span>' : '') + '</span>';
 		} else if (node.children.length > 0) {
 			return standalone ? '' : '<span class="node-placeholder"> </span>';
 		} else {
@@ -202,6 +222,7 @@ NovaDM.Render = (function (Model) {
 	return {
 		treeContent: treeContent,
 		badgeHtml: badgeHtml,
+		valueChipsHtml: valueChipsHtml,
 		escapeHtml: escapeHtml,
 		renderTree: renderTree,
 		highlightSelected: highlightSelected,

@@ -30,7 +30,8 @@ NovaDM.Model = (function () {
 	var selectedId = null;
 
 	var nodeConstraints = {}; // nodeId -> 'always' | 'never'
-	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'} }
+	var valueConstraints = {}; // nodeId -> { valueText: 'always' | 'never' } (individual values inside a node's parentheses)
+	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'}, valueConstraints: {nodeId: {value: 'always'|'never'}} }
 	var activeProfileName = null; // name of the profile currently loaded, or null
 
 	function getNodeConstraint(nodeId) { return nodeConstraints[nodeId] || 'default'; }
@@ -42,10 +43,26 @@ NovaDM.Model = (function () {
 		else delete nodeConstraints[nodeId];
 	}
 
-	function hasNodeConstraints() { return Object.keys(nodeConstraints).length > 0; }
+	function getValueConstraint(nodeId, value) {
+		return (valueConstraints[nodeId] && valueConstraints[nodeId][value]) || 'default';
+	}
+
+	function cycleValueConstraint(nodeId, value) {
+		var m = valueConstraints[nodeId] || (valueConstraints[nodeId] = {});
+		var cur = m[value];
+		if (cur === undefined) m[value] = 'always';
+		else if (cur === 'always') m[value] = 'never';
+		else delete m[value];
+		if (Object.keys(m).length === 0) delete valueConstraints[nodeId];
+	}
+
+	function hasNodeConstraints() {
+		return Object.keys(nodeConstraints).length > 0 || Object.keys(valueConstraints).length > 0;
+	}
 
 	function resetNodeConstraints() {
 		nodeConstraints = {};
+		valueConstraints = {};
 		activeProfileName = null;
 	}
 
@@ -54,7 +71,11 @@ NovaDM.Model = (function () {
 
 	function saveProfile(name) {
 		if (profiles.some(function (p) { return p.name === name; })) return false;
-		profiles.push({ name: name, constraints: JSON.parse(JSON.stringify(nodeConstraints)) });
+		profiles.push({
+			name: name,
+			constraints: JSON.parse(JSON.stringify(nodeConstraints)),
+			valueConstraints: JSON.parse(JSON.stringify(valueConstraints))
+		});
 		activeProfileName = name;
 		return true;
 	}
@@ -68,6 +89,7 @@ NovaDM.Model = (function () {
 		var p = profiles.filter(function (pr) { return pr.name === name; })[0];
 		if (!p) return;
 		nodeConstraints = JSON.parse(JSON.stringify(p.constraints));
+		valueConstraints = JSON.parse(JSON.stringify(p.valueConstraints || {}));
 		activeProfileName = name;
 	}
 
@@ -75,22 +97,40 @@ NovaDM.Model = (function () {
 		return {
 			active: activeProfileName,
 			current: JSON.parse(JSON.stringify(nodeConstraints)),
+			currentValues: JSON.parse(JSON.stringify(valueConstraints)),
 			saved: JSON.parse(JSON.stringify(profiles))
 		};
 	}
 
 	function applyProfileState(state) {
-		var valid = collectNodeIds(root, {});
+		var nodesById = collectNodes(root, {});
 		function prune(constraints) {
 			var out = {};
 			Object.keys(constraints || {}).forEach(function (id) {
-				if (valid[id] && (constraints[id] === 'always' || constraints[id] === 'never')) out[id] = constraints[id];
+				if (nodesById[id] && (constraints[id] === 'always' || constraints[id] === 'never')) out[id] = constraints[id];
+			});
+			return out;
+		}
+		function pruneValues(byNode) {
+			var out = {};
+			Object.keys(byNode || {}).forEach(function (id) {
+				var node = nodesById[id];
+				if (!node) return;
+				Object.keys(byNode[id]).forEach(function (v) {
+					var c = byNode[id][v];
+					if (node.value.indexOf(v) !== -1 && (c === 'always' || c === 'never')) {
+						(out[id] = out[id] || {})[v] = c;
+					}
+				});
 			});
 			return out;
 		}
 		state = state || {};
 		nodeConstraints = prune(state.current);
-		profiles = (state.saved || []).map(function (p) { return { name: p.name, constraints: prune(p.constraints) }; });
+		valueConstraints = pruneValues(state.currentValues);
+		profiles = (state.saved || []).map(function (p) {
+			return { name: p.name, constraints: prune(p.constraints), valueConstraints: pruneValues(p.valueConstraints) };
+		});
 		activeProfileName = profiles.some(function (p) { return p.name === state.active; }) ? state.active : null;
 	}
 
@@ -99,16 +139,47 @@ NovaDM.Model = (function () {
 		resetNodeConstraints();
 	}
 
+	/* How many ways the node's own parenthesised values can be chosen.
+	   A node with values (a; b; c) is a small XOR over them: "never" removes a value,
+	   "always" pins the choice to that value (two "always" values contradict -> 0). */
+	function ownChoices(node) {
+		var vals = node.value;
+		if (vals.length === 0) return 1;
+		var vc = valueConstraints[node.id] || {};
+		var forced = vals.filter(function (v) { return vc[v] === 'always'; });
+		if (forced.length > 1) return 0;
+		if (forced.length === 1) return 1;
+		return vals.filter(function (v) { return vc[v] !== 'never'; }).length;
+	}
+
+	/* True if this node or anything beneath it is marked "always" (node or value level).
+	   Such a node must be present in every scenario, so every XOR above it is pinned to its branch. */
+	function containsAlways(node) {
+		if (nodeConstraints[node.id] === 'always') return true;
+		var vc = valueConstraints[node.id];
+		if (vc && node.value.some(function (v) { return vc[v] === 'always'; })) return true;
+		return node.children.some(containsAlways);
+	}
+
 	function scenarioSpaceSize() {
-		function countSubtree(node) {
+		function count(node) {
 			if (nodeConstraints[node.id] === 'never') return 0;
-			var total = 1;
-			node.children.forEach(function (c) { total += countSubtree(c); });
-			return total;
+			var own = ownChoices(node);
+			if (own === 0 || node.children.length === 0) return own;
+
+			var sub;
+			if (node.kind === 'AND') {
+				sub = node.children.reduce(function (p, c) { return p * count(c); }, 1);
+			} else { /* XOR: exactly one child is chosen */
+				var forced = node.children.filter(containsAlways);
+				if (forced.length > 1) return 0; /* two required branches under one XOR conflict */
+				var pool = forced.length ? forced : node.children;
+				sub = pool.reduce(function (s, c) { return s + count(c); }, 0);
+			}
+			return own * sub;
 		}
-		var total = 0;
-		root.children.forEach(function (top) { total += countSubtree(top); });
-		return total;
+		/* Root is an implicit AND over the top-level nodes. */
+		return root.children.reduce(function (p, c) { return p * count(c); }, 1);
 	}
 
 	function findNode(node, id) {
@@ -207,6 +278,11 @@ NovaDM.Model = (function () {
 		selectedId = null;
 	}
 
+	function collectNodes(node, into) {
+		node.children.forEach(function (c) { into[c.id] = c; collectNodes(c, into); });
+		return into;
+	}
+
 	function collectNodeIds(node, into) {
 		node.children.forEach(function (c) { into[c.id] = true; collectNodeIds(c, into); });
 		return into;
@@ -233,6 +309,8 @@ NovaDM.Model = (function () {
 		replaceTree: replaceTree,
 		getNodeConstraint: getNodeConstraint,
 		cycleNodeConstraint: cycleNodeConstraint,
+		getValueConstraint: getValueConstraint,
+		cycleValueConstraint: cycleValueConstraint,
 		hasNodeConstraints: hasNodeConstraints,
 		resetNodeConstraints: resetNodeConstraints,
 		resetProfiles: resetProfiles,
