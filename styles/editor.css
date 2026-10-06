@@ -636,8 +636,8 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 .tt-root-dot.drop-target { outline: 2px dashed var(--color-accent); outline-offset: 3px; background: var(--color-accent-light); }
 .tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
 
-/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order – 
-   fixed pixel height matters here since render.js's edge math assumes it exactly. */
+/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order.
+   The height here is the base: render.js sets the real height inline per box. */
 .tree-row.tt-node-box {
 	position: absolute;
 	height: 56px;
@@ -662,3 +662,11 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 	font-size: 0.78rem;
 }
 .tt-node-box .node-badge { flex-shrink: 0; }
+/* Rows 3+: one value per line under the label. 18px lines + 2px gap = TT_VALUE_LINE (20) in render.js. */
+.tt-node-values {
+	display: flex; flex-direction: column; align-items: center; gap: 2px;
+	max-width: 100%;
+	font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-ink-muted);
+}
+.tt-value-line { height: 18px; max-width: 100%; }
+.tt-value-line .value-chip { display: block; max-width: 100%; line-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
