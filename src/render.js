@@ -71,7 +71,10 @@ NovaDM.Render = (function (Model) {
 		return kindLabelHtml(node) + detailHtml(node, false);
 	}
 
-	function constraintDotHtml(node) {
+	/* Only constrainable nodes (see Model.isConstrainable) get a dot. In the directory layout the others get an
+	   empty spacer so the rows stay aligned; the traditional boxes are centred, so they need no spacer. */
+	function constraintDotHtml(node, reserveSpace) {
+		if (!Model.isConstrainable(node)) return reserveSpace ? '<span class="constraint-dot-spacer"></span>' : '';
 		var state = Model.getNodeConstraint(node.id); // 'default' | 'always' | 'never'
 		return '<button type="button" class="constraint-dot ' + state + '" data-constraint-toggle="' + node.id +
 			'" title="Profile constraint: click to cycle default / always / never" aria-label="Profile constraint for this node"></button>';
@@ -112,7 +115,7 @@ NovaDM.Render = (function (Model) {
 		var hasChildren = node.children.length > 0;
 		var html = '<li class="tree-node" data-id="' + node.id + '">';
 		html += '<div class="tree-row" data-id="' + node.id + '" draggable="true">';
-		html += constraintDotHtml(node);
+		html += constraintDotHtml(node, true);
 		html += '<button class="disclosure' + (hasChildren ? '' : ' leaf') + '" data-toggle="' + node.id + '">' +
 			(hasChildren ? (node.expanded ? '\u25BE' : '\u25B8') : '') + '</button>';
 		html += badgeHtml(node);

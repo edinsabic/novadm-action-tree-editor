@@ -25,6 +25,7 @@ NovaDM.TreeInteractions = (function (Model, Render, EditorForm) {
 		if (valueBtn) {
 			Model.cycleValueConstraint(valueBtn.getAttribute('data-value-toggle'), valueBtn.getAttribute('data-value'));
 			Render.renderTree();
+			EditorForm.renderEditorForm(); // Updates chips on the editor panel
 			return;
 		}
 		var constraintBtn = e.target.closest('[data-constraint-toggle]');

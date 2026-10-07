@@ -578,6 +578,7 @@ main {
 	margin-right: 2px;
 }
 .constraint-dot:hover { border-color: var(--color-ink-muted); }
+.constraint-dot-spacer { width: 12px; height: 12px; flex-shrink: 0; margin-right: 2px; } /* keeps rows aligned where a node has no dot */
 .constraint-dot.always { border-color: var(--color-always); background-color: var(--color-always); }
 .constraint-dot.never { border-color: var(--color-never); background-color: var(--color-never); }
 
@@ -637,7 +638,8 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 .tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
 
 /* Compound selector overrides the shared .tree-row rules regardless of stylesheet order.
-   The height here is the base: render.js sets the real height inline per box. */
+   The height here is only the base (kind row + label row): render.js sets the real height inline
+   per box (taller when the node lists value lines), and its edge math uses that same number. */
 .tree-row.tt-node-box {
 	position: absolute;
 	height: 56px;

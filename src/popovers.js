@@ -36,7 +36,7 @@ NovaDM.Popovers = (function (Model, Render, EditorForm) {
 
 		var profiles = Model.getProfiles();
 		if (profiles.length === 0) {
-			html += '<div class="editor-empty">No profiles saved yet \u2013 click nodes in the tree to mark them as always/never, then Save profile.</div>';
+			html += '<div class="editor-empty">No profiles saved yet \u2013 click the dot on a leaf or an option (chip) in the tree to mark it as always/never, then Save profile.</div>';
 		} else {
 			html += '<ul class="popover-list">';
 			profiles.forEach(function (p) {
@@ -52,7 +52,7 @@ NovaDM.Popovers = (function (Model, Render, EditorForm) {
 
 		document.getElementById('save-profile-btn').addEventListener('click', function () {
 			if (!Model.hasNodeConstraints()) {
-				alert('Colour at least one node (click its dot in the tree) before saving a profile.');
+				alert('Mark at least one leaf (click its dot) or option (click its chip) in the tree before saving a profile.');
 				return;
 			}
 			var name = (prompt('Profile name:', '') || '').trim();
@@ -64,15 +64,15 @@ NovaDM.Popovers = (function (Model, Render, EditorForm) {
 			updatePillLabels(); renderProfilePane();
 		});
 		document.getElementById('reset-profile-btn').addEventListener('click', function () {
-			if (!Model.hasNodeConstraints() || confirm('Reset every node back to default (white)?')) {
+			if (!Model.hasNodeConstraints() || confirm('Reset every constraint back to default?')) {
 				Model.resetNodeConstraints();
-				Render.renderTree(); updatePillLabels(); renderProfilePane();
+				Render.renderTree(); EditorForm.renderEditorForm(); updatePillLabels(); renderProfilePane();
 			}
 		});
 		profilePane.querySelectorAll('[data-load-profile]').forEach(function (b) {
 			b.addEventListener('click', function () {
 				Model.loadProfile(b.getAttribute('data-load-profile'));
-				Render.renderTree(); updatePillLabels(); renderProfilePane();
+				Render.renderTree(); EditorForm.renderEditorForm(); updatePillLabels(); renderProfilePane();
 			});
 		});
 		profilePane.querySelectorAll('[data-delete-profile]').forEach(function (b) {

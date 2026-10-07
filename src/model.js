@@ -13,6 +13,13 @@ NovaDM.Model = (function () {
 	var NODE_CLASSES = ['', 'Subject', 'Approach', 'Feature'];
 	var TOP_LEVEL_KIND = 'AND'; /* Root is an implicit AND node (see spec for details). */
 
+	/**
+	 * Decision: always/never can only be set on leaves.
+	 * Constraints stored on any other node (e.g. from an older file) are kept in the data but ignored everywhere. 
+	 * Set LEAF_ONLY_CONSTRAINTS to false to allow constraints on any node again.
+	 */
+	var LEAF_ONLY_CONSTRAINTS = true;
+
 	var nextId = 1;
 	var usedIds = {}; /* every id currently in use (or promised by a file being loaded), so makeId never collides */
 	function makeId() {
@@ -33,6 +40,15 @@ NovaDM.Model = (function () {
 	var valueConstraints = {}; // nodeId -> { valueText: 'always' | 'never' } (individual values inside a node's parentheses)
 	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'}, valueConstraints: {nodeId: {value: 'always'|'never'}} }
 	var activeProfileName = null; // name of the profile currently loaded, or null
+
+	function isConstrainable(node) {
+		return !LEAF_ONLY_CONSTRAINTS || (node.children.length === 0 && node.value.length < 2);
+	}
+
+	/* The node-level constraint that actually applies to this node ('always' | 'never' | undefined). */
+	function activeNodeConstraint(node) {
+		return isConstrainable(node) ? nodeConstraints[node.id] : undefined;
+	}
 
 	function getNodeConstraint(nodeId) { return nodeConstraints[nodeId] || 'default'; }
 
@@ -57,7 +73,11 @@ NovaDM.Model = (function () {
 	}
 
 	function hasNodeConstraints() {
-		return Object.keys(nodeConstraints).length > 0 || Object.keys(valueConstraints).length > 0;
+		var nodeLevel = Object.keys(nodeConstraints).some(function (id) {
+			var node = findNode(root, id);
+			return node && isConstrainable(node);
+		});
+		return nodeLevel || Object.keys(valueConstraints).length > 0;
 	}
 
 	function resetNodeConstraints() {
@@ -155,7 +175,7 @@ NovaDM.Model = (function () {
 	/* True if this node or anything beneath it is marked "always" (node or value level).
 	   Such a node must be present in every scenario, so every XOR above it is pinned to its branch. */
 	function containsAlways(node) {
-		if (nodeConstraints[node.id] === 'always') return true;
+		if (activeNodeConstraint(node) === 'always') return true;
 		var vc = valueConstraints[node.id];
 		if (vc && node.value.some(function (v) { return vc[v] === 'always'; })) return true;
 		return node.children.some(containsAlways);
@@ -163,7 +183,7 @@ NovaDM.Model = (function () {
 
 	function scenarioSpaceSize() {
 		function count(node) {
-			if (nodeConstraints[node.id] === 'never') return 0;
+			if (activeNodeConstraint(node) === 'never') return 0;
 			var own = ownChoices(node);
 			if (own === 0 || node.children.length === 0) return own;
 
@@ -309,6 +329,7 @@ NovaDM.Model = (function () {
 		replaceTree: replaceTree,
 		getNodeConstraint: getNodeConstraint,
 		cycleNodeConstraint: cycleNodeConstraint,
+		isConstrainable: isConstrainable,
 		getValueConstraint: getValueConstraint,
 		cycleValueConstraint: cycleValueConstraint,
 		hasNodeConstraints: hasNodeConstraints,
