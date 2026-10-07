@@ -12,6 +12,28 @@ NovaDM.Parser = (function (Model) {
 
 	var DEFAULT_SNAPSHOT_ID = 'Initial version';
 
+	function isBareRoot(spec) {
+		return !!spec && typeof spec === 'object' && spec.kind === Model.TOP_LEVEL_KIND &&
+			!spec.nodeClass && !spec.label && Model.parseValues(spec.value).length === 0;
+	}
+
+	/**
+	 * Files written before version 5 list the top-level nodes directly and leave the AND root implicit.
+	 * This wraps them in an explicit root. */
+	function ensureRoot(specs) {
+		if (!Array.isArray(specs) || specs.length === 0) return specs;
+		if (specs.length === 1 && isBareRoot(specs[0])) return specs;
+		return [{ kind: Model.TOP_LEVEL_KIND, nodeClass: '', label: '', value: [], children: specs }];
+	}
+
+	function withRootedTree(snapshot) {
+		if (!snapshot || typeof snapshot !== 'object') return snapshot;
+		var copy = {};
+		Object.keys(snapshot).forEach(function (k) { copy[k] = snapshot[k]; });
+		copy.tree = ensureRoot(snapshot.tree);
+		return copy;
+	}
+
 	function emptyHistory() {
 		return { head: DEFAULT_SNAPSHOT_ID, edges: [], snapshots: [] };
 	}
@@ -87,7 +109,8 @@ NovaDM.Parser = (function (Model) {
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 4, /* 4: profiles also hold per-value constraints (currentValues / valueConstraints).
+		version: 5, /* 5: the tree is a single AND root node (older files get one added on import).
+					** 4: profiles also hold per-value constraints (currentValues / valueConstraints).
 					** 3: versionControl / profile / actionTree sections. 
 					** 2: single `tree`, value is an array of strings. 
 					** 1: text values. Older files still import. */
@@ -117,14 +140,17 @@ NovaDM.Parser = (function (Model) {
 
 		/**
 		 * @param {string} text the file's text
-		 * @returns {{tree: Array, profile: Object|null, history: Object}}
+		 * @returns {{tree: Array, profile: Object|null, history: Object, addedRoot: boolean}}
 		 * Throws an Error with a readable message if this is not a NovaDM file.
 		 */
 		parse: function (text) {
 			var data = parseJson(text);
 
 			// A bare array of nodes (like examples/sample-tree.js, as JSON) is accepted too.
-			if (Array.isArray(data)) return { tree: data, profile: null, history: emptyHistory() };
+			if (Array.isArray(data)) {
+				var rooted = ensureRoot(data);
+				return { tree: rooted, profile: null, history: emptyHistory(), addedRoot: rooted !== data };
+			}
 
 			if (!data || data.format !== TREE_FILE_FORMAT.id) {
 				throw new Error('This does not look like a NovaDM action tree file.');
@@ -134,22 +160,29 @@ NovaDM.Parser = (function (Model) {
 			}
 
 			// Versions 1 and 2: one tree, no profiles, no history.
-			if (data.version < 3) return { tree: data.tree, profile: null, history: emptyHistory() };
+			if (data.version < 3) {
+				var rootedTree = ensureRoot(data.tree);
+				return { tree: rootedTree, profile: null, history: emptyHistory(), addedRoot: rootedTree !== data.tree };
+			}
 
 			var parsers = sectionParsers();
 			var versionControl = parsers.versionControl(data.versionControl);
 			var profile = parsers.profile(data.profile);
 			var snapshots = parsers.actionTree(data.actionTree);
+			var rawSnapshots = snapshots;
+			if (data.version < 5) snapshots = snapshots.map(withRootedTree);
 			if (snapshots.length === 0) throw new Error('The "actionTree" section holds no snapshots.');
 
 			var head = versionControl.head === null ? snapshots[snapshots.length - 1].id : versionControl.head;
 			var headSnapshot = snapshots.filter(function (s) { return s && s.id === head; })[0];
 			if (!headSnapshot) throw new Error('The head snapshot ' + JSON.stringify(head) + ' is not in the "actionTree" section.');
 
+			var rawHead = rawSnapshots.filter(function (s) { return s && s.id === head; })[0];
 			return {
 				tree: headSnapshot.tree,
 				profile: profile,
-				history: { head: head, edges: versionControl.edges, snapshots: snapshots }
+				history: { head: head, edges: versionControl.edges, snapshots: snapshots },
+				addedRoot: headSnapshot.tree !== rawHead.tree 
 			};
 		}
 	};
@@ -235,9 +268,13 @@ NovaDM.Parser = (function (Model) {
 
 	function validateSpecs(specs) {
 		if (!Array.isArray(specs)) return 'The tree data is not a list of nodes.';
-		return validateSiblingSpecs(specs, 'Top level', true, {});
+		if (specs.length > 1) {
+			return 'The tree has ' + specs.length + ' top-level nodes, but it must have a single ' + Model.TOP_LEVEL_KIND + ' root node that holds the rest.';
+		}
+		return validateSiblingSpecs(specs, 'Root', 0, {});
 	}
-	function validateSiblingSpecs(list, where, isTopLevel, seenIds) {
+	
+	function validateSiblingSpecs(list, where, depth, seenIds) {
 		var seenKind = null;
 		for (var i = 0; i < list.length; i++) {
 			var spec = list[i];
@@ -251,8 +288,8 @@ NovaDM.Parser = (function (Model) {
 			if (Model.KINDS.indexOf(spec.kind) === -1) {
 				return here + ' has an unknown kind (' + JSON.stringify(spec.kind) + '); expected ' + Model.KINDS.join(' or ') + '.';
 			}
-			if (isTopLevel && spec.kind !== Model.TOP_LEVEL_KIND) {
-				return here + ' is ' + spec.kind + ', but top-level nodes must be ' + Model.TOP_LEVEL_KIND + ' (the project root is an implicit ' + Model.TOP_LEVEL_KIND + ').';
+			if (depth <= 1 && spec.kind !== Model.TOP_LEVEL_KIND) {
+				return here + ' is ' + spec.kind + ', but ' + (depth === 0 ? 'the root' : 'the root\'s children') + ' must be ' + Model.TOP_LEVEL_KIND + '.';
 			}
 			if (seenKind !== null && spec.kind !== seenKind) {
 				return here + ' is ' + spec.kind + ', but its siblings are ' + seenKind + ' (all siblings must share the same kind).';
@@ -271,7 +308,7 @@ NovaDM.Parser = (function (Model) {
 			if (spec.children !== undefined && !Array.isArray(spec.children)) {
 				return here + ' has children that are not a list.';
 			}
-			var problem = validateSiblingSpecs(spec.children || [], here, false, seenIds);
+			var problem = validateSiblingSpecs(spec.children || [], here, depth + 1, seenIds);
 			if (problem) return problem;
 		}
 		return null;
@@ -280,6 +317,7 @@ NovaDM.Parser = (function (Model) {
 	return {
 		TREE_FILE_FORMAT: TREE_FILE_FORMAT,
 		emptyHistory: emptyHistory,
+		ensureRoot: ensureRoot,
 		validateDocument: validateDocument,
 		validateSpecs: validateSpecs
 	};

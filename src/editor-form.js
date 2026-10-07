@@ -16,6 +16,7 @@ NovaDM.EditorForm = (function (Model, Render) {
 			formHost.innerHTML = '<div class="editor-empty">Select a node in the tree to edit it, or drag a new AND/XOR node in.</div>';
 			return;
 		}
+		var isRoot = Model.isRootNode(node);
 		var classOptions = Model.NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' + (c || '(none)') + '</option>';
 		}).join('');
@@ -32,7 +33,7 @@ NovaDM.EditorForm = (function (Model, Render) {
 					'<strong style="font-size:0.85rem;">' + node.kind + '</strong></div>' +
 				'</div>' +
 				'<div class="field"><label>Class</label>' +
-					'<select id="f-class">' + classOptions + '</select>' +
+					'<select id="f-class"' + (isRoot ? ' disabled title="The root node has no class"' : '') + '>' + classOptions + '</select>' +
 				'</div>' +
 			'</div>' +
 			'<div class="field"><label>Label</label><input id="f-label" type="text" placeholder="e.g. structural_element" value="' + Render.escapeHtml(node.label) + '" /></div>' +
@@ -63,6 +64,7 @@ NovaDM.EditorForm = (function (Model, Render) {
 		document.getElementById('add-and-child').addEventListener('click', function () { addChildTo(node, 'AND'); });
 		document.getElementById('add-xor-child').addEventListener('click', function () { addChildTo(node, 'XOR'); });
 		document.getElementById('delete-node').addEventListener('click', function () {
+			if (isRoot && !confirm('Delete the root node and the entire tree?')) return;
 			Model.removeNode(node.id);
 			Model.setSelectedId(null);
 			Render.renderTree(); renderEditorForm();

@@ -90,21 +90,41 @@ NovaDM.Render = (function (Model) {
 	function setLayout(layout) { currentLayout = layout === 'traditional' ? 'traditional' : 'directory'; }
 	function getLayout() { return currentLayout; }
 
+	var constraintWarningEl = null;
+	function constraintWarning() {
+		if (constraintWarningEl) return constraintWarningEl;
+		var el = document.getElementById('constraint-warning');
+		if (!el) {
+			el = document.createElement('div');
+			el.id = 'constraint-warning';
+			el.className = 'constraint-warning';
+			el.setAttribute('role', 'alert');
+			el.hidden = true;
+			el.textContent = 'Warning: the applied constraints are contradictory, so the scenario space is 0.';
+			var anchor = scenarioSizeEl ? (scenarioSizeEl.closest('.metric') || scenarioSizeEl.parentNode) : null;
+			if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(el, anchor.nextSibling);
+			else treeContent.parentNode.insertBefore(el, treeContent);
+		}
+		constraintWarningEl = el;
+		return el;
+	}
+
 	function renderTree() {
 		var root = Model.root;
 		treeContent.classList.toggle('empty-hint', root.children.length === 0);
 		exportBtn.disabled = root.children.length === 0;
-		if (scenarioSizeEl) scenarioSizeEl.textContent = Model.scenarioSpaceSize();
-		
+		var size = Model.scenarioSpaceSize();
+		if (scenarioSizeEl) scenarioSizeEl.textContent = size;
+		constraintWarning().hidden = size !== 0;
+
 		var html;
 		if (root.children.length === 0) {
-			html = '<div class="root-drop-zone" data-root-drop="true" title="The project root is an implicit ' + Model.TOP_LEVEL_KIND + ' node, so top-level nodes must be ' + Model.TOP_LEVEL_KIND + '"></div>' +
-				'<div style="text-align:center; color:var(--color-ink-muted); padding: 20px 0;">No nodes yet.<br>Drag an ' + Model.TOP_LEVEL_KIND + ' node from the editor panel (the project root is an implicit ' + Model.TOP_LEVEL_KIND + ', so top-level nodes are always ' + Model.TOP_LEVEL_KIND + '), or click "Load example tree" / "Import tree\u2026".</div>';
+			html = '<div class="root-drop-zone" data-root-drop="true" title="The tree needs one root node, and it must be ' + Model.TOP_LEVEL_KIND + '"></div>' +
+				'<div style="text-align:center; color:var(--color-ink-muted); padding: 20px 0;">No nodes yet.<br>Drag an ' + Model.TOP_LEVEL_KIND + ' node from the editor panel to create the root node, or click "Load example tree" / "Import tree\u2026".</div>';
 		} else if (currentLayout === 'traditional') {
-			html = renderTraditionalCanvas(root.children); // includes its own root-dot drop zone
+			html = renderTraditionalCanvas(root.children);
 		} else {
-			html = '<div class="root-drop-zone" data-root-drop="true" title="The project root is an implicit ' + Model.TOP_LEVEL_KIND + ' node, so top-level nodes must be ' + Model.TOP_LEVEL_KIND + '"></div>' +
-				'<ul class="tree-list">' + root.children.map(renderNode).join('') + '</ul>';
+			html = '<ul class="tree-list">' + root.children.map(renderNode).join('') + '</ul>';
 		}
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && root.children.length > 0);
 		treeContent.innerHTML = html;
@@ -163,15 +183,13 @@ NovaDM.Render = (function (Model) {
 			return x;
 		}
 
-		var topXs = topNodes.map(function (n) { return visit(n, 1); });
+		topNodes.forEach(function (n) { visit(n, 0); }); /* the explicit root node is level 0 */
 
 		/* Each level starts below the tallest box of the level above, keeping the usual gap between levels. */
 		var rowGap = TT_ROW_HEIGHT - TT_BOX_HEIGHT;
-		var yAtDepth = { 1: TT_ROW_HEIGHT };
-		for (var d = 2; d <= maxDepth; d++) yAtDepth[d] = yAtDepth[d - 1] + tallestAtDepth[d - 1] + rowGap;
+		var yAtDepth = { 0: 0 };
+		for (var d = 1; d <= maxDepth; d++) yAtDepth[d] = yAtDepth[d - 1] + tallestAtDepth[d - 1] + rowGap;
 		Object.keys(positions).forEach(function (id) { positions[id].y = yAtDepth[positions[id].depth]; });
-
-		positions.__root__ = { x: (topXs[0] + topXs[topXs.length - 1]) / 2, y: 0 };
 
 		return {
 			positions: positions,
@@ -198,7 +216,6 @@ NovaDM.Render = (function (Model) {
 
 	function renderTraditionalCanvas(topNodes) {
 		var layout = layoutTraditional(topNodes);
-		var rootPos = layout.positions.__root__;
 		var edges = [];
 		var boxes = [];
 
@@ -228,15 +245,10 @@ NovaDM.Render = (function (Model) {
 			}
 		}
 
-		topNodes.forEach(function (node) {
-			var pos = layout.positions[node.id];
-			edges.push('<line class="tt-edge" x1="' + rootPos.x + '" y1="' + rootPos.y + '" x2="' + pos.x + '" y2="' + pos.y + '" />');
-			visitRender(node);
-		});
+		topNodes.forEach(visitRender);
 
 		return '<div class="tt-canvas" style="width:' + layout.width + 'px; height:' + layout.height + 'px;">' +
 			'<svg class="tt-edges" width="' + layout.width + '" height="' + layout.height + '">' + edges.join('') + '</svg>' +
-			'<div class="tt-root-dot" data-root-drop="true" title="The project root is an implicit ' + Model.TOP_LEVEL_KIND + ' node, so top-level nodes must be ' + Model.TOP_LEVEL_KIND + '" style="left:' + rootPos.x + 'px; top:' + rootPos.y + 'px;"></div>' +
 			boxes.join('') +
 		'</div>';
 	}

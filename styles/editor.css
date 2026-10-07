@@ -453,6 +453,18 @@ main {
 	white-space: nowrap;
 }
 
+.constraint-warning {
+	flex-shrink: 0;
+	padding: 5px 12px;
+	background-color: var(--color-accent-light);
+	color: var(--color-accent);
+	border-radius: var(--radius-sm);
+	font-size: 0.85rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.constraint-warning[hidden] { display: none; }
+
 .scenario-metrics {
 	display: flex;
 	align-items: baseline;
@@ -626,16 +638,6 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 .tt-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
 .tt-edge { stroke: var(--color-border); stroke-width: 1.5; }
 
-.tt-root-dot {
-	position: absolute;
-	width: 10px; height: 10px;
-	margin-left: -5px; /* Centers the dot on its x, since left:Npx marks its center. */
-	border-radius: 50%;
-	background: var(--color-ink-muted);
-	cursor: default;
-}
-.tt-root-dot.drop-target { outline: 2px dashed var(--color-accent); outline-offset: 3px; background: var(--color-accent-light); }
-.tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
 
 /* Compound selector overrides the shared .tree-row rules regardless of stylesheet order.
    The height here is only the base (kind row + label row): render.js sets the real height inline

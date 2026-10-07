@@ -11,12 +11,11 @@ NovaDM.Model = (function () {
 
 	var KINDS = ['AND', 'XOR'];
 	var NODE_CLASSES = ['', 'Subject', 'Approach', 'Feature'];
-	var TOP_LEVEL_KIND = 'AND'; /* Root is an implicit AND node (see spec for details). */
+	var TOP_LEVEL_KIND = 'AND'; /* The root node is always AND (see spec for details). */
 
 	/**
-	 * Decision: always/never can only be set on leaves.
-	 * Constraints stored on any other node (e.g. from an older file) are kept in the data but ignored everywhere. 
-	 * Set LEAF_ONLY_CONSTRAINTS to false to allow constraints on any node again.
+	 * Decision: always/never can only be set on leaves (chips for values and dot for nodes). 
+	 * Set to false to allow constraints on any node again.
 	 */
 	var LEAF_ONLY_CONSTRAINTS = true;
 
@@ -41,11 +40,13 @@ NovaDM.Model = (function () {
 	var profiles = []; // { name, constraints: {nodeId: 'always'|'never'}, valueConstraints: {nodeId: {value: 'always'|'never'}} }
 	var activeProfileName = null; // name of the profile currently loaded, or null
 
+	function isRootNode(node) { return root.children.length > 0 && root.children[0] === node; }
+
 	function isConstrainable(node) {
+		if (isRootNode(node)) return false;
 		return !LEAF_ONLY_CONSTRAINTS || (node.children.length === 0 && node.value.length < 2);
 	}
 
-	/* The node-level constraint that actually applies to this node ('always' | 'never' | undefined). */
 	function activeNodeConstraint(node) {
 		return isConstrainable(node) ? nodeConstraints[node.id] : undefined;
 	}
@@ -237,7 +238,10 @@ NovaDM.Model = (function () {
 		return null;
 	}
 	function canAcceptKind(parentNode, kind, excludeId) {
-		if (parentNode === root && kind !== TOP_LEVEL_KIND) return false; // implicit AND root
+		if (parentNode === root) {
+			return kind === TOP_LEVEL_KIND && !parentNode.children.some(function (c) { return c.id !== excludeId; });
+		}
+		if (parentNode === root.children[0] && kind !== TOP_LEVEL_KIND) return false;
 		var existing = siblingKind(parentNode, excludeId);
 		return existing === null || existing === kind;
 	}
@@ -330,6 +334,7 @@ NovaDM.Model = (function () {
 		getNodeConstraint: getNodeConstraint,
 		cycleNodeConstraint: cycleNodeConstraint,
 		isConstrainable: isConstrainable,
+		isRootNode: isRootNode,
 		getValueConstraint: getValueConstraint,
 		cycleValueConstraint: cycleValueConstraint,
 		hasNodeConstraints: hasNodeConstraints,
