@@ -126,8 +126,14 @@ NovaDM.Parser = (function (Model) {
 			var history = doc.history || emptyHistory();
 			var head = history.head || DEFAULT_SNAPSHOT_ID;
 
-			var snapshots = history.snapshots.map(function (s) { return s.id === head ? { id: head, tree: doc.tree } : s; });
-			if (!snapshots.some(function (s) { return s.id === head; })) snapshots.unshift({ id: head, tree: doc.tree });
+			function headSnapshot(created) {
+				var snap = { id: head };
+				if (created) snap.created = created;
+				snap.tree = doc.tree;
+				return snap;
+			}
+			var snapshots = history.snapshots.map(function (s) { return s.id === head ? headSnapshot(s.created) : s; });
+			if (!snapshots.some(function (s) { return s.id === head; })) snapshots.unshift(headSnapshot(''));
 
 			return formatJson({
 				format: TREE_FILE_FORMAT.id,
@@ -251,6 +257,7 @@ NovaDM.Parser = (function (Model) {
 			if (!s || typeof s.id !== 'string' || !s.id.trim()) return 'Snapshot #' + (i + 1) + ' has no id.';
 			if (known[s.id]) return 'There are two snapshots called ' + JSON.stringify(s.id) + '.';
 			known[s.id] = true;
+			if (s.created !== undefined && typeof s.created !== 'string') return 'Snapshot ' + JSON.stringify(s.id) + ' has a "created" date that is not text.';
 			var problem = validateSpecs(s.tree);
 			if (problem) return 'Snapshot ' + JSON.stringify(s.id) + ': ' + problem;
 		}

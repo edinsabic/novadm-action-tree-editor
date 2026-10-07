@@ -18,62 +18,76 @@
 <main>
 
 	<section id="action-tree" class="tab-panel" role="tabpanel">
-		
-		<div class="control-row">
-			<div class="control-left">
-				<span class="layout-label">Tree layout</span>
-				<div class="toggle-group" role="group" aria-label="Tree layout">
-					<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
-					<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
-				</div>
-			</div>
+		<div id="panels-stack" class="panels-stack">
 
-			<div class="control-right">
-				<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">Create or select profile</span>
-				</button>
-				<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
-					<span class="pill-btn-label">Version history</span>
-				</button>
-			</div>
-
-		</div>
-
-		<div class="viewport-row">
-
-			<div class="viewport-box viewport-tree">
-				<div class="viewport-toolbar">
-					<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
-					<span id="zoom-label">100%</span>
-					<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
-					<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
-					<button id="load-example-btn" type="button" class="btn">Load example tree</button>
-					<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
-				<button id="import-tree-btn" type="button" class="btn">Import tree</button>
-				<button id="export-tree-btn" type="button" class="btn">Export tree</button>
-				<input id="import-file-input" type="file" hidden />
-				</div>
-				<div id="tree-viewport-content" class="viewport-content"></div>
-			</div>
-
-			<div class="viewport-editor-col">
-				<span class="viewport-box-label">Editor panel</span>
-				<div class="viewport-box viewport-editor-panel" style="padding:0;">
-					<div class="palette">
-						<span class="palette-label">Drag onto the tree</span>
-						<div class="palette-item" draggable="true" data-new-kind="AND">
-							<span class="node-badge neutral">+</span>
-							<span>AND node</span>
-							<span class="hint">all children</span>
-						</div>
-						<div class="palette-item" draggable="true" data-new-kind="XOR">
-							<span class="node-badge neutral">−</span>
-							<span>XOR node</span>
-							<span class="hint">one of</span>
-						</div>
+			<div class="control-row">
+				<div class="control-left">
+					<span class="layout-label">Tree layout</span>
+					<div class="toggle-group" role="group" aria-label="Tree layout">
+						<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
+						<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
 					</div>
-					<div id="editor-form-host"></div>
 				</div>
+
+				<div class="control-right">
+					<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">Create or select profile</span>
+					</button>
+					<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+						<span class="pill-btn-label">Version history</span>
+					</button>
+				</div>
+
+			</div>
+
+			<div class="viewport-row">
+
+				<div class="viewport-box viewport-tree">
+					<div class="viewport-toolbar">
+						<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
+						<span id="zoom-label">100%</span>
+						<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
+						<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
+						<button id="load-example-btn" type="button" class="btn">Load example tree</button>
+						<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
+					<button id="import-tree-btn" type="button" class="btn">Import tree</button>
+					<button id="export-tree-btn" type="button" class="btn">Export tree</button>
+					<input id="import-file-input" type="file" hidden />
+					</div>
+					<div id="tree-viewport-content" class="viewport-content"></div>
+				</div>
+
+				<div class="viewport-editor-col">
+					<span class="viewport-box-label">Editor panel</span>
+					<div class="viewport-box viewport-editor-panel" style="padding:0;">
+						<div class="palette">
+							<span class="palette-label">Drag onto the tree</span>
+							<div class="palette-item" draggable="true" data-new-kind="AND">
+								<span class="node-badge neutral">+</span>
+								<span>AND node</span>
+								<span class="hint">all children</span>
+							</div>
+							<div class="palette-item" draggable="true" data-new-kind="XOR">
+								<span class="node-badge neutral">−</span>
+								<span>XOR node</span>
+								<span class="hint">one of</span>
+							</div>
+						</div>
+						<div id="editor-form-host"></div>
+					</div>
+				</div>
+
+			</div>
+
+			<div class="scenario-summary-bar">
+				<span class="scenario-summary-label">Scenario space (live)</span>
+				<div class="scenario-metrics">
+					<span class="metric"><span class="metric-label">Size</span> <span class="metric-value" id="scenario-space-size-value">0</span></span>
+					<span class="metric"><span class="metric-label">Cost</span> <span class="metric-value">N/A</span></span>
+					<span class="metric"><span class="metric-label">CO&#8322;</span> <span class="metric-value">N/A</span></span>
+					<span class="metric"><span class="metric-label">Score</span> <span class="metric-value">N/A</span></span>
+				</div>
+				<button type="button" id="view-full-analysis-btn" class="scenario-summary-link">View full analysis &rarr;</button>
 			</div>
 
 			<div class="viewport-popover-layer">
@@ -99,23 +113,11 @@
 						<button type="button" class="flyout-close" data-flyout-close="version" aria-label="Close">&times;</button>
 					</div>
 					<div class="flyout-body">
-						<div class="flyout-pane" id="version-pane" role="menu" aria-label="Versions"></div>
+						<div class="flyout-pane" id="version-pane" role="group" aria-label="Versions"></div>
 					</div>
 				</div>
 			</div>
 
-		</div>
-
-
-		<div class="scenario-summary-bar">
-			<span class="scenario-summary-label">Scenario space (live)</span>
-			<div class="scenario-metrics">
-				<span class="metric"><span class="metric-label">Size</span> <span class="metric-value" id="scenario-space-size-value">0</span></span>
-				<span class="metric"><span class="metric-label">Cost</span> <span class="metric-value">N/A</span></span>
-				<span class="metric"><span class="metric-label">CO&#8322;</span> <span class="metric-value">N/A</span></span>
-				<span class="metric"><span class="metric-label">Score</span> <span class="metric-value">N/A</span></span>
-			</div>
-			<button type="button" id="view-full-analysis-btn" class="scenario-summary-link">View full analysis &rarr;</button>
 		</div>
 	</section>
 
@@ -128,11 +130,13 @@
 <script src="../examples/sample-tree.js"></script>
 <script src="../src/model.js"></script>
 <script src="../src/parser.js"></script>
+<script src="../src/history.js"></script>
+<script src="../src/version-graph.js"></script>
 <script src="../src/render.js"></script>
 <script src="../src/editor-form.js"></script>
 <script src="../src/tree-interactions.js"></script>
-<script src="../src/tree-io.js"></script>
 <script src="../src/popovers.js"></script>
+<script src="../src/tree-io.js"></script>
 <script src="../src/app.js"></script>
 
 </body>
