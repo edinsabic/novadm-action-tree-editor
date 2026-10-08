@@ -4,39 +4,57 @@ window.NovaDM = window.NovaDM || {};
  * Version history: the snapshots of the tree and how they follow on from
  * each other. popovers.js draws it, version-graph.js lays the graph out.
  */
-NovaDM.History = (function (Model) {
+NovaDM.History = (function (Model, Parser, Util) {
 	'use strict';
 
-	var DEFAULT_ID = 'Initial version';
+	var DEFAULT_ID = Parser.DEFAULT_SNAPSHOT_ID;
 	var MAX_CHANGES_SHOWN = 6;
 
 	var head = DEFAULT_ID;
 	var edges = [];
 	var snapshots = [];
 
+	var clone = Util.clone;
+
 	/* ---------- Small helpers ---------- */
 
-	function clone(value) { return JSON.parse(JSON.stringify(value)); }
 	function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
 	function today() {
 		var d = new Date();
 		return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 	}
-	function liveSpecs() { return Model.root.children.map(Model.nodeToSpec); }
-	function find(id) {
-		for (var i = 0; i < snapshots.length; i++) if (snapshots[i].id === id) return snapshots[i];
-		return null;
+
+	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
+	function indexOfVersion(id) {
+		for (var i = 0; i < snapshots.length; i++) {
+			if (snapshots[i].id === id) return i;
+		}
+		return -1;
 	}
-	function allTrees() { return snapshots.map(function (s) { return s.tree; }); }
+
+	function find(id) {
+		var i = indexOfVersion(id);
+		return i === -1 ? null : snapshots[i];
+	}
+
+	function allTrees() {
+		return snapshots.map(function (s) { return s.tree; });
+	}
+
 	function uniqueName(base) {
-		var name = base, n = 2;
-		while (find(name)) name = base + ' ' + (n++);
+		var name = base;
+		for (var n = 2; find(name); n++) name = base + ' ' + n;
 		return name;
 	}
 
 	function canon(list) {
 		return JSON.stringify((list || []).map(function walk(s) {
-			return [s.id || '', s.kind, s.nodeClass || '', s.label || '', Model.parseValues(s.value), (s.children || []).map(walk)];
+			return [
+				s.id || '', s.kind, s.nodeClass || '', s.label || '', Model.parseValues(s.value),
+				(s.children || []).map(walk)
+			];
 		}));
 	}
 
@@ -45,7 +63,7 @@ NovaDM.History = (function (Model) {
 	function reset() {
 		head = DEFAULT_ID;
 		edges = [];
-		snapshots = [{ id: DEFAULT_ID, created: today(), tree: clone(liveSpecs()) }];
+		snapshots = [{ id: DEFAULT_ID, created: today(), tree: Model.treeSpecs() }];
 	}
 
 	function load(fileHistory) {
@@ -53,18 +71,21 @@ NovaDM.History = (function (Model) {
 		head = fileHistory.head || DEFAULT_ID;
 		edges = clone(fileHistory.edges || []);
 		snapshots = clone(fileHistory.snapshots || []);
-		if (!find(head)) snapshots.unshift({ id: head, created: today(), tree: clone(liveSpecs()) });
+		if (!find(head)) snapshots.unshift({ id: head, created: today(), tree: Model.treeSpecs() });
 		Model.reserveIds(allTrees());
 	}
 
 	function getState() { return { head: head, edges: edges, snapshots: snapshots }; }
 
 	function getHead() { return head; }
+
 	function has(id) { return !!find(id); }
+
 	function snapshotCount() { return snapshots.length; }
+
 	function isDirty() {
 		var h = find(head);
-		return !h || canon(liveSpecs()) !== canon(h.tree);
+		return !h || canon(Model.treeSpecs()) !== canon(h.tree);
 	}
 
 	/* ---------- Reading the graph ---------- */
@@ -87,7 +108,13 @@ NovaDM.History = (function (Model) {
 	function graphNodes() {
 		var dirty = isDirty();
 		return snapshots.map(function (s) {
-			return { id: s.id, parents: parentsOf(s.id), isHead: s.id === head, isBranch: isBranch(s.id), isDirty: s.id === head && dirty };
+			return {
+				id: s.id,
+				parents: parentsOf(s.id),
+				isHead: s.id === head,
+				isBranch: isBranch(s.id),
+				isDirty: s.id === head && dirty
+			};
 		});
 	}
 
@@ -107,23 +134,29 @@ NovaDM.History = (function (Model) {
 
 	function flatten(list, parentId, out) {
 		(list || []).forEach(function (s) {
-			if (s.id) {
-				out[s.id] = { parent: parentId, text: nodeText(s), sig: nodeSig(s) };
-			}
+			if (s.id) out[s.id] = { parent: parentId, text: nodeText(s), sig: nodeSig(s) };
 			flatten(s.children, s.id || null, out);
 		});
 		return out;
 	}
 
 	function changesOf(id) {
-		var snap = find(id), parent = find(parentsOf(id)[0]);
+		var snap = find(id);
+		var parent = find(parentsOf(id)[0]);
 		if (!snap || !parent) return [];
-		var before = flatten(parent.tree, null, {}), after = flatten(snap.tree, null, {});
-		var added = [], removed = [], changed = [];
+		var before = flatten(parent.tree, null, {});
+		var after = flatten(snap.tree, null, {});
+		var added = [];
+		var removed = [];
+		var changed = [];
 		Object.keys(after).forEach(function (k) {
-			if (!before[k]) added.push({ type: 'add', text: after[k].text });
-			else if (before[k].sig !== after[k].sig) changed.push({ type: 'modify', text: before[k].text + ' \u2192 ' + after[k].text });
-			else if (before[k].parent !== after[k].parent) changed.push({ type: 'modify', text: after[k].text + ' (moved)' });
+			if (!before[k]) {
+				added.push({ type: 'add', text: after[k].text });
+			} else if (before[k].sig !== after[k].sig) {
+				changed.push({ type: 'modify', text: before[k].text + ' → ' + after[k].text });
+			} else if (before[k].parent !== after[k].parent) {
+				changed.push({ type: 'modify', text: after[k].text + ' (moved)' });
+			}
 		});
 		Object.keys(before).forEach(function (k) {
 			if (!after[k]) removed.push({ type: 'remove', text: before[k].text });
@@ -169,13 +202,13 @@ NovaDM.History = (function (Model) {
 		name = String(name || '').trim();
 		if (!name) return 'Please enter a name for the version.';
 		if (find(name)) return 'A version called "' + name + '" already exists.';
-		addVersion(name, liveSpecs(), [head], String(comment || '').trim());
+		addVersion(name, Model.treeSpecs(), [head], String(comment || '').trim());
 		return null;
 	}
 
 	function updateHead() {
 		var h = find(head);
-		if (h) h.tree = clone(liveSpecs());
+		if (h) h.tree = Model.treeSpecs();
 	}
 
 	function checkout(id) {
@@ -199,24 +232,23 @@ NovaDM.History = (function (Model) {
 	/* ---------- Merging ---------- */
 
 	function ancestorDistances(id) {
-		var dist = {}, queue = [id];
+		var dist = {};
+		var queue = [id];
 		dist[id] = 0;
 		while (queue.length) {
 			var cur = queue.shift();
 			parentsOf(cur).forEach(function (p) {
-				if (dist[p] === undefined) { dist[p] = dist[cur] + 1; queue.push(p); }
+				if (dist[p] !== undefined) return;
+				dist[p] = dist[cur] + 1;
+				queue.push(p);
 			});
 		}
 		return dist;
 	}
 
-	function indexOfVersion(id) {
-		for (var i = 0; i < snapshots.length; i++) if (snapshots[i].id === id) return i;
-		return -1;
-	}
-
 	function commonAncestor(a, b) {
-		var da = ancestorDistances(a), db = ancestorDistances(b);
+		var da = ancestorDistances(a);
+		var db = ancestorDistances(b);
 		var common = Object.keys(da).filter(function (k) { return db[k] !== undefined; });
 		var lowest = common.filter(function (c) {
 			return !common.some(function (d) { return d !== c && ancestorDistances(d)[c] !== undefined; });
@@ -224,9 +256,9 @@ NovaDM.History = (function (Model) {
 		var best = null;
 		lowest.forEach(function (c) {
 			var score = da[c] + db[c];
-			if (best === null || score < best.score || (score === best.score && indexOfVersion(c) < indexOfVersion(best.id))) {
-				best = { id: c, score: score };
-			}
+			var isCloser = best === null || score < best.score ||
+				(score === best.score && indexOfVersion(c) < indexOfVersion(best.id));
+			if (isCloser) best = { id: c, score: score };
 		});
 		return best ? best.id : null;
 	}
@@ -235,7 +267,10 @@ NovaDM.History = (function (Model) {
 		var table = { byId: {}, order: [], noId: [] };
 		(function walk(items, parentId) {
 			(items || []).forEach(function (s) {
-				if (!s.id) { table.noId.push(nodeText(s)); return; }
+				if (!s.id) {
+					table.noId.push(nodeText(s));
+					return;
+				}
 				table.byId[s.id] = { parent: parentId, sig: nodeSig(s), text: nodeText(s), spec: s };
 				table.order.push(s.id);
 				walk(s.children, s.id);
@@ -251,8 +286,9 @@ NovaDM.History = (function (Model) {
 	}
 
 	/**
-	 * Three-way merge of version `sourceId` ("theirs") into the tree on screen
-	 * ("mine"), against the nearest common ancestor ("base"), matche by node id.
+	 * Three-way merge of version `sourceId` ("theirs") into the tree on screen ("mine"), against
+	 * their nearest common ancestor ("base"), matched by node id: decides per node, applies the
+	 * result to a copy of the live tree and checks it with the import rules (Parser.validateSpecs).
 	 */
 	function computeMerge(sourceId) {
 		var source = find(sourceId);
@@ -260,18 +296,26 @@ NovaDM.History = (function (Model) {
 		var baseId = commonAncestor(head, sourceId);
 		var baseSnap = baseId === null ? null : find(baseId);
 
-		var live = liveSpecs();
-		var B = nodeTable(baseSnap ? baseSnap.tree : []), M = nodeTable(live), T = nodeTable(source.tree);
-		var conflicts = [], conflicted = {};
+		var live = Model.treeSpecs();
+		var B = nodeTable(baseSnap ? baseSnap.tree : []);
+		var M = nodeTable(live);
+		var T = nodeTable(source.tree);
+		var conflicts = [];
+		var conflicted = {};
+
 		function conflict(id, text, reason) {
 			if (conflicted[id]) return;
 			conflicted[id] = true;
 			conflicts.push({ id: id, text: text, reason: reason });
 		}
-		T.noId.forEach(function (text, i) { conflict('?' + i, text, 'has no id in "' + sourceId + '", so it cannot be matched'); });
 
-		/* 1. Decide per node. */
-		var adds = [], updates = [], removes = {};
+		T.noId.forEach(function (text, i) {
+			conflict('?' + i, text, 'has no id in "' + sourceId + '", so it cannot be matched');
+		});
+
+		var adds = [];
+		var updates = [];
+		var removes = {};
 		var ids = T.order.concat(B.order.filter(function (id) { return !T.byId[id]; }));
 		ids.forEach(function (id) {
 			var b = B.byId[id], m = M.byId[id], t = T.byId[id];
@@ -279,7 +323,9 @@ NovaDM.History = (function (Model) {
 			if (!b) {
 				if (!t) return;
 				if (!m) adds.push(id);
-				else if (m.sig !== t.sig || m.parent !== t.parent) conflict(id, text, 'added differently on both sides');
+				else if (m.sig !== t.sig || m.parent !== t.parent) {
+					conflict(id, text, 'added differently on both sides');
+				}
 				return;
 			}
 			if (t && t.sig === b.sig && t.parent === b.parent) return;
@@ -290,13 +336,21 @@ NovaDM.History = (function (Model) {
 				else conflict(id, text, 'deleted on their side, changed on yours');
 				return;
 			}
-			if (!m) { conflict(id, text, 'changed on their side, deleted on yours'); return; }
-			var content = pick(b.sig, m.sig, t.sig), place = pick(b.parent, m.parent, t.parent);
-			if (content === 'conflict' || place === 'conflict') { conflict(id, text, 'changed differently on both sides'); return; }
-			if (content === 'theirs' || place === 'theirs') updates.push({ id: id, content: content === 'theirs', place: place === 'theirs' });
+			if (!m) {
+				conflict(id, text, 'changed on their side, deleted on yours');
+				return;
+			}
+			var content = pick(b.sig, m.sig, t.sig);
+			var place = pick(b.parent, m.parent, t.parent);
+			if (content === 'conflict' || place === 'conflict') {
+				conflict(id, text, 'changed differently on both sides');
+				return;
+			}
+			if (content === 'theirs' || place === 'theirs') {
+				updates.push({ id: id, content: content === 'theirs', place: place === 'theirs' });
+			}
 		});
 
-		/* 2. Apply to the copy of the live tree. */
 		var loc = {};
 		(function index(list, parentId) {
 			list.forEach(function (s) {
@@ -305,16 +359,24 @@ NovaDM.History = (function (Model) {
 				index(s.children, s.id);
 			});
 		})(live, null);
+
 		function listOf(parentId) { return parentId === null ? live : loc[parentId].spec.children; }
+
 		function isInside(id, ancestorId) {
-			for (var cur = id; cur !== null && loc[cur]; cur = loc[cur].parent) if (cur === ancestorId) return true;
+			for (var cur = id; cur !== null && loc[cur]; cur = loc[cur].parent) {
+				if (cur === ancestorId) return true;
+			}
 			return false;
 		}
 
-		var added = 0, skippedAdd = {};
+		var added = 0;
+		var skippedAdd = {};
 		adds.forEach(function (id) {
 			var t = T.byId[id];
-			if (t.parent !== null && skippedAdd[t.parent]) { skippedAdd[id] = true; return; }
+			if (t.parent !== null && skippedAdd[t.parent]) {
+				skippedAdd[id] = true;
+				return;
+			}
 			if (t.parent !== null && !loc[t.parent]) {
 				skippedAdd[id] = true;
 				conflict(id, t.text, 'its parent is not in your version');
@@ -329,10 +391,17 @@ NovaDM.History = (function (Model) {
 
 		var updated = 0;
 		updates.forEach(function (u) {
-			var t = T.byId[u.id], here = loc[u.id];
+			var t = T.byId[u.id];
+			var here = loc[u.id];
 			if (u.place) {
-				if (t.parent !== null && !loc[t.parent]) { conflict(u.id, t.text, 'moved on their side to a place that is not in your version'); return; }
-				if (t.parent !== null && isInside(t.parent, u.id)) { conflict(u.id, t.text, 'moved on their side to somewhere that would put it inside itself'); return; }
+				if (t.parent !== null && !loc[t.parent]) {
+					conflict(u.id, t.text, 'moved on their side to a place that is not in your version');
+					return;
+				}
+				if (t.parent !== null && isInside(t.parent, u.id)) {
+					conflict(u.id, t.text, 'moved on their side to somewhere that would put it inside itself');
+					return;
+				}
 				here.list.splice(here.list.indexOf(here.spec), 1);
 				here.list = listOf(t.parent);
 				here.list.push(here.spec);
@@ -348,9 +417,13 @@ NovaDM.History = (function (Model) {
 		});
 
 		function descendantsOf(spec, out) {
-			spec.children.forEach(function (c) { out.push(c.id); descendantsOf(c, out); });
+			spec.children.forEach(function (c) {
+				out.push(c.id);
+				descendantsOf(c, out);
+			});
 			return out;
 		}
+
 		var settled = false;
 		while (!settled) {
 			settled = true;
@@ -372,36 +445,47 @@ NovaDM.History = (function (Model) {
 			if (here.parent === null || !removes[here.parent]) here.list.splice(here.list.indexOf(here.spec), 1);
 		});
 
-		/* 3. Validate with the same rules as file import. */
-		var rejected = null;
-		if (added + updated + removed > 0) {
-			var parser = NovaDM.Parser;
-			rejected = parser && parser.validateSpecs ? parser.validateSpecs(live) : 'the structure rules (Parser.validateSpecs) are not available';
-		}
+		var empty = added + updated + removed === 0;
 		return {
-			baseId: baseId, tree: live, added: added, updated: updated, removed: removed,
-			conflicts: conflicts, empty: added + updated + removed === 0, rejected: rejected
+			baseId: baseId,
+			tree: live,
+			added: added,
+			updated: updated,
+			removed: removed,
+			conflicts: conflicts,
+			empty: empty,
+			rejected: empty ? null : Parser.validateSpecs(live)
 		};
 	}
-
-	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
 	function mergeSummary(r) {
 		var parts = ['Added ' + r.added, 'Updated ' + r.updated, 'Removed ' + r.removed];
 		if (r.conflicts.length) parts.push(plural(r.conflicts.length, 'conflict') + ', kept yours');
-		return parts.join(' \u00b7 ');
+		return parts.join(' · ');
+	}
+
+	function mergeProblem(id, r) {
+		if (r.rejected) return 'Merge rejected: ' + r.rejected;
+		if (!r.empty) return '';
+		var kept = r.conflicts.length
+			? ' (' + plural(r.conflicts.length, 'conflict') + ' would be kept as yours).'
+			: '.';
+		return 'Nothing to merge: nothing in "' + id + '" differs from "' + head +
+			'" in a way that can be applied' + kept;
 	}
 
 	function mergePreview(id) {
 		var r = computeMerge(id);
-		if (r.error) return { error: r.error, canMerge: false, problem: r.error };
-		var problem = r.rejected ? 'Merge rejected: ' + r.rejected
-			: r.empty ? 'Nothing to merge: nothing in "' + id + '" differs from "' + head + '" in a way that can be applied' +
-				(r.conflicts.length ? ' (' + plural(r.conflicts.length, 'conflict') + ' would be kept as yours).' : '.')
-			: '';
+		if (r.error) return { canMerge: false, problem: r.error };
+		var problem = mergeProblem(id, r);
 		return {
-			added: r.added, updated: r.updated, removed: r.removed, conflicts: r.conflicts,
-			summary: mergeSummary(r), canMerge: !problem, problem: problem
+			added: r.added,
+			updated: r.updated,
+			removed: r.removed,
+			conflicts: r.conflicts,
+			summary: mergeSummary(r),
+			canMerge: !problem,
+			problem: problem
 		};
 	}
 
@@ -409,12 +493,12 @@ NovaDM.History = (function (Model) {
 		var r = computeMerge(id);
 		if (r.error) return { error: r.error };
 		if (r.rejected) return { error: 'Merge rejected, nothing was changed: ' + r.rejected };
-		if (r.empty) return { error: mergePreview(id).problem };
+		if (r.empty) return { error: mergeProblem(id, r) };
 		var summary = mergeSummary(r);
 		var name = uniqueName('Merge ' + id);
 		addVersion(name, r.tree, [head, id], 'Merged "' + id + '" into "' + head + '" (' + summary + ')');
 		Model.replaceTree(clone(r.tree), allTrees());
-		return { name: name, added: r.added, updated: r.updated, removed: r.removed, conflicts: r.conflicts, summary: summary };
+		return { name: name, conflicts: r.conflicts, summary: summary };
 	}
 
 	reset();
@@ -436,4 +520,4 @@ NovaDM.History = (function (Model) {
 		mergePreview: mergePreview,
 		merge: merge
 	};
-})(NovaDM.Model);
+})(NovaDM.Model, NovaDM.Parser, NovaDM.Util);

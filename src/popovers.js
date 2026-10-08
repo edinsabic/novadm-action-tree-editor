@@ -6,8 +6,14 @@ window.NovaDM = window.NovaDM || {};
  * with hidden panes); clicking the other tab in either header switches
  * straight to the other one.
  */
-NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
+NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, Util) {
 	'use strict';
+
+	var MAX_COMMENT_CHARS = 64;
+	var MAX_CONFLICTS_LISTED = 5;
+	var GRAPH_ZOOM_STEP = 1.2;
+
+	var escapeHtml = Util.escapeHtml;
 
 	var profileBtn = document.getElementById('profile-btn');
 	var versionBtn = document.getElementById('version-btn');
@@ -17,96 +23,116 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 	var versionPane = document.getElementById('version-pane');
 	var panelsStack = document.getElementById('panels-stack');
 
-	var openPopover = null; /* 'profile' | 'version' | null */
-
+	var openFlyoutName = null;
 	var selectedVersion = null;
 	var graph = null;
 	var graphView = null;
 	var notice = null;
 
-	/* ---------- Flyout contents: profiles & versions ---------- */
+	function renderFlyout() {
+		renderProfilePane();
+		renderVersionPane();
+	}
+
+	/* ---------- Profile pane ---------- */
 
 	function updatePillLabels() {
 		var active = Model.getActiveProfileName();
 		profileBtn.querySelector('.pill-btn-label').textContent = active || 'Create or select profile';
 	}
 
-	function renderFlyout() { renderProfilePane(); renderVersionPane(); }
-
 	function renderProfilePane() {
 		var activeName = Model.getActiveProfileName();
+		var profiles = Model.getProfiles();
 		var html = '<div class="editor-add-row">' +
 			'<button type="button" class="btn" id="save-profile-btn">Save profile</button>' +
 			'<button type="button" class="btn" id="reset-profile-btn">Reset</button>' +
-			'</div><div class="popover-divider"></div>';
+			'</div>' +
+			'<div class="popover-divider"></div>';
 
-		var profiles = Model.getProfiles();
 		if (profiles.length === 0) {
-			html += '<div class="editor-empty">No profiles saved yet \u2013 click the dot on a leaf or an option (chip) in the tree to mark it as always/never, then Save profile.</div>';
+			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
+				' (chip) in the tree to mark it as always/never, then Save profile.</div>';
 		} else {
-			html += '<ul class="popover-list">';
-			profiles.forEach(function (p) {
-				html += '<li class="profile-row">' +
-					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') +
-					'" data-load-profile="' + Render.escapeHtml(p.name) + '">' + Render.escapeHtml(p.name) + '</button>' +
-					'<button type="button" class="profile-delete-btn" data-delete-profile="' + Render.escapeHtml(p.name) + '" aria-label="Delete profile" title="Delete profile">&times;</button>' +
+			html += '<ul class="popover-list">' + profiles.map(function (p) {
+				var name = escapeHtml(p.name);
+				return '<li class="profile-row">' +
+					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') + '"' +
+					' data-load-profile="' + name + '">' + name + '</button>' +
+					'<button type="button" class="profile-delete-btn" data-delete-profile="' + name + '"' +
+					' aria-label="Delete profile" title="Delete profile">&times;</button>' +
 					'</li>';
-			});
-			html += '</ul>';
+			}).join('') + '</ul>';
 		}
 		profilePane.innerHTML = html;
-
-		document.getElementById('save-profile-btn').addEventListener('click', function () {
-			if (!Model.hasNodeConstraints()) {
-				alert('Mark at least one leaf (click its dot) or option (click its chip) in the tree before saving a profile.');
-				return;
-			}
-			var name = (prompt('Profile name:', '') || '').trim();
-			if (!name) return;
-			if (!Model.saveProfile(name)) {
-				alert('A profile called "' + name + '" already exists.');
-				return;
-			}
-			updatePillLabels(); renderProfilePane();
-		});
-		document.getElementById('reset-profile-btn').addEventListener('click', function () {
-			if (!Model.hasNodeConstraints() || confirm('Reset every constraint back to default?')) {
-				Model.resetNodeConstraints();
-				Render.renderTree(); EditorForm.renderEditorForm(); updatePillLabels(); renderProfilePane();
-			}
-		});
-		profilePane.querySelectorAll('[data-load-profile]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				Model.loadProfile(b.getAttribute('data-load-profile'));
-				Render.renderTree(); EditorForm.renderEditorForm(); updatePillLabels(); renderProfilePane();
-			});
-		});
-		profilePane.querySelectorAll('[data-delete-profile]').forEach(function (b) {
-			b.addEventListener('click', function () {
-				Model.deleteProfile(b.getAttribute('data-delete-profile'));
-				updatePillLabels(); renderProfilePane();
-			});
-		});
 		Render.recordChange();
 	}
 
-	/* ---------- Version pane: graph + details card ---------- */
+	function afterProfileChange(constraintsChanged) {
+		if (constraintsChanged) {
+			Render.renderTree();
+			EditorForm.renderEditorForm();
+		}
+		updatePillLabels();
+		renderProfilePane();
+	}
 
-	var MAX_COMMENT_CHARS = 64;
+	function saveProfile() {
+		if (!Model.hasNodeConstraints()) {
+			alert('Mark at least one leaf (click its dot) or option (click its chip) in the tree' +
+				' before saving a profile.');
+			return;
+		}
+		var name = (prompt('Profile name:', '') || '').trim();
+		if (!name) return;
+		if (!Model.saveProfile(name)) {
+			alert('A profile called "' + name + '" already exists.');
+			return;
+		}
+		afterProfileChange(false);
+	}
 
-	function shorten(text, max) { return text.length > max ? text.slice(0, max - 1) + '\u2026' : text; }
+	function resetProfile() {
+		if (Model.hasNodeConstraints() && !confirm('Reset every constraint back to default?')) return;
+		Model.resetNodeConstraints();
+		afterProfileChange(true);
+	}
 
-	function resetVersionView() { selectedVersion = null; graphView = null; notice = null; }
+	profilePane.addEventListener('click', function (e) {
+		var btn = e.target.closest('button');
+		if (!btn) return;
+		if (btn.id === 'save-profile-btn') {
+			saveProfile();
+		} else if (btn.id === 'reset-profile-btn') {
+			resetProfile();
+		} else if (btn.hasAttribute('data-load-profile')) {
+			Model.loadProfile(btn.getAttribute('data-load-profile'));
+			afterProfileChange(true);
+		} else if (btn.hasAttribute('data-delete-profile')) {
+			Model.deleteProfile(btn.getAttribute('data-delete-profile'));
+			afterProfileChange(false);
+		}
+	});
+
+	/* ---------- Version pane ---------- */
+
+	function resetVersionView() {
+		selectedVersion = null;
+		graphView = null;
+		notice = null;
+	}
 
 	function renderVersionPane() {
 		if (!selectedVersion || !History.has(selectedVersion)) selectedVersion = History.getHead();
 		versionPane.innerHTML =
 			'<div class="viewport-toolbar">' +
-			'<button type="button" class="btn-icon" data-vg="zoom-out" aria-label="Zoom out">\u2212</button>' +
+			'<button type="button" class="btn-icon" data-vg="zoom-out" aria-label="Zoom out">−</button>' +
 			'<span class="metric-label" id="vg-zoom-label"></span>' +
 			'<button type="button" class="btn-icon" data-vg="zoom-in" aria-label="Zoom in">+</button>' +
-			'<button type="button" class="btn" data-vg="recenter" title="Fit the whole graph into view">Re-center</button>' +
-			'<button type="button" class="btn" data-vg="save" title="Save the tree on screen as a new version">Save as new version\u2026</button>' +
+			'<button type="button" class="btn" data-vg="recenter" title="Fit the whole graph into view">' +
+			'Re-center</button>' +
+			'<button type="button" class="btn" data-vg="save" title="Save the tree on screen as a new version">' +
+			'Save as new version…</button>' +
 			'</div>' +
 			'<div class="vg-box" id="vg-box"></div>' +
 			'<div class="vg-details" id="vg-details"></div>';
@@ -115,7 +141,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 		graph = VersionGraph.create(document.getElementById('vg-box'), History.graphNodes(), {
 			selectedId: selectedVersion,
 			view: graphView,
-			onSelect: function (id) { selectVersion(id); },
+			onSelect: selectVersion,
 			onViewChange: function (view) {
 				graphView = view;
 				zoomLabel.textContent = Math.round(view.k * 100) + '%';
@@ -137,61 +163,87 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 	function changesHtml(d) {
 		if (d.parents.length === 0) return '<div class="metric-label">First version</div>';
 		var c = d.changeCounts;
-		var label = '+' + c.added + ' added \u00b7 ' + c.changed + ' changed \u00b7 ' + c.removed + ' removed';
-		var title = 'Compared with "' + Render.escapeHtml(d.parents[0]) + '"';
-		if (c.added + c.changed + c.removed === 0) return '<div class="metric-label" title="' + title + '">' + label + '</div>';
-		var signs = { add: '+', remove: '\u2212', modify: '~' };
+		var label = '+' + c.added + ' added · ' + c.changed + ' changed · ' + c.removed + ' removed';
+		var title = 'Compared with "' + escapeHtml(d.parents[0]) + '"';
+		if (c.added + c.changed + c.removed === 0) {
+			return '<div class="metric-label" title="' + title + '">' + label + '</div>';
+		}
+		var signs = { add: '+', remove: '−', modify: '~' };
 		var lines = d.changes.map(function (ch) {
-			return '<div>' + signs[ch.type] + ' ' + Render.escapeHtml(ch.text) + '</div>';
+			return '<div>' + signs[ch.type] + ' ' + escapeHtml(ch.text) + '</div>';
 		}).join('');
-		if (d.changes.hiddenCount) lines += '<div>\u2026 and ' + d.changes.hiddenCount + ' more</div>';
-		return '<details><summary class="metric-label" title="' + title + '">' + label + '</summary><div class="sibling-note">' + lines + '</div></details>';
+		if (d.changes.hiddenCount) lines += '<div>… and ' + d.changes.hiddenCount + ' more</div>';
+		return '<details>' +
+			'<summary class="metric-label" title="' + title + '">' + label + '</summary>' +
+			'<div class="note">' + lines + '</div>' +
+			'</details>';
 	}
 
 	function noticeHtml() {
 		if (!notice) return '';
-		var html = '<div class="sibling-note">' + Render.escapeHtml(notice.text) + '</div>';
+		var html = '<div class="note">' + escapeHtml(notice.text) + '</div>';
 		if (notice.conflicts && notice.conflicts.length) {
-			html += '<details><summary class="sibling-note">Conflicts (kept yours)</summary><div class="sibling-note">' +
-				notice.conflicts.map(function (c) { return '<div>' + Render.escapeHtml(c.text + ' \u2013 ' + c.reason) + '</div>'; }).join('') +
-				'</div></details>';
+			var lines = notice.conflicts.map(function (c) {
+				return '<div>' + escapeHtml(c.text + ' – ' + c.reason) + '</div>';
+			}).join('');
+			html += '<details>' +
+				'<summary class="note">Conflicts (kept yours)</summary>' +
+				'<div class="note">' + lines + '</div>' +
+				'</details>';
 		}
 		return html;
 	}
 
+	function buttonHtml(action, label, title, disabled) {
+		return '<button type="button" class="btn"' + (action ? ' data-vg="' + action + '"' : '') +
+			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(title) + '">' + label + '</button>';
+	}
+
 	function actionsHtml(d) {
 		var head = History.getHead();
-		var esc = Render.escapeHtml;
-		var html = '<button type="button" class="btn" data-vg="open"' + (d.isHead ? ' disabled title="Already open in the editor"' : ' title="Switch the editor to this version"') + '>Open</button>' +
-			'<button type="button" class="btn" data-vg="restore"' + (d.isHead ? ' disabled title="This is the current version"' :
-				' title="' + esc('Make a new version with the contents of this one, on top of "' + head + '"') + '"') + '>Restore</button>';
 		if (d.isHead) {
-			html += '<button type="button" class="btn" disabled title="Select another version in the graph to merge it into this one">Merge</button>';
-		} else {
-			var p = History.mergePreview(d.id);
-			var n = p.canMerge ? p.added + p.updated + p.removed : 0;
-			var tip = p.canMerge ? 'Merge into "' + head + '": ' + p.summary : p.problem;
-			html += '<button type="button" class="btn" data-vg="merge"' + (p.canMerge ? '' : ' disabled') + ' title="' + esc(tip) + '">Merge' + (n ? ' (' + n + ')' : '') + '</button>';
+			return buttonHtml('open', 'Open', 'Already open in the editor', true) +
+				buttonHtml('restore', 'Restore', 'This is the current version', true) +
+				buttonHtml(null, 'Merge', 'Select another version in the graph to merge it into this one', true) +
+				(d.isDirty
+					? buttonHtml('update', 'Update this version',
+						'Overwrite this version with the tree on screen', false)
+					: '');
 		}
-		if (d.isHead && d.isDirty) {
-			html += '<button type="button" class="btn" data-vg="update" title="Overwrite this version with the tree on screen">Update this version</button>';
-		}
-		return html;
+		var p = History.mergePreview(d.id);
+		var count = p.canMerge ? p.added + p.updated + p.removed : 0;
+		return buttonHtml('open', 'Open', 'Switch the editor to this version', false) +
+			buttonHtml('restore', 'Restore',
+				'Make a new version with the contents of this one, on top of "' + head + '"', false) +
+			buttonHtml('merge', 'Merge' + (count ? ' (' + count + ')' : ''),
+				p.canMerge ? 'Merge into "' + head + '": ' + p.summary : p.problem, !p.canMerge);
 	}
 
 	function renderDetails() {
 		var box = document.getElementById('vg-details');
 		var d = History.describe(selectedVersion);
-		if (!d) { box.innerHTML = '<div class="editor-empty">Select a version in the graph.</div>'; return; }
-		var esc = Render.escapeHtml;
+		if (!d) {
+			box.innerHTML = '<div class="editor-empty">Select a version in the graph.</div>';
+			return;
+		}
 		var tags = (d.isHead ? tagHtml('current') : '') + (d.isDirty ? tagHtml('unsaved changes') : '') +
 			(d.isBranch ? tagHtml('branch') : '') + (d.isMerge ? tagHtml('merge') : '');
 		var html = noticeHtml() +
-			'<div class="control-left"><strong>' + esc(d.id) + '</strong>' + tags + '<span class="metric-label">' + esc(d.created) + '</span></div>';
-		if (d.description) html += '<div class="metric-label" title="' + esc(d.description) + '">' + esc(shorten(d.description, MAX_COMMENT_CHARS)) + '</div>';
+			'<div class="control-left">' +
+			'<strong>' + escapeHtml(d.id) + '</strong>' + tags +
+			'<span class="metric-label">' + escapeHtml(d.created) + '</span>' +
+			'</div>';
+		if (d.description) {
+			html += '<div class="metric-label" title="' + escapeHtml(d.description) + '">' +
+				escapeHtml(Util.shorten(d.description, MAX_COMMENT_CHARS)) + '</div>';
+		}
 		if (d.parents.length) {
 			html += '<div class="control-left"><span class="metric-label">Based on</span>' +
-				d.parents.map(function (p) { return '<button type="button" class="btn" data-pick="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>';
+				d.parents.map(function (p) {
+					return '<button type="button" class="btn" data-pick="' + escapeHtml(p) + '">' +
+						escapeHtml(p) + '</button>';
+				}).join('') +
+				'</div>';
 		}
 		html += changesHtml(d) + '<div class="viewport-toolbar">' + actionsHtml(d) + '</div>';
 		box.innerHTML = html;
@@ -209,21 +261,28 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 	function saveAsNewVersion() {
 		var name = (prompt('Name for the new version:', '') || '').trim();
 		if (!name) return;
-		var comment = (prompt('Comment (optional) \u2013 what changed?', '') || '').trim();
+		var comment = (prompt('Comment (optional) – what changed?', '') || '').trim();
 		var error = History.saveAsNew(name, comment);
-		if (error) { alert(error); return; }
+		if (error) {
+			alert(error);
+			return;
+		}
 		notice = null;
 		selectedVersion = History.getHead();
 		renderVersionPane();
 	}
 
-	function confirmLosingChanges(what) {
-		return !History.isDirty() || confirm(what + ' The unsaved changes to "' + History.getHead() + '" will be lost.');
+	function confirmLosingChanges(question) {
+		return !History.isDirty() ||
+			confirm(question + ' The unsaved changes to "' + History.getHead() + '" will be lost.');
 	}
 
 	function conflictLines(list) {
-		return list.slice(0, 5).map(function (c) { return '\n\u2022 ' + c.text + ' \u2013 ' + c.reason; }).join('') +
-			(list.length > 5 ? '\n\u2022 \u2026 and ' + (list.length - 5) + ' more' : '');
+		var shown = list.slice(0, MAX_CONFLICTS_LISTED).map(function (c) {
+			return '\n• ' + c.text + ' – ' + c.reason;
+		}).join('');
+		var more = list.length - MAX_CONFLICTS_LISTED;
+		return shown + (more > 0 ? '\n• … and ' + more + ' more' : '');
 	}
 
 	var actions = {
@@ -247,7 +306,10 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 				(p.conflicts.length ? '\n\nConflicts (your side is kept):' + conflictLines(p.conflicts) : '');
 			if (!confirm(question)) return;
 			var result = History.merge(id);
-			if (result.error) { alert(result.error); return; }
+			if (result.error) {
+				alert(result.error);
+				return;
+			}
 			notice = { text: 'Merged "' + id + '": ' + result.summary, conflicts: result.conflicts };
 			afterTreeChange(result.name);
 		},
@@ -260,19 +322,22 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 	};
 
 	versionPane.addEventListener('click', function (e) {
-		var target = e.target.closest ? e.target.closest('button') : null;
-		if (!target || target.disabled) return;
-		var vg = target.getAttribute('data-vg');
-		var pick = target.getAttribute('data-pick');
-		if (pick !== null) { selectVersion(pick); return; }
-		if (vg === 'zoom-in') graph.zoomBy(1.2);
-		else if (vg === 'zoom-out') graph.zoomBy(1 / 1.2);
+		var btn = e.target.closest('button');
+		if (!btn || btn.disabled) return;
+		var pick = btn.getAttribute('data-pick');
+		if (pick !== null) {
+			selectVersion(pick);
+			return;
+		}
+		var vg = btn.getAttribute('data-vg');
+		if (vg === 'zoom-in') graph.zoomBy(GRAPH_ZOOM_STEP);
+		else if (vg === 'zoom-out') graph.zoomBy(1 / GRAPH_ZOOM_STEP);
 		else if (vg === 'recenter') graph.fit();
 		else if (vg === 'save') saveAsNewVersion();
 		else if (actions[vg]) actions[vg](selectedVersion);
 	});
 
-	/* ---------- Open/close/switch plumbing ---------- */
+	/* ---------- Opening, closing and switching ---------- */
 
 	function setActivePill(name) {
 		profileBtn.classList.toggle('is-open', name === 'profile');
@@ -282,67 +347,66 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 		panelsStack.classList.toggle('flyout-open', name !== null);
 	}
 
-	function flyoutFor(name) { return name === 'profile' ? profileFlyout : versionFlyout; }
-
-	function closeAllPopovers() {
+	function closeFlyouts() {
 		profileFlyout.hidden = true;
 		versionFlyout.hidden = true;
 		setActivePill(null);
-		openPopover = null;
+		openFlyoutName = null;
 	}
 
-	function togglePopover(name) {
-		if (openPopover === name) {
-			closeAllPopovers();
-			return;
+	function openFlyout(name) {
+		openFlyoutName = name;
+		if (name === 'version') {
+			selectedVersion = null;
+			notice = null;
 		}
-		profileFlyout.hidden = true;
-		versionFlyout.hidden = true;
-		openPopover = name;
-		if (name === 'version') { selectedVersion = null; notice = null; }
 		renderFlyout();
-		flyoutFor(name).hidden = false;
+		profileFlyout.hidden = name !== 'profile';
+		versionFlyout.hidden = name !== 'version';
 		setActivePill(name);
+	}
+
+	function toggleFlyout(name) {
+		var wasOpen = openFlyoutName === name;
+		closeFlyouts();
+		if (!wasOpen) openFlyout(name);
 	}
 
 	profileBtn.addEventListener('click', function (e) {
 		e.stopPropagation();
-		togglePopover('profile');
+		toggleFlyout('profile');
 	});
+
 	versionBtn.addEventListener('click', function (e) {
 		e.stopPropagation();
-		togglePopover('version');
+		toggleFlyout('version');
 	});
 
 	document.querySelectorAll('[data-flyout-switch]').forEach(function (tab) {
 		tab.addEventListener('click', function (e) {
 			e.stopPropagation();
 			var name = tab.getAttribute('data-flyout-switch');
-			if (openPopover === name) return;
-			openPopover = name;
-			if (name === 'version') { selectedVersion = null; notice = null; }
-			renderFlyout();
-			flyoutFor(name).hidden = false;
-			flyoutFor(name === 'profile' ? 'version' : 'profile').hidden = true;
-			setActivePill(name);
+			if (openFlyoutName !== name) openFlyout(name);
 		});
 	});
 
 	document.querySelectorAll('[data-flyout-close]').forEach(function (btn) {
 		btn.addEventListener('click', function (e) {
 			e.stopPropagation();
-			closeAllPopovers();
+			closeFlyouts();
 		});
 	});
 
-	profileFlyout.addEventListener('click', function (e) { e.stopPropagation(); });
-	versionFlyout.addEventListener('click', function (e) { e.stopPropagation(); });
+	[profileFlyout, versionFlyout].forEach(function (flyout) {
+		flyout.addEventListener('click', function (e) { e.stopPropagation(); });
+	});
 
 	document.addEventListener('click', function () {
-		if (openPopover !== null) closeAllPopovers();
+		if (openFlyoutName !== null) closeFlyouts();
 	});
+
 	document.addEventListener('keydown', function (e) {
-		if (e.key === 'Escape' && openPopover !== null) closeAllPopovers();
+		if (e.key === 'Escape' && openFlyoutName !== null) closeFlyouts();
 	});
 
 	return {
@@ -350,4 +414,4 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 		updatePillLabels: updatePillLabels,
 		resetVersionView: resetVersionView
 	};
-})(NovaDM.Model, NovaDM.History, NovaDM.VersionGraph, NovaDM.Render, NovaDM.EditorForm);
+})(NovaDM.Model, NovaDM.History, NovaDM.VersionGraph, NovaDM.Render, NovaDM.EditorForm, NovaDM.Util);
