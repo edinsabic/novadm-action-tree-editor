@@ -9,7 +9,7 @@ window.NovaDM = window.NovaDM || {};
 	'use strict';
 
 	var ZOOM_STEP = 10;
-	var RESET_ZOOM = 50;
+	var TRADITIONAL_ZOOM = 50;
 	var DIRECTORY_ZOOM = 100;
 
 	/* ---------- Top-level tabs ---------- */
@@ -59,7 +59,8 @@ window.NovaDM = window.NovaDM || {};
 	});
 
 	document.getElementById('zoom-reset-btn').addEventListener('click', function () {
-		Render.setZoom(RESET_ZOOM);
+		var activeLayout = document.querySelector('.toggle-btn.active').dataset.layout;
+		Render.setZoom(activeLayout === 'traditional' ? TRADITIONAL_ZOOM : DIRECTORY_ZOOM);
 	});
 
 	/* ---------- Start ---------- */
