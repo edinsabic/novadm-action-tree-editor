@@ -30,14 +30,13 @@
 				</div>
 
 				<div class="control-right">
-					<button id="profile-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<button id="profile-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false">
 						<span class="pill-btn-label">Create or select profile</span>
 					</button>
-					<button id="version-btn" type="button" class="pill-btn" aria-haspopup="true" aria-expanded="false">
+					<button id="version-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false">
 						<span class="pill-btn-label">Version history</span>
 					</button>
 				</div>
-
 			</div>
 
 			<div class="viewport-row">
@@ -45,20 +44,23 @@
 				<div class="viewport-box viewport-tree">
 					<div class="viewport-toolbar">
 						<div class="toolbar-group" role="group" aria-label="Zoom">
-							<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
+							<button id="zoom-out-btn" class="btn-icon" type="button"
+								aria-label="Zoom out">&minus;</button>
 							<span id="zoom-label">100%</span>
-							<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
-							<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
+							<button id="zoom-in-btn" class="btn-icon" type="button" aria-label="Zoom in">+</button>
+							<button id="zoom-reset-btn" class="btn" type="button">Reset zoom</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Undo and redo">
-							<button id="undo-btn" type="button" class="btn-icon" aria-label="Undo" title="Undo (Ctrl+Z)">&#8630;</button>
-							<button id="redo-btn" type="button" class="btn-icon" aria-label="Redo" title="Redo (Ctrl+Y)">&#8631;</button>
+							<button id="undo-btn" class="btn-icon" type="button" aria-label="Undo"
+								title="Undo (Ctrl+Z)">&#8630;</button>
+							<button id="redo-btn" class="btn-icon" type="button" aria-label="Redo"
+								title="Redo (Ctrl+Y)">&#8631;</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Tree file">
-							<button id="load-example-btn" type="button" class="btn">Load example tree</button>
-							<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
-							<button id="import-tree-btn" type="button" class="btn">Import tree</button>
-							<button id="export-tree-btn" type="button" class="btn">Export tree</button>
+							<button id="load-example-btn" class="btn" type="button">Load example tree</button>
+							<button id="clear-tree-btn" class="btn" type="button">Clear tree</button>
+							<button id="import-tree-btn" class="btn" type="button">Import tree</button>
+							<button id="export-tree-btn" class="btn" type="button">Export tree</button>
 							<input id="import-file-input" type="file" hidden />
 						</div>
 					</div>
@@ -67,7 +69,7 @@
 
 				<div class="viewport-editor-col">
 					<span class="viewport-box-label">Editor panel</span>
-					<div class="viewport-box viewport-editor-panel" style="padding:0;">
+					<div class="viewport-box viewport-editor-panel">
 						<div class="palette">
 							<span class="palette-label">Drag onto the tree</span>
 							<div class="palette-item" draggable="true" data-new-kind="AND">
@@ -76,7 +78,7 @@
 								<span class="hint">all children</span>
 							</div>
 							<div class="palette-item" draggable="true" data-new-kind="XOR">
-								<span class="node-badge neutral">−</span>
+								<span class="node-badge neutral">&minus;</span>
 								<span>XOR node</span>
 								<span class="hint">one of</span>
 							</div>
@@ -90,38 +92,61 @@
 			<div class="scenario-summary-bar">
 				<span class="scenario-summary-label">Scenario space (live)</span>
 				<div class="scenario-metrics">
-					<span class="metric"><span class="metric-label">Size</span> <span class="metric-value" id="scenario-space-size-value">0</span></span>
-					<span class="metric"><span class="metric-label">Cost</span> <span class="metric-value">N/A</span></span>
-					<span class="metric"><span class="metric-label">CO&#8322;</span> <span class="metric-value">N/A</span></span>
-					<span class="metric"><span class="metric-label">Score</span> <span class="metric-value">N/A</span></span>
+					<span class="metric">
+						<span class="metric-label">Size</span>
+						<span class="metric-value" id="scenario-space-size-value">0</span>
+					</span>
+					<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
+						Warning: the applied constraints are contradictory.
+					</div>
+					<span class="metric">
+						<span class="metric-label">Cost</span>
+						<span class="metric-value">N/A</span>
+					</span>
+					<span class="metric">
+						<span class="metric-label">CO&#8322;</span>
+						<span class="metric-value">N/A</span>
+					</span>
+					<span class="metric">
+						<span class="metric-label">Score</span>
+						<span class="metric-value">N/A</span>
+					</span>
 				</div>
-				<button type="button" id="view-full-analysis-btn" class="scenario-summary-link">View full analysis &rarr;</button>
+				<button id="view-full-analysis-btn" class="scenario-summary-link" type="button">
+					View full analysis &rarr;
+				</button>
 			</div>
 
 			<div class="viewport-popover-layer">
 				<div id="profile-flyout" class="flyout" role="dialog" aria-label="Profiles" hidden>
 					<div class="flyout-header">
 						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
-							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-switch="profile">Profile</button>
-							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-switch="version">Version</button>
+							<button class="flyout-tab active" type="button" role="tab" aria-selected="true"
+								data-flyout-switch="profile">Profile</button>
+							<button class="flyout-tab" type="button" role="tab" aria-selected="false"
+								data-flyout-switch="version">Version</button>
 						</div>
-						<button type="button" class="flyout-close" data-flyout-close="profile" aria-label="Close">&times;</button>
+						<button class="flyout-close" type="button" data-flyout-close="profile"
+							aria-label="Close">&times;</button>
 					</div>
 					<div class="flyout-body">
-						<div class="flyout-pane" id="profile-pane" role="menu" aria-label="Profiles"></div>
+						<div id="profile-pane" class="flyout-pane" role="menu" aria-label="Profiles"></div>
 					</div>
 				</div>
 
 				<div id="version-flyout" class="flyout" role="dialog" aria-label="Version history" hidden>
 					<div class="flyout-header">
 						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
-							<button type="button" class="flyout-tab" role="tab" aria-selected="false" data-flyout-switch="profile">Profile</button>
-							<button type="button" class="flyout-tab active" role="tab" aria-selected="true" data-flyout-switch="version">Version</button>
+							<button class="flyout-tab" type="button" role="tab" aria-selected="false"
+								data-flyout-switch="profile">Profile</button>
+							<button class="flyout-tab active" type="button" role="tab" aria-selected="true"
+								data-flyout-switch="version">Version</button>
 						</div>
-						<button type="button" class="flyout-close" data-flyout-close="version" aria-label="Close">&times;</button>
+						<button class="flyout-close" type="button" data-flyout-close="version"
+							aria-label="Close">&times;</button>
 					</div>
 					<div class="flyout-body">
-						<div class="flyout-pane" id="version-pane" role="group" aria-label="Versions"></div>
+						<div id="version-pane" class="flyout-pane" role="group" aria-label="Versions"></div>
 					</div>
 				</div>
 			</div>
@@ -136,6 +161,7 @@
 </main>
 
 <script src="../examples/sample-tree.js"></script>
+<script src="../src/util.js"></script>
 <script src="../src/model.js"></script>
 <script src="../src/parser.js"></script>
 <script src="../src/history.js"></script>

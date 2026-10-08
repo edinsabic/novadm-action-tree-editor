@@ -1,3 +1,5 @@
+/* ---------- Design tokens ---------- */
+
 :root {
 	--color-bg: #F5F5F7;
 	--color-surface: #FFFFFF;
@@ -8,8 +10,14 @@
 	--color-accent: #6B2737;
 	--color-accent-light: #F5ECED;
 
-	/* Node color is driven by domain class (Subject/Feature/Approach), not AND/XOR kind.
-	   A node with no class set renders --neutral-color. */
+	--color-danger: #B3261E;
+	--color-danger-border: #E7C4C1;
+	--color-danger-light: #FBEDEC;
+
+	--color-always: #2E7D32;
+	--color-always-light: #E8F3E9;
+	--color-never: #B3261E;
+
 	--subject-color: #C1440E;
 	--feature-color: #1F6FEB;
 	--approach-color: #1E8E5A;
@@ -26,63 +34,63 @@
 	--shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
 	--shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
 
-	--color-danger: #B3261E;
-	--color-danger-border: #E7C4C1;
-	--color-danger-light: #FBEDEC;
-
-	--color-always: #2E7D32;
-	--color-never: #B3261E;
-	--color-always-light: #E8F3E9;
-
-	/* Tree viewport / editor panel widths — must sum to 100%.
-	   Both .viewport-tree, .viewport-editor-col, and the popover offset read from these,
-	   so changing a value here keeps everything in sync (see Viewports section below). */
 	--tree-width: 68%;
 	--editor-width: 32%;
-	/* Floor, not a fixed height: the panels stretch to fill whatever vertical space
-	   is left after the title/tabs/controls/summary bar, so the whole app fits one
-	   screen with no page scrollbar. This only kicks in if the window gets too short
-	   for everything to fit -- below it, the page scrolls instead of crushing the panels. */
 	--panels-min-height: 320px;
 }
 
+/* ---------- Base ---------- */
+
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+
+html,
+body {
+	height: 100%;
+}
 
 body {
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	height: 100dvh;
 	margin: 0;
 	padding: 24px 32px;
+	overflow-y: auto;
 	background-color: var(--color-bg);
 	color: var(--color-ink);
 	font-family: var(--font-body);
 	font-size: 14px;
-	-webkit-font-smoothing: antialiased;
 	letter-spacing: -0.01em;
-	display: flex;
-	flex-direction: column;
-	height: 100vh;  /* fallback for browsers without dvh support */
-	height: 100dvh; /* accounts for mobile browser chrome; desktop treats this the same as 100vh */
-	overflow-y: auto; /* only scrolls if --panels-min-height can't be honored (very short window) */
+	-webkit-font-smoothing: antialiased;
 }
 
-button { font: inherit; cursor: pointer; }
-input, select { font: inherit; }
+button {
+	font: inherit;
+	cursor: pointer;
+}
+
+input,
+select {
+	font: inherit;
+}
+
+[hidden] { display: none !important; }
 
 #page-title {
-	font-family: var(--font-display);
-	font-weight: 600;
-	font-size: 1.4rem;
-	margin: 0 0 18px;
 	flex-shrink: 0;
+	margin: 0 0 18px;
+	font-family: var(--font-display);
+	font-size: 1.4rem;
+	font-weight: 600;
 }
 
-/* --- Top-level tabs --- */
+/* ---------- Top-level tabs ---------- */
 
 .tabs {
 	display: flex;
+	flex-shrink: 0;
 	gap: 6px;
 	border-bottom: 1px solid var(--color-border);
-	flex-shrink: 0;
 }
 
 .tab {
@@ -99,40 +107,38 @@ input, select { font: inherit; }
 .tab:hover { color: var(--color-ink); }
 
 .tab.active {
-	background-color: var(--color-surface);
+	margin-bottom: -1px;
 	border-color: var(--color-border);
 	border-bottom: 1px solid var(--color-surface);
-	margin-bottom: -1px;
+	background-color: var(--color-surface);
 	color: var(--color-ink);
 	font-weight: 600;
 }
 
 main {
-	padding-top: 18px;
-	flex: 1;
-	min-height: 0; /* required for a flex child to actually shrink instead of overflowing */
 	display: flex;
-	flex-direction: column;
-}
-
-/* Whichever section is visible (not [hidden]) fills all of main's remaining height. */
-.tab-panel {
 	flex: 1;
+	flex-direction: column;
 	min-height: 0;
-	display: flex;
-	flex-direction: column;
+	padding-top: 18px;
 }
-.tab-panel[hidden] { display: none; } /* our own display:flex above would otherwise override the browser's default [hidden] rule */
 
-/* --- Control row: layout toggle + profile/version buttons --- */
+.tab-panel {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+}
+
+/* ---------- Control row ---------- */
 
 .control-row {
 	display: flex;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
 	margin-bottom: 14px;
-	flex-shrink: 0;
 }
 
 .control-left {
@@ -148,16 +154,16 @@ main {
 }
 
 .layout-label {
-	font-size: 0.8rem;
 	color: var(--color-ink-muted);
+	font-size: 0.8rem;
 	font-weight: 500;
 }
 
 .toggle-group {
 	display: flex;
+	overflow: hidden;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-sm);
-	overflow: hidden;
 	background-color: var(--color-surface);
 }
 
@@ -170,8 +176,8 @@ main {
 	font-size: 0.85rem;
 	font-weight: 500;
 }
+
 .toggle-btn:last-child { border-right: none; }
-.toggle-btn:disabled { color: var(--color-ink-muted); font-style: italic; cursor: not-allowed; }
 
 .toggle-btn:hover { color: var(--color-ink); }
 
@@ -180,8 +186,6 @@ main {
 	color: var(--color-ink);
 	font-weight: 600;
 }
-
-/* --- Profile / Version buttons --- */
 
 .pill-btn {
 	display: inline-flex;
@@ -204,78 +208,73 @@ main {
 	font-weight: 600;
 }
 
-/* --- Viewports --- */
-.panels-stack { position: relative; flex: 1; display: flex; flex-direction: column; }
+/* ---------- Viewports ---------- */
+
+.panels-stack {
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+
 .panels-stack.flyout-open .control-right { visibility: hidden; }
 
 .viewport-row {
 	position: relative;
 	display: flex;
-	gap: 28px;
-	align-items: stretch; /* both columns stretch to the row's full height, so their bottoms always line up */
 	flex: 1;
+	align-items: stretch;
+	gap: 28px;
 	min-height: var(--panels-min-height);
 	contain: size;
 }
 
 .viewport-box {
-	background-color: var(--color-surface);
-	border: 1px solid var(--color-border-soft);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-card);
 	display: flex;
 	flex-direction: column;
-	min-height: 0; /* lets it shrink to the stretched height instead of growing past it */
-	overflow: hidden; /* only the inner content areas scroll, not the box or the page */
+	min-height: 0;
+	overflow: hidden;
+	border: 1px solid var(--color-border-soft);
+	border-radius: var(--radius-md);
+	background-color: var(--color-surface);
+	box-shadow: var(--shadow-card);
 }
-.viewport-tree { flex: 1 1 var(--tree-width); max-width: var(--tree-width); min-width: 0; }
-.viewport-editor-col { flex: 1 1 var(--editor-width); max-width: var(--editor-width); min-width: 240px; display: flex; flex-direction: column; gap: 10px; }
-/* The label sits above the editor's box, so the box itself is shorter at the top —
-   flex:1 makes it absorb exactly (row height − label height − gap), so its bottom
-   still lands on the same line as the tree box's bottom. */
-.viewport-editor-panel { flex: 1; min-height: 0; align-items: stretch; padding: 0; }
+
+.viewport-tree {
+	flex: 1 1 var(--tree-width);
+	min-width: 0;
+	max-width: var(--tree-width);
+}
+
+.viewport-editor-col {
+	display: flex;
+	flex: 1 1 var(--editor-width);
+	flex-direction: column;
+	gap: 10px;
+	min-width: 240px;
+	max-width: var(--editor-width);
+}
+
+.viewport-editor-panel {
+	flex: 1;
+	min-height: 0;
+}
+
 .viewport-box-label {
 	align-self: flex-start;
 	padding: 5px 12px;
+	border-radius: var(--radius-sm);
 	background-color: var(--color-accent-light);
 	color: var(--color-accent);
-	border-radius: var(--radius-sm);
 	font-size: 0.82rem;
 	font-weight: 600;
 }
 
-.viewport-toolbar {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	padding: 8px 12px;
-	color: var(--color-ink-muted);
-	flex-wrap: wrap;
-}
-.viewport-tree > .viewport-toolbar { column-gap: 14px; row-gap: 6px; }
-.toolbar-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.btn-icon:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn, .btn-icon {
-	border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-	background-color: var(--color-surface); color: var(--color-ink-muted); font-size: 0.78rem;
-}
-.btn { padding: 4px 10px; }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-icon { width: 22px; height: 22px; padding: 0; }
-.btn:hover:not(:disabled), .btn-icon:hover:not(:disabled) { border-color: var(--color-border); color: var(--color-ink); background-color: var(--color-bg); }
-
-#zoom-label {
-	font-size: 0.8rem;
-	color: var(--color-ink-muted);
-	min-width: 34px;
-	text-align: center;
-}
-
 .viewport-content {
 	flex: 1;
+	padding: 4px 10px 14px;
 	overflow-y: auto;
 	font-size: 0.88rem;
-	padding: 4px 10px 14px;
 	text-align: left;
 }
 
@@ -283,19 +282,79 @@ main {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--color-ink-muted);
-	text-align: center;
 	padding: 20px;
+	color: var(--color-ink-muted);
 	font-size: 0.85rem;
+	text-align: center;
 }
 
-/* --- Profile / Version (independent) flyouts --- */
+/* ---------- Toolbars and buttons ---------- */
+
+.viewport-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	color: var(--color-ink-muted);
+}
+
+.viewport-tree > .viewport-toolbar {
+	column-gap: 14px;
+	row-gap: 6px;
+}
+
+.toolbar-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.btn,
+.btn-icon {
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--color-surface);
+	color: var(--color-ink-muted);
+	font-size: 0.78rem;
+}
+
+.btn { padding: 4px 10px; }
+
+.btn-icon {
+	width: 22px;
+	height: 22px;
+	padding: 0;
+}
+
+.btn:hover:not(:disabled),
+.btn-icon:hover:not(:disabled) {
+	background-color: var(--color-bg);
+	color: var(--color-ink);
+}
+
+.btn:disabled,
+.btn-icon:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+#zoom-label {
+	min-width: 34px;
+	color: var(--color-ink-muted);
+	font-size: 0.8rem;
+	text-align: center;
+}
+
+/* ---------- Profile and version flyouts ---------- */
+
 .viewport-popover-layer {
 	position: absolute;
 	top: 0;
-	left: 0;
 	right: 0;
 	bottom: -10px;
+	left: 0;
 	pointer-events: none;
 }
 
@@ -303,21 +362,20 @@ main {
 	position: absolute;
 	top: 0;
 	right: 0;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
 	width: calc(var(--editor-width) + 8%);
 	min-width: 320px;
 	max-width: 560px;
 	max-height: 100%;
-	display: flex;
-	flex-direction: column;
-	background-color: var(--color-surface);
+	overflow: hidden;
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-lg);
+	background-color: var(--color-surface);
 	box-shadow: var(--shadow-popover);
 	pointer-events: auto;
-	z-index: 30;
-	overflow: hidden;
 }
-.flyout[hidden] { display: none; }
 
 .flyout-header {
 	display: flex;
@@ -347,8 +405,8 @@ main {
 .flyout-tab:hover { color: var(--color-ink); }
 
 .flyout-tab.active {
-	background-color: var(--color-surface);
 	border-color: var(--color-border);
+	background-color: var(--color-surface);
 	color: var(--color-ink);
 	font-weight: 600;
 }
@@ -375,11 +433,11 @@ main {
 
 .flyout-body {
 	display: flex;
-	flex-direction: column;
 	flex: 1 1 auto;
+	flex-direction: column;
 	min-height: 240px;
-	overflow-y: auto;
 	padding: 8px;
+	overflow-y: auto;
 }
 
 .flyout-pane {
@@ -387,43 +445,22 @@ main {
 	flex-direction: column;
 }
 
-/* --- Version flyout graph --- */
-#version-pane { flex: 1; min-height: 0; }
-#version-pane .viewport-toolbar { padding: 2px 0; }
-.vg-box { position: relative; flex: 1 100 260px; min-height: 120px; background-color: var(--color-bg); border-radius: var(--radius-sm); }
-.vg-details { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
-.vg-tag { padding: 1px 7px; border-radius: var(--radius-sm); background-color: var(--color-accent-light); color: var(--color-accent); font-size: 0.72rem; font-weight: 600; }
-.vg-svg { position: absolute; inset: 0; cursor: grab; user-select: none; }
-.vg-svg.panning { cursor: grabbing; }
-.vg-node-g { cursor: pointer; }
-.vg-node { fill: var(--color-surface); stroke: var(--color-ink-muted); stroke-width: 1.5; }
-.vg-node.current { fill: var(--color-accent); }
-.vg-node.branch { stroke-dasharray: 3 2; }
-.vg-node.selected { stroke: var(--color-ink); stroke-width: 3; stroke-dasharray: none; }
-.vg-dirty { fill: none; stroke: var(--color-accent); stroke-dasharray: 3 2; }
-.vg-edge, .vg-arrowhead { color: var(--color-ink-muted); }
-.vg-edge { fill: none; stroke: currentColor; stroke-width: 1.5; }
-.vg-arrowhead { fill: currentColor; }
-.vg-edge.merged, .vg-arrowhead.merged { color: var(--color-accent); }
-.vg-label { fill: var(--color-ink-muted); font-size: 0.72rem; }
-.vg-label.current { fill: var(--color-ink); font-weight: 600; }
-
 .popover-list {
-	list-style: none;
 	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
 .popover-item {
 	display: block;
 	width: 100%;
-	text-align: left;
 	padding: 8px 10px;
 	border: none;
 	border-radius: var(--radius-sm);
 	background-color: transparent;
 	color: var(--color-ink);
 	font-size: 0.85rem;
+	text-align: left;
 }
 
 .popover-item:hover { background-color: var(--color-bg); }
@@ -440,64 +477,161 @@ main {
 	background-color: var(--color-border-soft);
 }
 
-.profile-row { display: flex; align-items: stretch; gap: 4px; }
+.profile-row {
+	display: flex;
+	align-items: stretch;
+	gap: 4px;
+}
+
 .profile-row .popover-item { flex: 1; }
+
 .profile-delete-btn {
 	flex-shrink: 0;
 	width: 22px;
 	border: none;
-	background: none;
-	color: var(--color-ink-muted);
-	cursor: pointer;
 	border-radius: var(--radius-sm);
+	background-color: transparent;
+	color: var(--color-ink-muted);
 	font-size: 1rem;
 	line-height: 1;
 }
-.profile-delete-btn:hover { background: var(--color-danger-light); color: var(--color-danger); }
+
+.profile-delete-btn:hover {
+	background-color: var(--color-danger-light);
+	color: var(--color-danger);
+}
+
+/* ---------- Version graph ---------- */
+
+#version-pane {
+	flex: 1;
+	min-height: 0;
+}
+
+#version-pane .viewport-toolbar { padding: 2px 0; }
+
+.vg-box {
+	position: relative;
+	flex: 1 100 260px;
+	min-height: 120px;
+	border-radius: var(--radius-sm);
+	background-color: var(--color-bg);
+}
+
+.vg-details {
+	display: flex;
+	flex: 0 1 auto;
+	flex-direction: column;
+	gap: 6px;
+	min-height: 0;
+	padding-top: 8px;
+	overflow-y: auto;
+}
+
+.vg-tag {
+	padding: 1px 7px;
+	border-radius: var(--radius-sm);
+	background-color: var(--color-accent-light);
+	color: var(--color-accent);
+	font-size: 0.72rem;
+	font-weight: 600;
+}
+
+.vg-svg {
+	position: absolute;
+	inset: 0;
+	cursor: grab;
+	user-select: none;
+}
+
+.vg-svg.panning { cursor: grabbing; }
+
+.vg-node-g { cursor: pointer; }
+
+.vg-node {
+	fill: var(--color-surface);
+	stroke: var(--color-ink-muted);
+	stroke-width: 1.5;
+}
+
+.vg-node.current { fill: var(--color-accent); }
+
+.vg-node.branch { stroke-dasharray: 3 2; }
+
+.vg-node.selected {
+	stroke: var(--color-ink);
+	stroke-width: 3;
+	stroke-dasharray: none;
+}
+
+.vg-dirty {
+	fill: none;
+	stroke: var(--color-accent);
+	stroke-dasharray: 3 2;
+}
+
+.vg-edge,
+.vg-arrowhead {
+	color: var(--color-ink-muted);
+}
+
+.vg-edge {
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.5;
+}
+
+.vg-arrowhead { fill: currentColor; }
+
+.vg-edge.merged,
+.vg-arrowhead.merged {
+	color: var(--color-accent);
+}
+
+.vg-label {
+	fill: var(--color-ink-muted);
+	font-size: 0.72rem;
+}
+
+.vg-label.current {
+	fill: var(--color-ink);
+	font-weight: 600;
+}
+
+/* ---------- Scenario summary bar ---------- */
 
 .scenario-summary-bar {
 	display: flex;
+	flex-shrink: 0;
+	flex-wrap: nowrap;
 	align-items: center;
 	gap: 24px;
 	margin-top: 18px;
 	padding: 14px 20px;
-	background-color: var(--color-surface);
+	overflow-x: auto;
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-md);
+	background-color: var(--color-surface);
 	box-shadow: var(--shadow-card);
-	flex-wrap: nowrap;
-	overflow-x: auto;
-	flex-shrink: 0;
 }
 
-.scenario-summary-label {
-	flex-shrink: 0;
-	font-size: 0.85rem;
-	font-weight: 600;
-	color: var(--color-accent);
-	background-color: var(--color-accent-light);
-	padding: 5px 12px;
-	border-radius: var(--radius-sm);
-	white-space: nowrap;
-}
-
+.scenario-summary-label,
 .constraint-warning {
 	flex-shrink: 0;
 	padding: 5px 12px;
+	border-radius: var(--radius-sm);
 	background-color: var(--color-accent-light);
 	color: var(--color-accent);
-	border-radius: var(--radius-sm);
 	font-size: 0.85rem;
 	font-weight: 600;
 	white-space: nowrap;
 }
-.constraint-warning[hidden] { display: none; }
 
 .scenario-metrics {
 	display: flex;
+	flex: 1;
 	align-items: baseline;
 	gap: 28px;
-	flex: 1;
 }
 
 .metric {
@@ -514,17 +648,17 @@ main {
 }
 
 .metric-value {
-	font-weight: 600;
-	font-size: 1.05rem;
 	color: var(--color-ink);
+	font-size: 1.05rem;
+	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
 
 .scenario-summary-link {
 	flex-shrink: 0;
-	background: none;
-	border: none;
 	padding: 0;
+	border: none;
+	background-color: transparent;
 	color: var(--color-accent);
 	font-size: 0.9rem;
 	font-weight: 600;
@@ -534,11 +668,11 @@ main {
 .scenario-summary-link:hover { text-decoration: underline; }
 
 .placeholder-panel {
-	flex: 1;
-	min-height: 0;
 	display: flex;
+	flex: 1;
 	align-items: center;
 	justify-content: center;
+	min-height: 0;
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-md);
 	background-color: var(--color-surface);
@@ -546,122 +680,274 @@ main {
 	font-size: 0.85rem;
 }
 
-.palette { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
-#editor-form-host { flex: 1; overflow-y: auto; }
-.palette-label { font-size: 0.75rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
-.palette-item {
-	display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-	border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-	background: var(--color-surface); cursor: grab; user-select: none;
+/* ---------- Editor panel ---------- */
+
+.palette {
+	display: flex;
+	flex-shrink: 0;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border-bottom: 1px solid var(--color-border);
 }
+
+#editor-form-host {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.palette-label {
+	margin-bottom: 2px;
+	color: var(--color-ink-muted);
+	font-size: 0.75rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.palette-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--color-surface);
+	cursor: grab;
+	user-select: none;
+}
+
 .palette-item:active { cursor: grabbing; }
+
 .palette-item.dragging { opacity: 0.4; }
-.palette-item span.hint { margin-left: auto; font-size: 0.72rem; color: var(--color-ink-muted); }
+
+.palette-item .hint {
+	margin-left: auto;
+	color: var(--color-ink-muted);
+	font-size: 0.72rem;
+}
+
+.editor-form {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 10px;
+	padding: 12px;
+}
+
+.editor-form label {
+	color: var(--color-ink-muted);
+	font-size: 0.72rem;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.field input,
+.field select {
+	padding: 6px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background-color: var(--color-surface);
+	color: var(--color-ink);
+	font-size: 0.85rem;
+}
+
+.field-row {
+	display: flex;
+	gap: 8px;
+}
+
+.field-row .field { flex: 1; }
+
+.kind-display {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.kind-display strong { font-size: 0.85rem; }
+
+.editor-empty {
+	padding: 12px;
+	color: var(--color-ink-muted);
+	font-size: 0.85rem;
+	text-align: center;
+}
+
+.editor-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 4px;
+}
+
+.editor-actions .btn {
+	padding: 7px 10px;
+	text-align: left;
+}
+
+.editor-actions .btn.danger {
+	border-color: var(--color-danger-border);
+	color: var(--color-danger);
+}
+
+.editor-actions .btn.danger:hover {
+	border-color: var(--color-danger);
+	background-color: var(--color-danger-light);
+}
+
+.editor-add-row {
+	display: flex;
+	gap: 6px;
+}
+
+.editor-add-row .btn {
+	flex: 1;
+	text-align: center;
+}
+
+.note {
+	color: var(--color-ink-muted);
+	font-size: 0.72rem;
+}
+
+/* ---------- Tree: badges, labels and chips ---------- */
 
 .node-badge {
-	width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-	display: flex; align-items: center; justify-content: center;
-	font-weight: 700; font-size: 13px; border: 2px solid currentColor; background: var(--color-surface);
-}
-/* Node colour is driven by domain class (Subject/Feature/Approach), not
-   AND/XOR kind — shared by the tree badge and the inline kind label. */
-.node-badge.subject, .node-kind-label.subject { color: var(--subject-color); }
-.node-badge.feature, .node-kind-label.feature { color: var(--feature-color); }
-.node-badge.approach, .node-kind-label.approach { color: var(--approach-color); }
-.node-badge.neutral, .node-kind-label.neutral { color: var(--neutral-color); }
-
-.editor-form { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.editor-form label { font-size: 0.72rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.03em; }
-.field { display: flex; flex-direction: column; gap: 4px; }
-.field input, .field select {
-	padding: 6px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
-	background: var(--color-surface); color: var(--color-ink); font-size: 0.85rem;
-}
-.field-row { display: flex; gap: 8px; }
-.field-row .field { flex: 1; }
-.editor-empty { color: var(--color-ink-muted); font-size: 0.85rem; padding: 12px; text-align: center; }
-.editor-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.editor-actions .btn { text-align: left; padding: 7px 10px; }
-.editor-actions .btn.danger { color: var(--color-danger); border-color: var(--color-danger-border); }
-.editor-actions .btn.danger:hover { background: var(--color-danger-light); border-color: var(--color-danger); }
-.editor-add-row { display: flex; gap: 6px; }
-.editor-add-row .btn { flex: 1; text-align: center; }
-.sibling-note { font-size: 0.72rem; color: var(--color-ink-muted); }
-
-.tree-list, .tree-children { list-style: none; margin: 0; padding-left: 0; }
-.tree-children { padding-left: 20px; }
-.tree-node { position: relative; }
-.tree-row {
-	display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: var(--radius-sm);
-	cursor: pointer; border: 1px solid transparent;
-}
-.tree-row:hover { background: var(--color-bg); }
-.tree-row.selected { background: var(--color-accent-light); border-color: var(--color-accent); }
-.tree-row.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; }
-.tree-row.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; }
-
-.disclosure {
-	width: 14px; height: 14px; flex-shrink: 0; border: none; background: none; color: var(--color-ink-muted);
-	display: flex; align-items: center; justify-content: center; padding: 0;
-}
-.disclosure.leaf { visibility: hidden; }
-
-.constraint-dot {
-	width: 12px;
-	height: 12px;
+	display: flex;
 	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border: 2px solid currentColor;
 	border-radius: 50%;
-	border: 2px solid var(--color-border);
 	background-color: var(--color-surface);
-	padding: 0;
-	cursor: pointer;
-	margin-right: 2px;
+	font-size: 13px;
+	font-weight: 700;
 }
-.constraint-dot:hover { border-color: var(--color-ink-muted); }
-.constraint-dot-spacer { width: 12px; height: 12px; flex-shrink: 0; margin-right: 2px; } /* keeps rows aligned where a node has no dot */
-.constraint-dot.always { border-color: var(--color-always); background-color: var(--color-always); }
-.constraint-dot.never { border-color: var(--color-never); background-color: var(--color-never); }
 
-.tree-row .node-badge { width: 18px; height: 18px; font-size: 11px; }
+.tree-row .node-badge {
+	width: 18px;
+	height: 18px;
+	font-size: 11px;
+}
 
-.node-kind-label { font-weight: 700; font-size: 0.78rem; }
+.node-badge.subject,
+.node-kind-label.subject {
+	color: var(--subject-color);
+}
+
+.node-badge.feature,
+.node-kind-label.feature {
+	color: var(--feature-color);
+}
+
+.node-badge.approach,
+.node-kind-label.approach {
+	color: var(--approach-color);
+}
+
+.node-badge.neutral,
+.node-kind-label.neutral {
+	color: var(--neutral-color);
+}
+
+.node-kind-label {
+	font-size: 0.78rem;
+	font-weight: 700;
+}
+
 .node-text { color: var(--color-ink); }
-.node-text .node-value { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 0.82rem; }
-.node-placeholder { color: var(--color-ink-muted); font-style: italic; }
 
-/* Per-value constraint chips inside a node's (a; b; c) list. Inherit the muted mono look of .node-value.
-   State is shown by more than colour: a check for always, strikethrough for never. */
+.node-text .node-value {
+	color: var(--color-ink-muted);
+	font-family: var(--font-mono);
+	font-size: 0.82rem;
+}
+
+.node-placeholder {
+	color: var(--color-ink-muted);
+	font-style: italic;
+}
+
 .value-chip {
 	padding: 0 4px;
 	border: 1px solid transparent;
 	border-radius: 4px;
-	background: transparent;
+	background-color: transparent;
 	color: inherit;
-	font: inherit;
 	line-height: 1.35;
-	cursor: pointer;
 }
+
 button.value-chip:hover { border-color: var(--color-ink-muted); }
-.value-chip.always { color: var(--color-always); background-color: var(--color-always-light); font-weight: 600; }
-.value-chip.never { color: var(--color-never); background-color: var(--color-danger-light); text-decoration: line-through; }
-span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
-.field[hidden] { display: none; } /* .field's display would otherwise override the hidden attribute */
 
-/* Editor panel: the same chips, bordered so they read as buttons. */
-.value-chip-row { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-ink-muted); }
-.value-chip-row .value-chip { padding: 2px 8px; border-color: var(--color-border); }
+.value-chip.always {
+	background-color: var(--color-always-light);
+	color: var(--color-always);
+	font-weight: 600;
+}
 
-.root-drop-zone { min-height: 2px; border-radius: var(--radius-sm); margin: 0 0 2px; }
-.root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
-.root-drop-zone.drop-invalid { outline: 2px dashed var(--color-danger); outline-offset: -2px; background: var(--color-danger-light); }
-/* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
-.viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
+.value-chip.never {
+	background-color: var(--color-danger-light);
+	color: var(--color-never);
+	text-decoration: line-through;
+}
+
+.value-chip-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	color: var(--color-ink-muted);
+	font-family: var(--font-mono);
+	font-size: 0.82rem;
+}
+
+.value-chip-row .value-chip {
+	padding: 2px 8px;
+	border-color: var(--color-border);
+}
+
+.constraint-dot {
+	flex-shrink: 0;
+	width: 12px;
+	height: 12px;
+	margin-right: 2px;
+	padding: 0;
+	border: 2px solid var(--color-border);
+	border-radius: 50%;
+	background-color: var(--color-surface);
+}
+
+.constraint-dot:hover { border-color: var(--color-ink-muted); }
+
+.constraint-dot.always {
+	border-color: var(--color-always);
+	background-color: var(--color-always);
+}
+
+.constraint-dot.never {
+	border-color: var(--color-never);
+	background-color: var(--color-never);
+}
+
+.constraint-dot-spacer {
+	flex-shrink: 0;
+	width: 12px;
+	height: 12px;
+	margin-right: 2px;
+}
 
 .node-delete-btn {
 	display: none;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
-	flex-shrink: 0;
 	width: 22px;
 	height: 22px;
 	margin-left: auto;
@@ -671,51 +957,175 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 	background-color: transparent;
 	color: var(--color-danger);
 }
+
 .tree-row.selected > .node-delete-btn { display: flex; }
-.node-delete-btn:hover { background-color: var(--color-danger-light); border-color: var(--color-danger-border); }
-.tt-node-box > .node-delete-btn { position: absolute; top: 3px; right: 3px; margin: 0; }
 
-/* --- Traditional layout --- */
-.viewport-content.tt-mode { display: flex; overflow-x: auto; }
+.node-delete-btn:hover {
+	border-color: var(--color-danger-border);
+	background-color: var(--color-danger-light);
+}
 
-.tt-canvas { position: relative; flex-shrink: 0; margin: auto; }
+/* ---------- Tree: directory layout ---------- */
 
-.tt-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
-.tt-edge { stroke: var(--color-border); stroke-width: 1.5; }
+.tree-list,
+.tree-children {
+	margin: 0;
+	padding-left: 0;
+	list-style: none;
+}
 
+.tree-children { padding-left: 20px; }
 
-/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order.
-   The height here is only the base (kind row + label row): render.js sets the real height inline
-   per box (taller when the node lists value lines), and its edge math uses that same number. */
+.tree-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 6px;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+}
+
+.tree-row:hover { background-color: var(--color-bg); }
+
+.tree-row.selected {
+	border-color: var(--color-accent);
+	background-color: var(--color-accent-light);
+}
+
+.disclosure {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 14px;
+	height: 14px;
+	padding: 0;
+	border: none;
+	background-color: transparent;
+	color: var(--color-ink-muted);
+}
+
+.disclosure.leaf { visibility: hidden; }
+
+/* ---------- Tree: empty tree and drag-and-drop ---------- */
+
+.empty-tree-message {
+	padding: 20px 0;
+	color: var(--color-ink-muted);
+	text-align: center;
+}
+
+.root-drop-zone {
+	min-height: 2px;
+	margin: 0 0 2px;
+	border-radius: var(--radius-sm);
+}
+
+.tree-row.drop-target,
+.root-drop-zone.drop-target {
+	outline: 2px dashed var(--color-accent);
+	outline-offset: -2px;
+}
+
+.tree-row.drop-invalid,
+.root-drop-zone.drop-invalid,
+.viewport-content.drop-invalid {
+	outline: 2px dashed var(--color-danger);
+	outline-offset: -2px;
+}
+
+.root-drop-zone.drop-target { background-color: var(--color-accent-light); }
+
+.root-drop-zone.drop-invalid { background-color: var(--color-danger-light); }
+
+/* ---------- Tree: traditional layout ---------- */
+
+.viewport-content.tt-mode {
+	display: flex;
+	overflow-x: auto;
+}
+
+.tt-canvas {
+	position: relative;
+	flex-shrink: 0;
+	margin: auto;
+}
+
+.tt-edges {
+	position: absolute;
+	top: 0;
+	left: 0;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.tt-edge {
+	stroke: var(--color-border);
+	stroke-width: 1.5;
+}
+
 .tree-row.tt-node-box {
 	position: absolute;
-	height: 56px;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 2px;
+	height: 56px;
 	padding: 4px 8px;
-	background: var(--color-surface);
 	overflow: hidden;
+	background-color: var(--color-surface);
 }
-/* Row 1: circle + Subject/Feature/Approach text, centered as one group. */
-.tt-node-top { display: flex; align-items: center; gap: 4px; }
-.tt-node-top .disclosure { width: 12px; height: 12px; font-size: 10px; }
-/* Row 2: the label/value detail line, below and centered. */
+
+.tt-node-box > .node-delete-btn {
+	position: absolute;
+	top: 3px;
+	right: 3px;
+	margin: 0;
+}
+
+.tt-node-top {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tt-node-top .disclosure {
+	width: 12px;
+	height: 12px;
+	font-size: 10px;
+}
+
 .tt-node-bottom {
 	max-width: 100%;
 	overflow: hidden;
-	text-overflow: ellipsis;
+	font-size: 0.78rem;
 	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.tt-node-values {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	max-width: 100%;
+	color: var(--color-ink-muted);
+	font-family: var(--font-mono);
 	font-size: 0.78rem;
 }
-.tt-node-box .node-badge { flex-shrink: 0; }
-/* Rows 3+: one value per line under the label. 18px lines + 2px gap = TT_VALUE_LINE (20) in render.js. */
-.tt-node-values {
-	display: flex; flex-direction: column; align-items: center; gap: 2px;
+
+.tt-value-line {
 	max-width: 100%;
-	font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-ink-muted);
+	height: 18px;
 }
-.tt-value-line { height: 18px; max-width: 100%; }
-.tt-value-line .value-chip { display: block; max-width: 100%; line-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.tt-value-line .value-chip {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	line-height: 16px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
