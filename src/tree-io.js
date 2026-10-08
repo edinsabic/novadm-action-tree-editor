@@ -71,16 +71,24 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser)
 	}
 
 	exportBtn.addEventListener('click', function () {
+		if (History.isDirty() && !History.canUpdateHead()) {
+			alert('"' + History.getHead() + '" has unsaved changes, but other versions are based on it, so it' +
+				' cannot store them. Save them as a new version first (Version history → Save as new version…).');
+			return;
+		}
 		var hasOtherVersions = History.snapshotCount() > 1;
 		if (History.isDirty() && hasOtherVersions && !confirm('"' + History.getHead() + '" has unsaved changes.' +
 			' The file will store them as that version (the other versions are kept as they are).' +
 			'\n\nExport anyway?')) {
 			return;
 		}
+		var tree = Model.treeSpecs();
+		var history = History.getState();
+		var fileTrees = history.snapshots.map(function (s) { return s.id === history.head ? tree : s.tree; });
 		var text = FORMAT.serialize({
-			tree: Model.treeSpecs(),
-			profile: Model.getProfileState(),
-			history: History.getState()
+			tree: tree,
+			profile: Model.getProfileState(fileTrees),
+			history: history
 		});
 		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
 	});
@@ -106,7 +114,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser)
 		if (!treeIsEmpty() && !confirm('Replace the current tree with "' + fileName + '"?')) return;
 
 		Model.replaceTree(doc.tree);
-		Model.applyProfileState(doc.profile);
+		Model.applyProfileState(doc.profile, doc.history.snapshots.map(function (s) { return s.tree; }));
 		History.load(doc.history);
 		refreshAll();
 		if (doc.addedRoot) {

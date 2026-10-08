@@ -65,7 +65,8 @@ The paper's optional fourth rule, "an AND with a red child is red", is
 **not** applied: a red child of an AND is pruned, i.e. left out of the
 product as if that subtree were not there. This lets a user switch off a
 part of the tree (e.g. mark `structural_element = facade` never) and see
-how the scenario space shrinks. A red root node gives 0.
+how the scenario space shrinks. A red root node gives 0, and so does an
+empty tree (without a warning).
 
 A contradiction is a node that is both green and red: two `always`
 children of one XOR, two `always` values of one node, or a `never` node
@@ -87,19 +88,44 @@ could replace `VersionGraph.create()` later.
 - **Save as new version** snapshots the tree on screen on top of the
   current version (name and optional comment are asked for). **Update
   this version** (only offered for the current version with unsaved
-  changes) overwrites its snapshot.
+  changes) overwrites its snapshot. It is disabled once another version
+  is based on it, because changing it would change what that version and
+  every later merge build on; save the changes as a new version instead.
+  For the same reason, Export refuses in this case until the changes are
+  saved as a new version.
 - **Open** switches the editor to a version. **Restore** makes a new
   version with the contents of an older one, on top of the current one.
   Both ask first if there are unsaved changes.
-- Profiles are one global set shared by all versions.
+- **Delete** removes a version other than the current one. Each version
+  based on it is linked to the versions it was based on instead (keeping
+  its comment and the order of its parents), so the remaining versions
+  keep their common ancestors and merging still works. A link that is
+  already implied (a parent that is also an ancestor of another parent)
+  is left out, so deleting a merged branch turns its merge into a plain
+  version on top of the other parent. The first version
+  can only be deleted while at most one version is based on it;
+  otherwise those versions would lose their common start. Versions
+  cannot be renamed.
+- Every node in every version has an id (an import fills in missing
+  ones, see `actionTree` below), and a node keeps its id across versions.
+- Profiles are one global set shared by all versions. A constraint on a
+  node that the version on screen doesn't have is kept, and applies again
+  when a version with that node is opened.
+- In the graph, an edge that spans several columns stays in the row of
+  one end (whichever row is free in between) and changes rows within a
+  single column, so it never runs through other versions.
 - **Merge** is a non-interactive three-way merge by node id. "Theirs" is
-  the selected version, "mine" the tree on screen (unsaved changes
-  included), and the base is the nearest common ancestor in the version
-  graph (no common ancestor: an empty tree). Per node:
+  the selected version, "mine" the current version, and the base is the
+  nearest common ancestor in the version graph (no common ancestor: an
+  empty tree). As in git, the current version must not have unsaved
+  changes: save or undo them first. Per node:
   - only theirs added it: added (if its parent is still there);
   - theirs deleted it, mine did not touch it: removed (only if nothing of
     mine sits below it);
-  - theirs edited or moved it, mine did not: updated;
+  - theirs edited or moved it, mine did not: updated. If the move can't
+    be applied (the new parent is gone on my side, or the node would end
+    up inside itself), the edit is still applied and the move is
+    reported as a conflict;
   - changed differently on both sides, deleted on one side and edited on
     the other, or added differently on both: a conflict. Mine is kept and
     the conflict is reported.
@@ -118,7 +144,7 @@ could replace `VersionGraph.create()` later.
 
 - **Undo/redo** (`undo.js`, toolbar buttons, Ctrl+Z / Ctrl+Y) covers the
   whole document: tree, profiles and version history, so saving,
-  opening, restoring and merging versions can be undone too. Every
+  opening, restoring, merging and deleting versions can be undone too. Every
   render calls `Undo.record()`; a changed document becomes one step
   (max 100). Typing in one editor field is one step until focus leaves it.
 - The **selected node** shows a red delete icon in both layouts; it runs
@@ -159,20 +185,28 @@ between them are valid JSON and are written on purpose):
   snapshot id is free text (git-style, e.g. "Add scaffolding"); `created`
   is an optional `YYYY-MM-DD` date (older files have none). The editor
   loads the snapshot named by `versionControl.head` (default: the last
-  one).
+  one). On import, every node without an `id` gets a new one that is
+  used nowhere else in the file (`n<number>`, also avoiding ids named in
+  `profile`); root nodes without an id all get the same new id, so the
+  root never shows up as a change. A node whose id was removed by hand
+  therefore counts as a new node.
 - **`versionControl`** – `head` and `edges` (`from` -> `to`, optional
   `comment`; branches are two edges leaving the same snapshot, a merge is
-  a snapshot with two incoming edges). On export the tree on screen
-  replaces the head snapshot (the editor asks first if it has unsaved
-  changes and other versions exist). A fresh document has one snapshot
+  a snapshot with two incoming edges). Edges must not go round in a
+  circle (a snapshot based on itself); such a file is rejected. On export
+  the tree on screen replaces the head snapshot (the editor asks first if
+  it has unsaved changes and other versions exist, and refuses if other
+  versions are based on the head). A fresh document has one snapshot
   called "Initial version" and no edges.
 - **`profile`** – `current` / `currentValues` are the node and value
   constraints on screen now, `saved` the named profiles, `active` the
   loaded one (or `null`).
   Constraints are keyed by node `id`, which is why saved nodes now carry
   an `id` (unique within a snapshot; kept on load, so profiles keep
-  pointing at the same nodes). Constraints naming ids that aren't in the
-  loaded tree are dropped silently.
+  pointing at the same nodes). Constraints naming ids that are in none
+  of the snapshots (or values no snapshot gives that node) are dropped
+  silently: on import, on undo/redo, and when exporting (so exporting,
+  importing and exporting again gives the same file).
 - Each section is read by its own small function in `parser.js`, and
   `validateDocument()` checks all of them before the live editor is touched.
 
@@ -189,7 +223,7 @@ importing.
 | Version | What it introduced | On import |
 |---|---|---|
 | 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | Read as is. |
-| 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | No explicit root node: an AND root is added above the top-level nodes, the user is told, and the scenario space is unchanged. |
+| 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | No explicit root node: an AND root is added above the top-level nodes (with the same new id in every snapshot), the user is told, and the scenario space is unchanged. |
 | 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |
 | 2 | A single `tree` key; `value` is an array of strings. No profiles, no history. | An AND root is added as above; profiles are reset and history starts with one version, the tree just loaded. |
 | 1 | A single `tree` key; `value` is text (`"a; b"`, split by `Model.parseValues`). | As version 2. |
@@ -214,8 +248,17 @@ All `.json` examples are format version 5.
 - `examples/novadm-action-tree.json` is the version-history demo: the
   same tree with five versions – a main line, a branch, and a merge of
   the branch that applies the branch's added and deleted nodes. It is
-  also a quick manual test of Open, Restore and Merge. The root node has
+  also a quick manual test of Open, Restore, Merge and Delete. The root node has
   the same id (`n0`) in every snapshot, so it never shows up as a change.
+- `examples/version-history-test.json` is a test bed for the whole
+  version history, built on the sample tree with six versions: a main
+  line (Initial version, Windows & doors, Roof, and Merge Facade, the
+  current version), a merged branch (Facade) and an unmerged branch
+  (Ground floor). Merging Ground floor gives one conflict
+  (`windows_glazing` changed on both sides). Its two profiles constrain
+  nodes and values that only some versions have. Use it to try Open,
+  Restore, Merge, Delete (e.g. deleting Facade or Roof), and the rules
+  for Update this version and Export.
 - `examples/k45-case.json` is the K45 case: nine Subjects (roof,
   skylight, roof_cladding, window_frame, brick_facade, ground_floor,
   original_floor, stripped_terrain, layout) with XOR Features, one

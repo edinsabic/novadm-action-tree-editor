@@ -71,18 +71,19 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 	/** Loads a recorded state, keeping which nodes are expanded and which one is selected. */
 	function restore(state) {
 		var doc = JSON.parse(state);
+		var versionTrees = doc.history.snapshots.map(function (s) { return s.tree; });
 		var expanded = {};
 		eachNode(Model.root.children, function (n) { expanded[n.id] = n.expanded; });
 		var selected = Model.getSelectedId();
 
 		restoring = true;
 		try {
-			Model.replaceTree(doc.tree, doc.history.snapshots.map(function (s) { return s.tree; }));
+			Model.replaceTree(doc.tree, versionTrees);
 			eachNode(Model.root.children, function (n) {
 				if (expanded[n.id] !== undefined) n.expanded = expanded[n.id];
 			});
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);
-			Model.applyProfileState(doc.profile);
+			Model.applyProfileState(doc.profile, versionTrees);
 			History.load(doc.history);
 			Render.renderTree();
 			EditorForm.renderEditorForm();

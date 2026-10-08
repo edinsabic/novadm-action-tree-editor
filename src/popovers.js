@@ -194,9 +194,23 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		return html;
 	}
 
-	function buttonHtml(action, label, title, disabled) {
-		return '<button type="button" class="btn"' + (action ? ' data-vg="' + action + '"' : '') +
+	function buttonHtml(action, label, title, disabled, extraClass) {
+		return '<button type="button" class="btn' + (extraClass ? ' ' + extraClass : '') + '"' +
+			(action ? ' data-vg="' + action + '"' : '') +
 			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(title) + '">' + label + '</button>';
+	}
+
+	function deleteButtonHtml(d) {
+		var problem = History.deleteProblem(d.id);
+		return buttonHtml('remove', 'Delete', problem || 'Delete this version from the history', !!problem, 'danger');
+	}
+
+	function updateButtonHtml() {
+		var canUpdate = History.canUpdateHead();
+		return buttonHtml('update', 'Update this version', canUpdate
+			? 'Overwrite this version with the tree on screen'
+			: 'Other versions are based on this one, so it cannot be changed. Save as a new version instead.',
+			!canUpdate);
 	}
 
 	function actionsHtml(d) {
@@ -205,10 +219,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			return buttonHtml('open', 'Open', 'Already open in the editor', true) +
 				buttonHtml('restore', 'Restore', 'This is the current version', true) +
 				buttonHtml(null, 'Merge', 'Select another version in the graph to merge it into this one', true) +
-				(d.isDirty
-					? buttonHtml('update', 'Update this version',
-						'Overwrite this version with the tree on screen', false)
-					: '');
+				deleteButtonHtml(d) +
+				(d.isDirty ? updateButtonHtml() : '');
 		}
 		var p = History.mergePreview(d.id);
 		var count = p.canMerge ? p.added + p.updated + p.removed : 0;
@@ -216,7 +228,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			buttonHtml('restore', 'Restore',
 				'Make a new version with the contents of this one, on top of "' + head + '"', false) +
 			buttonHtml('merge', 'Merge' + (count ? ' (' + count + ')' : ''),
-				p.canMerge ? 'Merge into "' + head + '": ' + p.summary : p.problem, !p.canMerge);
+				p.canMerge ? 'Merge into "' + head + '": ' + p.summary : p.problem, !p.canMerge) +
+			deleteButtonHtml(d);
 	}
 
 	function renderDetails() {
@@ -285,6 +298,16 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		return shown + (more > 0 ? '\n• … and ' + more + ' more' : '');
 	}
 
+	function quoted(ids) {
+		return ids.map(function (id) { return '"' + id + '"'; }).join(', ');
+	}
+
+	function relinkNote(d) {
+		if (d.children.length === 0) return '';
+		if (d.parents.length === 0) return '\n\n' + quoted(d.children) + ' will become the first version.';
+		return '\n\n' + quoted(d.children) + ' will then be based on ' + quoted(d.parents) + ' instead.';
+	}
+
 	var actions = {
 		open: function (id) {
 			if (!confirmLosingChanges('Open "' + id + '"?')) return;
@@ -317,6 +340,18 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			if (!confirm('Overwrite "' + History.getHead() + '" with the tree on screen?')) return;
 			History.updateHead();
 			notice = null;
+			renderVersionPane();
+		},
+		remove: function (id) {
+			var d = History.describe(id);
+			if (!d || !confirm('Delete version "' + id + '"?' + relinkNote(d))) return;
+			var error = History.deleteVersion(id);
+			if (error) {
+				alert(error);
+				return;
+			}
+			notice = { text: 'Deleted "' + id + '".' };
+			selectedVersion = History.getHead();
 			renderVersionPane();
 		}
 	};
