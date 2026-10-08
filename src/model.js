@@ -295,11 +295,16 @@ NovaDM.Model = (function () {
 		});
 	}
 
-	function replaceTree(specs) {
+	function replaceTree(specs, otherTrees) {
 		usedIds = {};
 		reserveSpecIds(specs);
+		reserveIds(otherTrees);
 		root.children = specs.map(instantiateNode);
 		selectedId = null;
+	}
+
+	function reserveIds(trees) {
+		(trees || []).forEach(reserveSpecIds);
 	}
 
 	function collectNodes(node, into) {
@@ -331,6 +336,7 @@ NovaDM.Model = (function () {
 		instantiateNode: instantiateNode,
 		nodeToSpec: nodeToSpec,
 		replaceTree: replaceTree,
+		reserveIds: reserveIds,
 		getNodeConstraint: getNodeConstraint,
 		cycleNodeConstraint: cycleNodeConstraint,
 		isConstrainable: isConstrainable,

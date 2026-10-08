@@ -59,11 +59,43 @@ node's own `value` options, the way a true count of valid configurations
 would. Swap the body of `scenarioSpaceSize()` if/when the real formula
 is needed – it's an isolated function.
 
-**Version history** doesn't exist yet beyond an empty flyout pane
-(`popovers.js`'s `renderVersionPane`). It's planned as a visual,
-diagrammatic view of how versions branch (a graph library such as
-Cytoscape.js has been suggested), not a plain list – nothing structural
-is built for it yet.
+## Version history
+
+`history.js` holds the versions (snapshots of the tree and the edges
+between them), `version-graph.js` draws them as a small SVG graph, and
+the Version flyout in `popovers.js` shows the graph and a details card
+for the selected version. No libraries; a library such as Cytoscape.js
+could replace `VersionGraph.create()` later.
+
+- **Save as new version** snapshots the tree on screen on top of the
+  current version (name and optional comment are asked for). **Update
+  this version** (only offered for the current version with unsaved
+  changes) overwrites its snapshot.
+- **Open** switches the editor to a version. **Restore** makes a new
+  version with the contents of an older one, on top of the current one.
+  Both ask first if there are unsaved changes.
+- Profiles are one global set shared by all versions.
+- **Merge** is a non-interactive three-way merge by node id. "Theirs" is
+  the selected version, "mine" the tree on screen (unsaved changes
+  included), and the base is the nearest common ancestor in the version
+  graph (no common ancestor: an empty tree). Per node:
+  - only theirs added it: added (if its parent is still there);
+  - theirs deleted it, mine did not touch it: removed (only if nothing of
+    mine sits below it);
+  - theirs edited or moved it, mine did not: updated;
+  - changed differently on both sides, deleted on one side and edited on
+    the other, or added differently on both: a conflict. Mine is kept and
+    the conflict is reported.
+
+  Content (kind, class, label, value) and place (parent) are compared
+  separately, so an edit on one side and a move on the other do not
+  clash. Sibling order is not tracked: added and moved nodes go last. The
+  flyout shows a dry run first (`History.mergePreview`: "Added 2 ·
+  Updated 1 · Removed 1 · 1 conflict, kept yours"); the button is
+  disabled when there is nothing to merge. The result is checked with the
+  same structure rules as an import (`Parser.validateSpecs`); if it fails,
+  the whole merge is rejected and nothing changes. The merge is saved as a
+  new version with both parents.
 
 ## File format (`.json`, format id `novadm-action-tree`)
 
@@ -91,15 +123,17 @@ between them are valid JSON and are written on purpose):
 }
 ```
 
-- **`actionTree`** – the snapshots: a list of `{ id, tree }`. A snapshot id
-  is free text (git-style, e.g. "Add scaffolding"). The editor loads the
-  snapshot named by `versionControl.head` (default: the last one).
+- **`actionTree`** – the snapshots: a list of `{ id, created, tree }`. A
+  snapshot id is free text (git-style, e.g. "Add scaffolding"); `created`
+  is an optional `YYYY-MM-DD` date (older files have none). The editor
+  loads the snapshot named by `versionControl.head` (default: the last
+  one).
 - **`versionControl`** – `head` and `edges` (`from` -> `to`, optional
-  `comment`; branches are just two edges leaving the same snapshot).
-  Version history isn't editable yet: the editor holds whatever the file
-  contained and writes it back unchanged, except that the live tree
-  replaces the head snapshot. A fresh document has one snapshot called
-  "Initial version" and no edges.
+  `comment`; branches are two edges leaving the same snapshot, a merge is
+  a snapshot with two incoming edges). On export the tree on screen
+  replaces the head snapshot (the editor asks first if it has unsaved
+  changes and other versions exist). A fresh document has one snapshot
+  called "Initial version" and no edges.
 - **`profile`** – `current` is the always/never map on screen now,
   `saved` the named profiles, `active` the loaded one (or `null`).
   Constraints are keyed by node `id`, which is why saved nodes now carry
@@ -111,7 +145,7 @@ between them are valid JSON and are written on purpose):
 
 Older files still import: `version: 2` / `1` (a single `tree` key, no
 profiles, no history) and a bare array of nodes. In both cases profiles
-are reset and history starts empty.
+are reset and history starts with one version, the tree just loaded.
 
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
@@ -127,8 +161,8 @@ handlers need to change too.)
 `.js` version is what `index.html` preloads on open (as a `<script>`
 global, so it works over `file://` with no fetch/CORS issues); the
 `.json` version exists for import/export testing. `examples/
-novadm-action-tree.json` is a separate, smaller "heating" example –
-though at the moment it holds the same "windows / outer_doors / …" tree
-as `sample-tree.js` rather than the heating one, from an earlier editing
-pass; flagging in case that wasn't intentional. These files aren't
+novadm-action-tree.json` is the version-history demo (format version 3):
+the same tree with five versions – a main line, a branch, and a merge of
+the branch that applies the branch's added and deleted nodes. It is also
+a quick manual test of Open, Restore and Merge. These files aren't
 unified – known and deliberately deferred, not an oversight.

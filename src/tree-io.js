@@ -3,21 +3,15 @@ window.NovaDM = window.NovaDM || {};
 /**
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export (via parser.js's TREE_FILE_FORMAT). A document is
- * the tree, the profiles and the version history (see parser.js).
+ * the tree, the profiles and the version history (see parser.js and
+ * history.js).
  */
-NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
+NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser) {
 	'use strict';
-
-	/**
-	 * Version history is not editable yet, so whatever an imported file
-	 * carried is held here and written back on export, with the live tree
-	 * standing in for the head snapshot.
-	 */
-	var history = Parser.emptyHistory();
 
 	function refreshAll() {
 		Render.renderTree(); EditorForm.renderEditorForm();
-		Popovers.updatePillLabels(); Popovers.renderFlyout();
+		Popovers.updatePillLabels(); Popovers.resetVersionView(); Popovers.renderFlyout();
 	}
 
 	function loadSampleTree() {
@@ -27,7 +21,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 		}
 		Model.replaceTree(Parser.ensureRoot(NOVADM_SAMPLE_TREE)); /* a sample without a root node gets one, like an imported file */
 		Model.resetProfiles();
-		history = Parser.emptyHistory();
+		History.reset();
 		refreshAll();
 	}
 
@@ -41,7 +35,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 			Model.root.children = [];
 			Model.setSelectedId(null);
 			Model.resetProfiles();
-			history = Parser.emptyHistory();
+			History.reset();
 			refreshAll();
 		}
 	});
@@ -55,10 +49,14 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 	importBtn.title = 'Load a tree from a ' + Parser.TREE_FILE_FORMAT.extension + ' file on your computer';
 
 	exportBtn.addEventListener('click', function () {
+		if (History.isDirty() && History.snapshotCount() > 1 &&
+			!confirm('\"' + History.getHead() + '\" has unsaved changes. The file will store them as that version (the other versions are kept as they are).\n\nExport anyway?')) {
+			return;
+		}
 		var text = Parser.TREE_FILE_FORMAT.serialize({
 			tree: Model.root.children.map(Model.nodeToSpec),
 			profile: Model.getProfileState(),
-			history: history
+			history: History.getState()
 		});
 		var blob = new Blob([text], { type: Parser.TREE_FILE_FORMAT.mimeType });
 		var url = URL.createObjectURL(blob);
@@ -98,7 +96,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 			if (Model.root.children.length === 0 || confirm('Replace the current tree with "' + file.name + '"?')) {
 				Model.replaceTree(doc.tree);
 				Model.applyProfileState(doc.profile);
-				history = doc.history;
+				History.load(doc.history);
 				refreshAll();
 				if (doc.addedRoot) { 
 					setTimeout(function () {
@@ -111,4 +109,4 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 	});
 
 	return { loadSampleTree: loadSampleTree };
-})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.Parser);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.Parser);

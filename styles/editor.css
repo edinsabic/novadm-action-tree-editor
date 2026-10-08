@@ -205,6 +205,8 @@ main {
 }
 
 /* --- Viewports --- */
+.panels-stack { position: relative; flex: 1; display: flex; flex-direction: column; }
+.panels-stack.flyout-open .control-right { visibility: hidden; }
 
 .viewport-row {
 	position: relative;
@@ -213,6 +215,7 @@ main {
 	align-items: stretch; /* both columns stretch to the row's full height, so their bottoms always line up */
 	flex: 1;
 	min-height: var(--panels-min-height);
+	contain: size;
 }
 
 .viewport-box {
@@ -289,17 +292,18 @@ main {
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 0;
+	bottom: -10px;
 	pointer-events: none;
 }
 
 .flyout {
 	position: absolute;
-	top: -5px;
-	right: 200px;
-	width: 40%;
+	top: 0;
+	right: 0;
+	width: calc(var(--editor-width) + 8%);
 	min-width: 320px;
 	max-width: 560px;
+	max-height: 100%;
 	display: flex;
 	flex-direction: column;
 	background-color: var(--color-surface);
@@ -369,8 +373,8 @@ main {
 .flyout-body {
 	display: flex;
 	flex-direction: column;
+	flex: 1 1 auto;
 	min-height: 240px;
-	max-height: 60vh;
 	overflow-y: auto;
 	padding: 8px;
 }
@@ -379,6 +383,27 @@ main {
 	display: flex;
 	flex-direction: column;
 }
+
+/* --- Version flyout graph --- */
+#version-pane { flex: 1; min-height: 0; }
+#version-pane .viewport-toolbar { padding: 2px 0; }
+.vg-box { position: relative; flex: 1 100 260px; min-height: 120px; background-color: var(--color-bg); border-radius: var(--radius-sm); }
+.vg-details { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.vg-tag { padding: 1px 7px; border-radius: var(--radius-sm); background-color: var(--color-accent-light); color: var(--color-accent); font-size: 0.72rem; font-weight: 600; }
+.vg-svg { position: absolute; inset: 0; cursor: grab; user-select: none; }
+.vg-svg.panning { cursor: grabbing; }
+.vg-node-g { cursor: pointer; }
+.vg-node { fill: var(--color-surface); stroke: var(--color-ink-muted); stroke-width: 1.5; }
+.vg-node.current { fill: var(--color-accent); }
+.vg-node.branch { stroke-dasharray: 3 2; }
+.vg-node.selected { stroke: var(--color-ink); stroke-width: 3; stroke-dasharray: none; }
+.vg-dirty { fill: none; stroke: var(--color-accent); stroke-dasharray: 3 2; }
+.vg-edge, .vg-arrowhead { color: var(--color-ink-muted); }
+.vg-edge { fill: none; stroke: currentColor; stroke-width: 1.5; }
+.vg-arrowhead { fill: currentColor; }
+.vg-edge.merged, .vg-arrowhead.merged { color: var(--color-accent); }
+.vg-label { fill: var(--color-ink-muted); font-size: 0.72rem; }
+.vg-label.current { fill: var(--color-ink); font-weight: 600; }
 
 .popover-list {
 	list-style: none;

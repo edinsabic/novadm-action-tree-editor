@@ -1,179 +1,859 @@
 {
 	"format": "novadm-action-tree",
-	"version": 2,
-	"tree": [
+	"version": 3,
+
+	"versionControl": {
+		"head": "Merge Underfloor heating",
+		"edges": [
+			{ "from": "Initial version", "to": "Add scaffolding", "comment": "Facade work needs scaffolding" },
+			{
+				"from": "Add scaffolding",
+				"to": "Insulate envelope",
+				"comment": "Richer insulation options for roof and facade"
+			},
+			{
+				"from": "Add scaffolding",
+				"to": "Underfloor heating",
+				"comment": "Ground floor: heating instead of insulation"
+			},
+			{
+				"from": "Insulate envelope",
+				"to": "Merge Underfloor heating",
+				"comment": "Merged \"Underfloor heating\" into \"Insulate envelope\" (Added 1 · Updated 0 · Removed 1)"
+			},
+			{
+				"from": "Underfloor heating",
+				"to": "Merge Underfloor heating",
+				"comment": "Merged \"Underfloor heating\" into \"Insulate envelope\" (Added 1 · Updated 0 · Removed 1)"
+			}
+		]
+	},
+
+	"profile": {
+		"active": null,
+		"current": {},
+		"saved": []
+	},
+
+	"actionTree": [
 		{
-			"kind": "AND",
-			"nodeClass": "Subject",
-			"label": "structural_element",
-			"value": [
-				"windows"
-			],
-			"children": [
+			"id": "Initial version",
+			"created": "2026-10-04",
+			"tree": [
 				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "windows_glazing",
-					"value": [
-						"keep_double",
-						"replace_triple"
-					],
-					"children": []
-				}
-			]
-		},
-		{
-			"kind": "AND",
-			"nodeClass": "Subject",
-			"label": "structural_element",
-			"value": [
-				"outer_doors"
-			],
-			"children": [
-				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "outer_doors_replacement",
-					"value": [
-						"keep_current",
-						"replace"
-					],
-					"children": []
-				},
-				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "outer_doors_material",
-					"value": [
-						"keep_current",
-						"replace_to_wood"
-					],
-					"children": []
-				}
-			]
-		},
-		{
-			"kind": "AND",
-			"nodeClass": "Subject",
-			"label": "structural_element",
-			"value": [
-				"facade"
-			],
-			"children": [
-				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "facade_surface",
-					"value": [
-						"keep_current",
-						"paint"
-					],
-					"children": []
-				},
-				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "facade_insulation",
-					"value": [
-						"keep_current",
-						"add_insulation"
-					],
-					"children": []
-				},
-				{
-					"kind": "XOR",
-					"nodeClass": "",
-					"label": "",
-					"value": [],
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["windows"],
 					"children": [
 						{
-							"kind": "AND",
-							"nodeClass": "Approach",
-							"label": "replace_brick_facade",
-							"value": [],
+							"id": "n2",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "windows_glazing",
+							"value": ["keep_double", "replace_triple"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n3",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["outer_doors"],
+					"children": [
+						{
+							"id": "n4",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_replacement",
+							"value": ["keep_current", "replace"],
 							"children": []
 						},
 						{
-							"kind": "AND",
-							"nodeClass": "Approach",
-							"label": "keep_current_brick_facade",
+							"id": "n5",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_material",
+							"value": ["keep_current", "replace_to_wood"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n6",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["facade"],
+					"children": [
+						{
+							"id": "n7",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_surface",
+							"value": ["keep_current", "paint"],
+							"children": []
+						},
+						{
+							"id": "n8",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						},
+						{
+							"id": "n9",
+							"kind": "XOR",
+							"nodeClass": "",
+							"label": "",
 							"value": [],
 							"children": [
 								{
-									"kind": "XOR",
-									"nodeClass": "Feature",
-									"label": "brick_replacement",
-									"value": [
-										"0%",
-										"7.5%",
-										"15%",
-										"30%"
-									],
+									"id": "n10",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "replace_brick_facade",
+									"value": [],
 									"children": []
+								},
+								{
+									"id": "n11",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "keep_current_brick_facade",
+									"value": [],
+									"children": [
+										{
+											"id": "n12",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "brick_replacement",
+											"value": ["0%", "7.5%", "15%", "30%"],
+											"children": []
+										}
+									]
 								}
 							]
+						}
+					]
+				},
+				{
+					"id": "n13",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["roof"],
+					"children": [
+						{
+							"id": "n14",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n15",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n16",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["ground_floor"],
+					"children": [
+						{
+							"id": "n17",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n18",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
 						}
 					]
 				}
 			]
 		},
+
 		{
-			"kind": "AND",
-			"nodeClass": "Subject",
-			"label": "structural_element",
-			"value": [
-				"roof"
-			],
-			"children": [
+			"id": "Add scaffolding",
+			"created": "2026-10-04",
+			"tree": [
 				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "roof_replacement",
-					"value": [
-						"keep_current",
-						"replace"
-					],
-					"children": []
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["windows"],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "windows_glazing",
+							"value": ["keep_double", "replace_triple"],
+							"children": []
+						}
+					]
 				},
 				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "roof_insulation",
-					"value": [
-						"keep_current",
-						"add_insulation"
-					],
-					"children": []
+					"id": "n3",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["outer_doors"],
+					"children": [
+						{
+							"id": "n4",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n5",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_material",
+							"value": ["keep_current", "replace_to_wood"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n6",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["facade"],
+					"children": [
+						{
+							"id": "n7",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_surface",
+							"value": ["keep_current", "paint"],
+							"children": []
+						},
+						{
+							"id": "n8",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						},
+						{
+							"id": "n9",
+							"kind": "XOR",
+							"nodeClass": "",
+							"label": "",
+							"value": [],
+							"children": [
+								{
+									"id": "n10",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "replace_brick_facade",
+									"value": [],
+									"children": []
+								},
+								{
+									"id": "n11",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "keep_current_brick_facade",
+									"value": [],
+									"children": [
+										{
+											"id": "n12",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "brick_replacement",
+											"value": ["0%", "7.5%", "15%", "30%"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "scaffolding",
+							"value": ["rent", "buy"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n13",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["roof"],
+					"children": [
+						{
+							"id": "n14",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n15",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n16",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["ground_floor"],
+					"children": [
+						{
+							"id": "n17",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n18",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						}
+					]
 				}
 			]
 		},
+
 		{
-			"kind": "AND",
-			"nodeClass": "Subject",
-			"label": "structural_element",
-			"value": [
-				"ground_floor"
-			],
-			"children": [
+			"id": "Insulate envelope",
+			"created": "2026-10-04",
+			"tree": [
 				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "ground_floor_replacement",
-					"value": [
-						"keep_current",
-						"replace"
-					],
-					"children": []
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["windows"],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "windows_glazing",
+							"value": ["keep_double", "replace_triple"],
+							"children": []
+						}
+					]
 				},
 				{
-					"kind": "XOR",
-					"nodeClass": "Feature",
-					"label": "ground_floor_insulation",
-					"value": [
-						"keep_current",
-						"add_insulation"
-					],
-					"children": []
+					"id": "n3",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["outer_doors"],
+					"children": [
+						{
+							"id": "n4",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n5",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_material",
+							"value": ["keep_current", "replace_to_wood"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n6",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["facade"],
+					"children": [
+						{
+							"id": "n7",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_surface",
+							"value": ["keep_current", "paint", "render"],
+							"children": []
+						},
+						{
+							"id": "n8",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						},
+						{
+							"id": "n9",
+							"kind": "XOR",
+							"nodeClass": "",
+							"label": "",
+							"value": [],
+							"children": [
+								{
+									"id": "n10",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "replace_brick_facade",
+									"value": [],
+									"children": []
+								},
+								{
+									"id": "n11",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "keep_current_brick_facade",
+									"value": [],
+									"children": [
+										{
+											"id": "n12",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "brick_replacement",
+											"value": ["0%", "7.5%", "15%", "30%"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "scaffolding",
+							"value": ["rent", "buy"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n13",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["roof"],
+					"children": [
+						{
+							"id": "n14",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n15",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_insulation",
+							"value": ["keep_current", "add_insulation", "add_insulation_and_vapour_barrier"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n16",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["ground_floor"],
+					"children": [
+						{
+							"id": "n17",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n18",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "Underfloor heating",
+			"created": "2026-10-04",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["windows"],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "windows_glazing",
+							"value": ["keep_double", "replace_triple"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n3",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["outer_doors"],
+					"children": [
+						{
+							"id": "n4",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n5",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_material",
+							"value": ["keep_current", "replace_to_wood"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n6",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["facade"],
+					"children": [
+						{
+							"id": "n7",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_surface",
+							"value": ["keep_current", "paint"],
+							"children": []
+						},
+						{
+							"id": "n8",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						},
+						{
+							"id": "n9",
+							"kind": "XOR",
+							"nodeClass": "",
+							"label": "",
+							"value": [],
+							"children": [
+								{
+									"id": "n10",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "replace_brick_facade",
+									"value": [],
+									"children": []
+								},
+								{
+									"id": "n11",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "keep_current_brick_facade",
+									"value": [],
+									"children": [
+										{
+											"id": "n12",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "brick_replacement",
+											"value": ["0%", "7.5%", "15%", "30%"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "scaffolding",
+							"value": ["rent", "buy"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n13",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["roof"],
+					"children": [
+						{
+							"id": "n14",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n15",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n16",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["ground_floor"],
+					"children": [
+						{
+							"id": "n17",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n20",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_heating",
+							"value": ["keep_current", "underfloor"],
+							"children": []
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "Merge Underfloor heating",
+			"created": "2026-10-04",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["windows"],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "windows_glazing",
+							"value": ["keep_double", "replace_triple"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n3",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["outer_doors"],
+					"children": [
+						{
+							"id": "n4",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n5",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "outer_doors_material",
+							"value": ["keep_current", "replace_to_wood"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n6",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["facade"],
+					"children": [
+						{
+							"id": "n7",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_surface",
+							"value": ["keep_current", "paint", "render"],
+							"children": []
+						},
+						{
+							"id": "n8",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "facade_insulation",
+							"value": ["keep_current", "add_insulation"],
+							"children": []
+						},
+						{
+							"id": "n9",
+							"kind": "XOR",
+							"nodeClass": "",
+							"label": "",
+							"value": [],
+							"children": [
+								{
+									"id": "n10",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "replace_brick_facade",
+									"value": [],
+									"children": []
+								},
+								{
+									"id": "n11",
+									"kind": "AND",
+									"nodeClass": "Approach",
+									"label": "keep_current_brick_facade",
+									"value": [],
+									"children": [
+										{
+											"id": "n12",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "brick_replacement",
+											"value": ["0%", "7.5%", "15%", "30%"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "scaffolding",
+							"value": ["rent", "buy"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n13",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["roof"],
+					"children": [
+						{
+							"id": "n14",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n15",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "roof_insulation",
+							"value": ["keep_current", "add_insulation", "add_insulation_and_vapour_barrier"],
+							"children": []
+						}
+					]
+				},
+				{
+					"id": "n16",
+					"kind": "AND",
+					"nodeClass": "Subject",
+					"label": "structural_element",
+					"value": ["ground_floor"],
+					"children": [
+						{
+							"id": "n17",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_replacement",
+							"value": ["keep_current", "replace"],
+							"children": []
+						},
+						{
+							"id": "n20",
+							"kind": "XOR",
+							"nodeClass": "Feature",
+							"label": "ground_floor_heating",
+							"value": ["keep_current", "underfloor"],
+							"children": []
+						}
+					]
 				}
 			]
 		}
