@@ -11,6 +11,10 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 	'use strict';
 
 	var MAX_STEPS = 100;
+	var EDITABLE_TAGS = ['INPUT', 'TEXTAREA', 'SELECT'];
+
+	var undoBtn = document.getElementById('undo-btn');
+	var redoBtn = document.getElementById('redo-btn');
 
 	var undoStack = [];
 	var redoStack = [];
@@ -18,12 +22,9 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 	var lastKey = null;
 	var restoring = false;
 
-	var undoBtn = document.getElementById('undo-btn');
-	var redoBtn = document.getElementById('redo-btn');
-
 	function serialize() {
 		return JSON.stringify({
-			tree: Model.root.children.map(Model.nodeToSpec),
+			tree: Model.treeSpecs(),
 			profile: Model.getProfileState(),
 			history: History.getState()
 		});
@@ -44,7 +45,10 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 	function record() {
 		if (restoring) return;
 		var state = serialize();
-		if (current === null) { current = state; return; }
+		if (current === null) {
+			current = state;
+			return;
+		}
 		if (state === current) return;
 		var key = typingKey();
 		if (!key || key !== lastKey) {
@@ -57,23 +61,33 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 		updateButtons();
 	}
 
+	function eachNode(nodes, visit) {
+		nodes.forEach(function (n) {
+			visit(n);
+			eachNode(n.children, visit);
+		});
+	}
+
+	/** Loads a recorded state, keeping which nodes are expanded and which one is selected. */
 	function restore(state) {
 		var doc = JSON.parse(state);
 		var expanded = {};
-		(function walk(nodes) { nodes.forEach(function (n) { expanded[n.id] = n.expanded; walk(n.children); }); })(Model.root.children);
+		eachNode(Model.root.children, function (n) { expanded[n.id] = n.expanded; });
 		var selected = Model.getSelectedId();
 
 		restoring = true;
 		try {
 			Model.replaceTree(doc.tree, doc.history.snapshots.map(function (s) { return s.tree; }));
-			(function walk(nodes) {
-				nodes.forEach(function (n) { if (expanded[n.id] !== undefined) n.expanded = expanded[n.id]; walk(n.children); });
-			})(Model.root.children);
+			eachNode(Model.root.children, function (n) {
+				if (expanded[n.id] !== undefined) n.expanded = expanded[n.id];
+			});
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);
 			Model.applyProfileState(doc.profile);
 			History.load(doc.history);
-			Render.renderTree(); EditorForm.renderEditorForm();
-			Popovers.updatePillLabels(); Popovers.renderFlyout();
+			Render.renderTree();
+			EditorForm.renderEditorForm();
+			Popovers.updatePillLabels();
+			Popovers.renderFlyout();
 		} finally {
 			restoring = false;
 		}
@@ -94,20 +108,33 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 		restore(redoStack.pop());
 	}
 
-	/* ---------- Buttons & keyboard shortcuts ---------- */
-	undoBtn.addEventListener('click', function (e) { e.stopPropagation(); undo(); });
-	redoBtn.addEventListener('click', function (e) { e.stopPropagation(); redo(); });
+	/* ---------- Buttons and keyboard shortcuts ---------- */
+
+	undoBtn.addEventListener('click', function (e) {
+		e.stopPropagation();
+		undo();
+	});
+
+	redoBtn.addEventListener('click', function (e) {
+		e.stopPropagation();
+		redo();
+	});
 
 	document.addEventListener('keydown', function (e) {
 		if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
 		var t = e.target;
-		if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+		if (t && (EDITABLE_TAGS.indexOf(t.tagName) !== -1 || t.isContentEditable)) return;
 		var key = e.key.toLowerCase();
-		if (key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-		else if (key === 'y' || (key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+		if (key === 'z' && !e.shiftKey) {
+			e.preventDefault();
+			undo();
+		} else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+			e.preventDefault();
+			redo();
+		}
 	});
 
 	updateButtons();
 
-	return { record: record, undo: undo, redo: redo };
+	return { record: record };
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers);

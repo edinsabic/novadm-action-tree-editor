@@ -4,15 +4,15 @@
  * index.html loads this file and pre-populates the editor with it on open.
  *
  * Each entry: { kind: 'AND'|'XOR', nodeClass: 'Subject'|'Approach'|'Feature'|'', label, value, children }
- * - `kind` drives the AND(+)/XOR(−) logic and default badge color.
- * - `nodeClass` is the domain class; when it's 'Approach' the badge is shown in green
- *   regardless of kind, matching the sample diagram.
+ * - `kind` drives the AND(+)/XOR(−) logic and the badge symbol.
+ * - `nodeClass` is the domain class and sets the badge colour (Subject, Feature and
+ *   Approach each have their own; no class is black).
  * - `label` is the attribute name (e.g. "structural_element"), `value` the value/options
  *   string (e.g. "keep_current; replace").
  * Ids and `expanded` are assigned automatically when this is loaded — don't set them here.
  */
 var NOVADM_SAMPLE_TREE = [
-	{ kind: 'AND', children: [	
+	{ kind: 'AND', children: [
 		{
 			kind: 'AND', nodeClass: 'Subject', label: 'structural_element', value: 'windows',
 			children: [

@@ -2,31 +2,40 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Draws the version graph (a small left-to-right DAG) as plain SVG, with
- * click-to-select, drag-to-pan and scroll-to-zoom. No libraries, version
+ * click-to-select, drag-to-pan and scroll-to-zoom. No libraries: version
  * histories are tiny.
  */
-NovaDM.VersionGraph = (function () {
+NovaDM.VersionGraph = (function (Util) {
 	'use strict';
 
 	var COL = 120;
 	var ROW = 64;
 	var RADIUS = 9;
 	var RADIUS_HEAD = 11;
+	var DIRTY_RING_RADIUS = RADIUS_HEAD + 4;
 	var LABEL_DY = 27;
+	var MAX_LABEL_CHARS = 16;
+	var LABEL_HALF_WIDTH = 56;
+	var FIT_PADDING = 24;
+	var MAX_FIT_ZOOM = 1.3;
 	var MIN_ZOOM = 0.3;
 	var MAX_ZOOM = 3;
 	var NOMINAL_W = 520;
 	var NOMINAL_H = 280;
 	var DRAG_THRESHOLD = 4;
+	var WHEEL_ZOOM_SPEED = 0.0015;
 
-	function esc(s) {
-		return String(s).replace(/[&<>"']/g, function (c) {
-			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-		});
-	}
-	function shorten(text) { return text.length > 16 ? text.slice(0, 15) + '\u2026' : text; }
+	var escapeHtml = Util.escapeHtml;
+	var observers = new WeakMap();
+
 	function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
+	/* ---------- Layout ---------- */
+
+	/**
+	 * Column = longest path from a root; lane = the first child continues its parent's lane,
+	 * every other child starts a new one.
+	 */
 	function layout(nodes) {
 		var byId = {};
 		var items = nodes.map(function (n, i) {
@@ -38,7 +47,8 @@ NovaDM.VersionGraph = (function () {
 			it.parents = it.node.parents.filter(function (p) { return byId[p] && p !== it.node.id; });
 		});
 
-		var depth = {}, visiting = {};
+		var depth = {};
+		var visiting = {};
 		function depthOf(id) {
 			if (depth[id] !== undefined) return depth[id];
 			if (visiting[id]) return 0;
@@ -73,31 +83,51 @@ NovaDM.VersionGraph = (function () {
 		return { items: items, byId: byId, maxDepth: maxDepth, lanes: Math.max(nextLane, 1) };
 	}
 
+	/* ---------- SVG ---------- */
+
 	function radiusOf(item) { return item.node.isHead ? RADIUS_HEAD : RADIUS; }
 
 	function edgeSvg(from, to) {
 		var x1 = from.x + radiusOf(from) + 1;
 		var x2 = to.x - radiusOf(to) - 3;
-		var y1 = from.y, y2 = to.y;
+		var y1 = from.y;
+		var y2 = to.y;
+		var midX = x1 + (x2 - x1) / 2;
 		var merged = to.parents.length > 1;
 		var d = y1 === y2
 			? 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2
-			: 'M' + x1 + ' ' + y1 + ' C' + (x1 + (x2 - x1) / 2) + ' ' + y1 + ', ' + (x1 + (x2 - x1) / 2) + ' ' + y2 + ', ' + x2 + ' ' + y2;
-		return '<path class="vg-edge' + (merged ? ' merged' : '') + '" d="' + d + '" marker-end="url(#' + (merged ? 'vg-arrow-merged' : 'vg-arrow') + ')"/>';
+			: 'M' + x1 + ' ' + y1 + ' C' + midX + ' ' + y1 + ', ' + midX + ' ' + y2 + ', ' + x2 + ' ' + y2;
+		return '<path class="vg-edge' + (merged ? ' merged' : '') + '" d="' + d + '"' +
+			' marker-end="url(#' + (merged ? 'vg-arrow-merged' : 'vg-arrow') + ')"/>';
 	}
 
 	function nodeSvg(item, selectedId) {
 		var n = item.node;
-		var cls = 'vg-node' + (n.isHead ? ' current' : '') + (n.isBranch ? ' branch' : '') + (n.id === selectedId ? ' selected' : '');
-		var ring = n.isHead && n.isDirty ? '<circle class="vg-dirty" r="' + (RADIUS_HEAD + 4) + '"/>' : '';
-		return '<g class="vg-node-g" data-vid="' + esc(n.id) + '" transform="translate(' + item.x + ' ' + item.y + ')">' +
-			ring + '<circle class="' + cls + '" r="' + radiusOf(item) + '"/>' +
-			'<text class="vg-label' + (n.isHead ? ' current' : '') + '" y="' + LABEL_DY + '" text-anchor="middle">' + esc(shorten(n.id)) + '</text>' +
-			'<title>' + esc(n.id) + '</title></g>';
+		var cls = 'vg-node' + (n.isHead ? ' current' : '') + (n.isBranch ? ' branch' : '') +
+			(n.id === selectedId ? ' selected' : '');
+		var ring = n.isHead && n.isDirty ? '<circle class="vg-dirty" r="' + DIRTY_RING_RADIUS + '"/>' : '';
+		return '<g class="vg-node-g" data-vid="' + escapeHtml(n.id) + '"' +
+			' transform="translate(' + item.x + ' ' + item.y + ')">' +
+			ring +
+			'<circle class="' + cls + '" r="' + radiusOf(item) + '"/>' +
+			'<text class="vg-label' + (n.isHead ? ' current' : '') + '" y="' + LABEL_DY + '" text-anchor="middle">' +
+			escapeHtml(Util.shorten(n.id, MAX_LABEL_CHARS)) + '</text>' +
+			'<title>' + escapeHtml(n.id) + '</title>' +
+			'</g>';
 	}
 
-	var observers = new WeakMap();
+	function arrowMarkerSvg(id, extraClass) {
+		return '<marker id="' + id + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"' +
+			' orient="auto"><path class="vg-arrowhead' + extraClass + '" d="M0,0 L10,5 L0,10 z"/></marker>';
+	}
 
+	/* ---------- The graph ---------- */
+
+	/**
+	 * Draws `nodes` ({ id, parents, isHead, isBranch, isDirty }) into `container`.
+	 * options: selectedId, view (a previous getView() result, to keep the pan/zoom),
+	 * onSelect(id), onViewChange(view).
+	 */
 	function create(container, nodes, options) {
 		var selectedId = options.selectedId;
 		var lay = layout(nodes);
@@ -106,39 +136,45 @@ NovaDM.VersionGraph = (function () {
 		lay.items.forEach(function (to) {
 			to.parents.forEach(function (p) { edges.push(edgeSvg(lay.byId[p], to)); });
 		});
+		var nodesSvg = lay.items.map(function (it) { return nodeSvg(it, selectedId); });
 
 		container.innerHTML =
 			'<svg class="vg-svg" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">' +
-			'<defs>' +
-			'<marker id="vg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="vg-arrowhead" d="M0,0 L10,5 L0,10 z"/></marker>' +
-			'<marker id="vg-arrow-merged" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="vg-arrowhead merged" d="M0,0 L10,5 L0,10 z"/></marker>' +
-			'</defs>' +
-			'<g class="vg-world">' + edges.join('') + lay.items.map(function (it) { return nodeSvg(it, selectedId); }).join('') + '</g>' +
+			'<defs>' + arrowMarkerSvg('vg-arrow', '') + arrowMarkerSvg('vg-arrow-merged', ' merged') + '</defs>' +
+			'<g class="vg-world">' + edges.join('') + nodesSvg.join('') + '</g>' +
 			'</svg>';
 
 		var svg = container.querySelector('svg');
 		var world = container.querySelector('.vg-world');
 		var restore = !!options.view && !options.view.auto;
-		var view = restore ? { k: options.view.k, tx: options.view.tx, ty: options.view.ty } : { k: 1, tx: 0, ty: 0 };
+		var view = restore
+			? { k: options.view.k, tx: options.view.tx, ty: options.view.ty }
+			: { k: 1, tx: 0, ty: 0 };
 		var auto = !restore;
-		var lastW = container.clientWidth, lastH = container.clientHeight;
+		var lastW = container.clientWidth;
+		var lastH = container.clientHeight;
+
+		function getView() { return { k: view.k, tx: view.tx, ty: view.ty, auto: auto }; }
 
 		function apply() {
 			world.setAttribute('transform', 'translate(' + view.tx + ' ' + view.ty + ') scale(' + view.k + ')');
 			if (options.onViewChange) options.onViewChange(getView());
 		}
 
-		function getView() { return { k: view.k, tx: view.tx, ty: view.ty, auto: auto }; }
-
 		function fit() {
 			auto = true;
 			var w = container.clientWidth || NOMINAL_W;
 			var h = container.clientHeight || NOMINAL_H;
-			lastW = container.clientWidth; lastH = container.clientHeight;
-			var minX = -56, maxX = lay.maxDepth * COL + 56;
-			var minY = -RADIUS_HEAD - 4, maxY = (lay.lanes - 1) * ROW + LABEL_DY + 8;
-			var bw = maxX - minX, bh = maxY - minY;
-			view.k = clamp(Math.min((w - 24) / bw, (h - 24) / bh, 1.3), MIN_ZOOM, MAX_ZOOM);
+			lastW = container.clientWidth;
+			lastH = container.clientHeight;
+			var minX = -LABEL_HALF_WIDTH;
+			var maxX = lay.maxDepth * COL + LABEL_HALF_WIDTH;
+			var minY = -DIRTY_RING_RADIUS;
+			var maxY = (lay.lanes - 1) * ROW + LABEL_DY + 8;
+			var bw = maxX - minX;
+			var bh = maxY - minY;
+			var k = Math.min((w - FIT_PADDING) / bw, (h - FIT_PADDING) / bh, MAX_FIT_ZOOM);
+			view.k = clamp(k, MIN_ZOOM, MAX_ZOOM);
 			view.tx = (w - bw * view.k) / 2 - minX * view.k;
 			view.ty = (h - bh * view.k) / 2 - minY * view.k;
 			apply();
@@ -151,36 +187,6 @@ NovaDM.VersionGraph = (function () {
 			});
 		}
 
-		/* ---------- Interaction: click, drag to pan, wheel to zoom ---------- */
-		var down = null; /* { x, y, tx, ty, id, moved } */
-
-		svg.addEventListener('pointerdown', function (e) {
-			var g = e.target.closest ? e.target.closest('.vg-node-g') : null;
-			down = { x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty, id: g ? g.getAttribute('data-vid') : null, moved: false };
-			if (svg.setPointerCapture) { try { svg.setPointerCapture(e.pointerId); } catch (err) { } }
-		});
-		svg.addEventListener('pointermove', function (e) {
-			if (!down) return;
-			var dx = e.clientX - down.x, dy = e.clientY - down.y;
-			if (!down.moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
-			down.moved = true;
-			auto = false;
-			svg.classList.add('panning');
-			view.tx = down.tx + dx;
-			view.ty = down.ty + dy;
-			apply();
-		});
-		function release() {
-			if (!down) return;
-			var wasClick = !down.moved && down.id !== null;
-			var id = down.id;
-			down = null;
-			svg.classList.remove('panning');
-			if (wasClick) options.onSelect(id);
-		}
-		svg.addEventListener('pointerup', release);
-		svg.addEventListener('pointercancel', function () { down = null; svg.classList.remove('panning'); });
-
 		function zoomAt(px, py, factor) {
 			var k = clamp(view.k * factor, MIN_ZOOM, MAX_ZOOM);
 			view.tx = px - (px - view.tx) * (k / view.k);
@@ -190,34 +196,84 @@ NovaDM.VersionGraph = (function () {
 			apply();
 		}
 
+		function zoomBy(factor) {
+			zoomAt((container.clientWidth || NOMINAL_W) / 2, (container.clientHeight || NOMINAL_H) / 2, factor);
+		}
+
+		var down = null;
+
+		svg.addEventListener('pointerdown', function (e) {
+			var g = e.target.closest('.vg-node-g');
+			down = {
+				x: e.clientX,
+				y: e.clientY,
+				tx: view.tx,
+				ty: view.ty,
+				id: g ? g.getAttribute('data-vid') : null,
+				moved: false
+			};
+			try {
+				svg.setPointerCapture(e.pointerId);
+			} catch (err) {}
+		});
+
+		svg.addEventListener('pointermove', function (e) {
+			if (!down) return;
+			var dx = e.clientX - down.x;
+			var dy = e.clientY - down.y;
+			if (!down.moved && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+			down.moved = true;
+			auto = false;
+			svg.classList.add('panning');
+			view.tx = down.tx + dx;
+			view.ty = down.ty + dy;
+			apply();
+		});
+
+		svg.addEventListener('pointerup', function () {
+			if (!down) return;
+			var clickedId = down.moved ? null : down.id;
+			down = null;
+			svg.classList.remove('panning');
+			if (clickedId !== null) options.onSelect(clickedId);
+		});
+
+		svg.addEventListener('pointercancel', function () {
+			down = null;
+			svg.classList.remove('panning');
+		});
+
 		svg.addEventListener('wheel', function (e) {
 			e.preventDefault();
 			var rect = svg.getBoundingClientRect();
-			zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * 0.0015));
+			zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * WHEEL_ZOOM_SPEED));
 		}, { passive: false });
 
-		function zoomBy(factor) { zoomAt((container.clientWidth || NOMINAL_W) / 2, (container.clientHeight || NOMINAL_H) / 2, factor); }
-
 		if (observers.has(container)) observers.get(container).disconnect();
-		if (typeof ResizeObserver === 'function') {
-			var observer = new ResizeObserver(function () {
-				var w = container.clientWidth, h = container.clientHeight;
-				if (!w || !h) return;
-				if (auto) fit();
-				else if (lastW && lastH) {
-					view.tx += (w - lastW) / 2;
-					view.ty += (h - lastH) / 2;
-					lastW = w; lastH = h;
-					apply();
-				} else { lastW = w; lastH = h; }
-			});
-			observer.observe(container);
-			observers.set(container, observer);
-		}
+		var observer = new ResizeObserver(function () {
+			var w = container.clientWidth;
+			var h = container.clientHeight;
+			if (!w || !h) return;
+			if (auto) {
+				fit();
+				return;
+			}
+			if (lastW && lastH) {
+				view.tx += (w - lastW) / 2;
+				view.ty += (h - lastH) / 2;
+				apply();
+			}
+			lastW = w;
+			lastH = h;
+		});
+		observer.observe(container);
+		observers.set(container, observer);
 
-		if (restore) apply(); else fit();
-		return { setSelected: setSelected, fit: fit, zoomBy: zoomBy, getView: getView };
+		if (restore) apply();
+		else fit();
+
+		return { setSelected: setSelected, fit: fit, zoomBy: zoomBy };
 	}
 
 	return { create: create };
-})();
+})(NovaDM.Util);
