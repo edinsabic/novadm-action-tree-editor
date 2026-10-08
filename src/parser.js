@@ -38,6 +38,56 @@ NovaDM.Parser = (function (Model) {
 		return { head: DEFAULT_SNAPSHOT_ID, edges: [], snapshots: [] };
 	}
 
+	/* ---------- Missing node ids ---------- */
+
+	function eachSpec(list, visit) {
+		if (!Array.isArray(list)) return;
+		list.forEach(function (spec) {
+			if (!spec || typeof spec !== 'object') return;
+			visit(spec);
+			eachSpec(spec.children, visit);
+		});
+	}
+
+	function constraintIds(profile) {
+		if (!profile || typeof profile !== 'object') return [];
+		var maps = [profile.current, profile.currentValues];
+		(Array.isArray(profile.saved) ? profile.saved : []).forEach(function (p) {
+			if (p) maps.push(p.constraints, p.valueConstraints);
+		});
+		return maps.reduce(function (ids, map) {
+			return map && typeof map === 'object' ? ids.concat(Object.keys(map)) : ids;
+		}, []);
+	}
+
+	function fillMissingIds(trees, profile) {
+		var taken = {};
+		var next = 1;
+		var rootId = null;
+
+		function freshId() {
+			while (taken['n' + next]) next++;
+			taken['n' + next] = true;
+			return 'n' + next;
+		}
+
+		trees.forEach(function (tree) {
+			eachSpec(tree, function (spec) { if (typeof spec.id === 'string') taken[spec.id] = true; });
+		});
+		constraintIds(profile).forEach(function (id) { taken[id] = true; });
+		trees.forEach(function (tree) {
+			eachSpec(tree, function (spec) {
+				if (spec.id !== undefined) return;
+				if (spec === tree[0]) {
+					rootId = rootId || freshId();
+					spec.id = rootId;
+				} else {
+					spec.id = freshId();
+				}
+			});
+		});
+	}
+
 	/* ---------- Writing ---------- */
 
 	function isPrimitive(v) { return v === null || typeof v !== 'object'; }
@@ -117,6 +167,7 @@ NovaDM.Parser = (function (Model) {
 
 	function singleTreeDocument(tree) {
 		var rooted = ensureRoot(tree);
+		fillMissingIds([rooted], null);
 		return { tree: rooted, profile: null, history: emptyHistory(), addedRoot: rooted !== tree };
 	}
 
@@ -185,6 +236,7 @@ NovaDM.Parser = (function (Model) {
 			var rawSnapshots = SECTION_PARSERS.actionTree(data.actionTree);
 			var snapshots = data.version < 5 ? rawSnapshots.map(withRootedTree) : rawSnapshots;
 			if (snapshots.length === 0) throw new Error('The "actionTree" section holds no snapshots.');
+			fillMissingIds(snapshots.map(function (s) { return s && s.tree; }), profile);
 
 			var head = versionControl.head === null ? snapshots[snapshots.length - 1].id : versionControl.head;
 			var headSnapshot = findSnapshot(snapshots, head);
@@ -288,8 +340,33 @@ NovaDM.Parser = (function (Model) {
 				return here + ' (' + e.from + ' -> ' + e.to +
 					') points at a snapshot that is not in the "actionTree" section.';
 			}
+			if (e.from === e.to) return here + ' (' + e.from + ' -> ' + e.to + ') points from a snapshot to itself.';
+		}
+		if (hasCycle(history.edges)) {
+			return 'Version control: the edges go round in a circle, so a snapshot would be based on itself.';
 		}
 		return null;
+	}
+
+	function hasCycle(edges) {
+		var incoming = {};
+		var outgoing = {};
+		edges.forEach(function (e) {
+			incoming[e.from] = incoming[e.from] || 0;
+			incoming[e.to] = (incoming[e.to] || 0) + 1;
+			(outgoing[e.from] = outgoing[e.from] || []).push(e.to);
+		});
+		var ready = Object.keys(incoming).filter(function (id) { return incoming[id] === 0; });
+		var visited = 0;
+		while (ready.length) {
+			var id = ready.pop();
+			visited++;
+			(outgoing[id] || []).forEach(function (to) {
+				incoming[to]--;
+				if (incoming[to] === 0) ready.push(to);
+			});
+		}
+		return visited < Object.keys(incoming).length;
 	}
 
 	function validateSpecs(specs) {

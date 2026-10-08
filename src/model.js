@@ -80,14 +80,6 @@ NovaDM.Model = (function (Util) {
 		return false;
 	}
 
-	function collectNodes(node, into) {
-		node.children.forEach(function (c) {
-			into[c.id] = c;
-			collectNodes(c, into);
-		});
-		return into;
-	}
-
 	function removeNode(id) {
 		var parent = findParent(root, id);
 		if (!parent) return;
@@ -262,26 +254,32 @@ NovaDM.Model = (function (Util) {
 		resetNodeConstraints();
 	}
 
-	function getProfileState() {
-		return {
+	function getProfileState(trees) {
+		var state = {
 			active: activeProfileName,
 			current: Util.clone(nodeConstraints),
 			currentValues: Util.clone(valueConstraints),
 			saved: Util.clone(profiles)
 		};
+		return trees ? prunedProfileState(state, trees) : state;
 	}
 
-	/** Takes over a getProfileState() result, dropping constraints on missing nodes or values. */
-	function applyProfileState(state) {
-		state = state || {};
-		var nodesById = collectNodes(root, {});
+	function prunedProfileState(state, trees) {
+		var valuesById = {};
+
+		function collect(specs) {
+			specs.forEach(function (s) {
+				valuesById[s.id] = (valuesById[s.id] || []).concat(parseValues(s.value));
+				collect(s.children || []);
+			});
+		}
 
 		function isAlwaysOrNever(c) { return c === 'always' || c === 'never'; }
 
 		function prune(constraints) {
 			var out = {};
 			Object.keys(constraints || {}).forEach(function (id) {
-				if (nodesById[id] && isAlwaysOrNever(constraints[id])) out[id] = constraints[id];
+				if (valuesById[id] && isAlwaysOrNever(constraints[id])) out[id] = constraints[id];
 			});
 			return out;
 		}
@@ -289,11 +287,11 @@ NovaDM.Model = (function (Util) {
 		function pruneValues(byNode) {
 			var out = {};
 			Object.keys(byNode || {}).forEach(function (id) {
-				var node = nodesById[id];
-				if (!node) return;
+				var values = valuesById[id];
+				if (!values) return;
 				Object.keys(byNode[id]).forEach(function (v) {
 					var c = byNode[id][v];
-					if (node.value.indexOf(v) !== -1 && isAlwaysOrNever(c)) {
+					if (values.indexOf(v) !== -1 && isAlwaysOrNever(c)) {
 						(out[id] = out[id] || {})[v] = c;
 					}
 				});
@@ -301,16 +299,27 @@ NovaDM.Model = (function (Util) {
 			return out;
 		}
 
-		nodeConstraints = prune(state.current);
-		valueConstraints = pruneValues(state.currentValues);
-		profiles = (state.saved || []).map(function (p) {
-			return {
-				name: p.name,
-				constraints: prune(p.constraints),
-				valueConstraints: pruneValues(p.valueConstraints)
-			};
-		});
-		activeProfileName = findProfile(state.active) ? state.active : null;
+		trees.forEach(collect);
+		return {
+			active: state.active === undefined ? null : state.active,
+			current: prune(state.current),
+			currentValues: pruneValues(state.currentValues),
+			saved: (state.saved || []).map(function (p) {
+				return {
+					name: p.name,
+					constraints: prune(p.constraints),
+					valueConstraints: pruneValues(p.valueConstraints)
+				};
+			})
+		};
+	}
+
+	function applyProfileState(state, otherTrees) {
+		var pruned = prunedProfileState(state || {}, [treeSpecs()].concat(otherTrees || []));
+		nodeConstraints = pruned.current;
+		valueConstraints = pruned.currentValues;
+		profiles = pruned.saved;
+		activeProfileName = findProfile(pruned.active) ? pruned.active : null;
 	}
 
 	/* ---------- Scenario space size ---------- */
@@ -324,9 +333,10 @@ NovaDM.Model = (function (Util) {
 	/**
 	 * Counts the valid scenarios: AND = product of its children, XOR = sum, times the node's own
 	 * value choices. Always/never are applied without the And propagation rule, so a forbidden
-	 * child of an AND is left out. Returns 0 if the constraints contradict each other.
+	 * child of an AND is left out. Returns 0 for an empty tree or contradictory constraints.
 	 */
 	function scenarioSpaceSize() {
+		if (root.children.length === 0) return 0;
 		var contradiction = false;
 
 		function evaluate(node) {

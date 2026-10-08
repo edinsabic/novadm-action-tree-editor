@@ -123,7 +123,7 @@ NovaDM.Render = (function (Model, Util) {
 		var size = Model.scenarioSpaceSize();
 
 		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
-		constraintWarningEl.hidden = size !== 0;
+		constraintWarningEl.hidden = isEmpty || size !== 0;
 		exportBtn.disabled = isEmpty;
 		treeContent.classList.toggle('empty-hint', isEmpty);
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && !isEmpty);

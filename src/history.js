@@ -98,6 +98,14 @@ NovaDM.History = (function (Model, Parser, Util) {
 		return out;
 	}
 
+	function childrenOf(id) {
+		var out = [];
+		edges.forEach(function (e) {
+			if (e.from === id && find(e.to) && out.indexOf(e.to) === -1) out.push(e.to);
+		});
+		return out;
+	}
+
 	function isBranch(id) {
 		var p = parentsOf(id)[0];
 		if (p === undefined) return false;
@@ -178,6 +186,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 			id: id,
 			created: snap.created || '',
 			parents: parents,
+			children: childrenOf(id),
 			isHead: id === head,
 			isBranch: isBranch(id),
 			isMerge: parents.length > 1,
@@ -206,9 +215,11 @@ NovaDM.History = (function (Model, Parser, Util) {
 		return null;
 	}
 
+	function canUpdateHead() { return childrenOf(head).length === 0; }
+
 	function updateHead() {
 		var h = find(head);
-		if (h) h.tree = Model.treeSpecs();
+		if (h && canUpdateHead()) h.tree = Model.treeSpecs();
 	}
 
 	function checkout(id) {
@@ -227,6 +238,52 @@ NovaDM.History = (function (Model, Parser, Util) {
 		addVersion(name, tree, [head], 'Restored from "' + id + '"');
 		Model.replaceTree(clone(tree), allTrees());
 		return name;
+	}
+
+	function deleteProblem(id) {
+		if (!find(id)) return 'That version no longer exists.';
+		if (id === head) return 'This version is open in the editor. Open another version first.';
+		if (parentsOf(id).length === 0 && childrenOf(id).length > 1) {
+			return 'This is the first version and several versions are based on it, so they would lose' +
+				' their common start.';
+		}
+		return null;
+	}
+
+	function isImpliedParent(parentId, child) {
+		return parentsOf(child).some(function (other) {
+			return other !== parentId && ancestorDistances(other)[parentId] !== undefined;
+		});
+	}
+
+	function deleteVersion(id) {
+		var problem = deleteProblem(id);
+		if (problem) return problem;
+		var parents = parentsOf(id);
+		var children = childrenOf(id);
+		var relinked = [];
+		edges.forEach(function (e) {
+			if (e.to === id) return;
+			if (e.from !== id) {
+				relinked.push(e);
+				return;
+			}
+			parents.forEach(function (p) {
+				relinked.push(e.comment ? { from: p, to: e.to, comment: e.comment } : { from: p, to: e.to });
+			});
+		});
+		var seen = {};
+		edges = relinked.filter(function (e) {
+			var key = JSON.stringify([e.from, e.to]);
+			if (seen[key]) return false;
+			seen[key] = true;
+			return true;
+		});
+		snapshots.splice(indexOfVersion(id), 1);
+		edges = edges.filter(function (e) {
+			return children.indexOf(e.to) === -1 || !isImpliedParent(e.from, e.to);
+		});
+		return null;
 	}
 
 	/* ---------- Merging ---------- */
@@ -264,13 +321,9 @@ NovaDM.History = (function (Model, Parser, Util) {
 	}
 
 	function nodeTable(list) {
-		var table = { byId: {}, order: [], noId: [] };
+		var table = { byId: {}, order: [] };
 		(function walk(items, parentId) {
 			(items || []).forEach(function (s) {
-				if (!s.id) {
-					table.noId.push(nodeText(s));
-					return;
-				}
 				table.byId[s.id] = { parent: parentId, sig: nodeSig(s), text: nodeText(s), spec: s };
 				table.order.push(s.id);
 				walk(s.children, s.id);
@@ -308,10 +361,6 @@ NovaDM.History = (function (Model, Parser, Util) {
 			conflicted[id] = true;
 			conflicts.push({ id: id, text: text, reason: reason });
 		}
-
-		T.noId.forEach(function (text, i) {
-			conflict('?' + i, text, 'has no id in "' + sourceId + '", so it cannot be matched');
-		});
 
 		var adds = [];
 		var updates = [];
@@ -389,19 +438,20 @@ NovaDM.History = (function (Model, Parser, Util) {
 			added++;
 		});
 
+		function moveProblem(parentId, id) {
+			if (parentId === null) return null;
+			if (!loc[parentId]) return 'moved on their side to a place that is not in your version';
+			if (isInside(parentId, id)) return 'moved on their side to somewhere that would put it inside itself';
+			return null;
+		}
+
 		var updated = 0;
 		updates.forEach(function (u) {
 			var t = T.byId[u.id];
 			var here = loc[u.id];
-			if (u.place) {
-				if (t.parent !== null && !loc[t.parent]) {
-					conflict(u.id, t.text, 'moved on their side to a place that is not in your version');
-					return;
-				}
-				if (t.parent !== null && isInside(t.parent, u.id)) {
-					conflict(u.id, t.text, 'moved on their side to somewhere that would put it inside itself');
-					return;
-				}
+			var problem = u.place ? moveProblem(t.parent, u.id) : null;
+			if (problem) conflict(u.id, t.text, problem);
+			if (u.place && !problem) {
 				here.list.splice(here.list.indexOf(here.spec), 1);
 				here.list = listOf(t.parent);
 				here.list.push(here.spec);
@@ -413,7 +463,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 				here.spec.label = t.spec.label || '';
 				here.spec.value = Model.parseValues(t.spec.value);
 			}
-			updated++;
+			if (u.content || !problem) updated++;
 		});
 
 		function descendantsOf(spec, out) {
@@ -465,6 +515,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 	}
 
 	function mergeProblem(id, r) {
+		if (isDirty()) return 'Save or undo the unsaved changes to "' + head + '" before merging.';
 		if (r.rejected) return 'Merge rejected: ' + r.rejected;
 		if (!r.empty) return '';
 		var kept = r.conflicts.length
@@ -492,8 +543,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 	function merge(id) {
 		var r = computeMerge(id);
 		if (r.error) return { error: r.error };
-		if (r.rejected) return { error: 'Merge rejected, nothing was changed: ' + r.rejected };
-		if (r.empty) return { error: mergeProblem(id, r) };
+		var problem = mergeProblem(id, r);
+		if (problem) return { error: problem };
 		var summary = mergeSummary(r);
 		var name = uniqueName('Merge ' + id);
 		addVersion(name, r.tree, [head, id], 'Merged "' + id + '" into "' + head + '" (' + summary + ')');
@@ -514,9 +565,12 @@ NovaDM.History = (function (Model, Parser, Util) {
 		graphNodes: graphNodes,
 		describe: describe,
 		saveAsNew: saveAsNew,
+		canUpdateHead: canUpdateHead,
 		updateHead: updateHead,
 		checkout: checkout,
 		restore: restore,
+		deleteProblem: deleteProblem,
+		deleteVersion: deleteVersion,
 		mergePreview: mergePreview,
 		merge: merge
 	};

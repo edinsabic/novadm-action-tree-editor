@@ -24,9 +24,10 @@ NovaDM.VersionGraph = (function (Util) {
 	var NOMINAL_H = 280;
 	var DRAG_THRESHOLD = 4;
 	var WHEEL_ZOOM_SPEED = 0.0015;
+	var BEND_WIDTH = COL - 2 * RADIUS - 4;
 
 	var escapeHtml = Util.escapeHtml;
-	var observers = new WeakMap();
+	var observer = null;
 
 	function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -87,17 +88,38 @@ NovaDM.VersionGraph = (function (Util) {
 
 	function radiusOf(item) { return item.node.isHead ? RADIUS_HEAD : RADIUS; }
 
-	function edgeSvg(from, to) {
+	function curveTo(x1, y1, x2, y2) {
+		var midX = x1 + (x2 - x1) / 2;
+		return ' C' + midX + ' ' + y1 + ', ' + midX + ' ' + y2 + ', ' + x2 + ' ' + y2;
+	}
+
+	function isLaneFree(lay, lane, fromDepth, toDepth) {
+		return !lay.items.some(function (it) {
+			return it.lane === lane && it.depth > fromDepth && it.depth < toDepth;
+		});
+	}
+
+	function edgePath(lay, from, to) {
 		var x1 = from.x + radiusOf(from) + 1;
 		var x2 = to.x - radiusOf(to) - 3;
 		var y1 = from.y;
 		var y2 = to.y;
-		var midX = x1 + (x2 - x1) / 2;
+		var path = 'M' + x1 + ' ' + y1;
+		if (y1 === y2) return path + ' L' + x2 + ' ' + y2;
+		if (isLaneFree(lay, from.lane, from.depth, to.depth)) {
+			var bendX = Math.max(x1, x2 - BEND_WIDTH);
+			return path + ' L' + bendX + ' ' + y1 + curveTo(bendX, y1, x2, y2);
+		}
+		if (isLaneFree(lay, to.lane, from.depth, to.depth)) {
+			var endX = Math.min(x2, x1 + BEND_WIDTH);
+			return path + curveTo(x1, y1, endX, y2) + ' L' + x2 + ' ' + y2;
+		}
+		return path + curveTo(x1, y1, x2, y2);
+	}
+
+	function edgeSvg(lay, from, to) {
 		var merged = to.parents.length > 1;
-		var d = y1 === y2
-			? 'M' + x1 + ' ' + y1 + ' L' + x2 + ' ' + y2
-			: 'M' + x1 + ' ' + y1 + ' C' + midX + ' ' + y1 + ', ' + midX + ' ' + y2 + ', ' + x2 + ' ' + y2;
-		return '<path class="vg-edge' + (merged ? ' merged' : '') + '" d="' + d + '"' +
+		return '<path class="vg-edge' + (merged ? ' merged' : '') + '" d="' + edgePath(lay, from, to) + '"' +
 			' marker-end="url(#' + (merged ? 'vg-arrow-merged' : 'vg-arrow') + ')"/>';
 	}
 
@@ -134,7 +156,7 @@ NovaDM.VersionGraph = (function (Util) {
 
 		var edges = [];
 		lay.items.forEach(function (to) {
-			to.parents.forEach(function (p) { edges.push(edgeSvg(lay.byId[p], to)); });
+			to.parents.forEach(function (p) { edges.push(edgeSvg(lay, lay.byId[p], to)); });
 		});
 		var nodesSvg = lay.items.map(function (it) { return nodeSvg(it, selectedId); });
 
@@ -249,8 +271,8 @@ NovaDM.VersionGraph = (function (Util) {
 			zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * WHEEL_ZOOM_SPEED));
 		}, { passive: false });
 
-		if (observers.has(container)) observers.get(container).disconnect();
-		var observer = new ResizeObserver(function () {
+		if (observer) observer.disconnect();
+		observer = new ResizeObserver(function () {
 			var w = container.clientWidth;
 			var h = container.clientHeight;
 			if (!w || !h) return;
@@ -267,7 +289,6 @@ NovaDM.VersionGraph = (function (Util) {
 			lastH = h;
 		});
 		observer.observe(container);
-		observers.set(container, observer);
 
 		if (restore) apply();
 		else fit();

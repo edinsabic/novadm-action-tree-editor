@@ -340,6 +340,17 @@ main {
 	cursor: not-allowed;
 }
 
+.btn.danger {
+	border-color: var(--color-danger-border);
+	color: var(--color-danger);
+}
+
+.btn.danger:hover:not(:disabled) {
+	border-color: var(--color-danger);
+	background-color: var(--color-danger-light);
+	color: var(--color-danger);
+}
+
 #zoom-label {
 	min-width: 34px;
 	color: var(--color-ink-muted);
@@ -794,16 +805,6 @@ main {
 .editor-actions .btn {
 	padding: 7px 10px;
 	text-align: left;
-}
-
-.editor-actions .btn.danger {
-	border-color: var(--color-danger-border);
-	color: var(--color-danger);
-}
-
-.editor-actions .btn.danger:hover {
-	border-color: var(--color-danger);
-	background-color: var(--color-danger-light);
 }
 
 .editor-add-row {
