@@ -16,6 +16,7 @@ NovaDM.EditorForm = (function (Model, Render) {
 			formHost.innerHTML = '<div class="editor-empty">Select a node in the tree to edit it, or drag a new AND/XOR node in.</div>';
 			return;
 		}
+		var isRoot = Model.isRootNode(node);
 		var classOptions = Model.NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' + (c || '(none)') + '</option>';
 		}).join('');
@@ -32,11 +33,14 @@ NovaDM.EditorForm = (function (Model, Render) {
 					'<strong style="font-size:0.85rem;">' + node.kind + '</strong></div>' +
 				'</div>' +
 				'<div class="field"><label>Class</label>' +
-					'<select id="f-class">' + classOptions + '</select>' +
+					'<select id="f-class"' + (isRoot ? ' disabled title="The root node has no class"' : '') + '>' + classOptions + '</select>' +
 				'</div>' +
 			'</div>' +
 			'<div class="field"><label>Label</label><input id="f-label" type="text" placeholder="e.g. structural_element" value="' + Render.escapeHtml(node.label) + '" /></div>' +
 			'<div class="field"><label>Value / options</label><input id="f-value" type="text" placeholder="e.g. keep_current; replace" title="Separate several options with ; or ," value="' + Render.escapeHtml(node.value.join('; ')) + '" /></div>' +
+			'<div class="field" id="f-value-chips-field"><label>Option constraints</label>' +
+				'<div class="value-chip-row" id="f-value-chips"></div>' +
+				'<div class="sibling-note">Click an option to cycle default / always / never.</div></div>' +
 			'<div class="editor-add-row">' +
 				'<button class="btn" id="add-and-child" type="button"' + (canAddAnd ? '' : ' disabled') + '>+ AND child</button>' +
 				'<button class="btn" id="add-xor-child" type="button"' + (canAddXor ? '' : ' disabled') + '>\u2212 XOR child</button>' +
@@ -47,16 +51,31 @@ NovaDM.EditorForm = (function (Model, Render) {
 			'</div>' +
 			'</div>';
 
+		renderValueChips(node);
+		document.getElementById('f-value-chips').addEventListener('click', function (e) {
+			var chip = e.target.closest('[data-value-toggle]');
+			if (!chip) return;
+			Model.cycleValueConstraint(node.id, chip.getAttribute('data-value'));
+			Render.renderTree(); renderValueChips(node);
+		});
 		document.getElementById('f-class').addEventListener('change', function (e) { node.nodeClass = e.target.value; Render.renderTree(); renderEditorForm(); });
 		document.getElementById('f-label').addEventListener('input', function (e) { node.label = e.target.value; Render.renderTree(); });
-		document.getElementById('f-value').addEventListener('input', function (e) { node.value = Model.parseValues(e.target.value); Render.renderTree(); });
+		document.getElementById('f-value').addEventListener('input', function (e) { node.value = Model.parseValues(e.target.value); Render.renderTree(); renderValueChips(node); });
 		document.getElementById('add-and-child').addEventListener('click', function () { addChildTo(node, 'AND'); });
 		document.getElementById('add-xor-child').addEventListener('click', function () { addChildTo(node, 'XOR'); });
 		document.getElementById('delete-node').addEventListener('click', function () {
+			if (isRoot && !confirm('Delete the root node and the entire tree?')) return;
 			Model.removeNode(node.id);
 			Model.setSelectedId(null);
 			Render.renderTree(); renderEditorForm();
 		});
+	}
+
+	/** Only nodes with several values have options to constrain; the row hides itself otherwise. */
+	function renderValueChips(node) {
+		var field = document.getElementById('f-value-chips-field');
+		field.hidden = node.value.length < 2;
+		document.getElementById('f-value-chips').innerHTML = field.hidden ? '' : Render.valueChipsHtml(node, true);
 	}
 
 	function addChildTo(parentNode, kind) {

@@ -25,7 +25,7 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 			alert('sample-tree.js was not found or did not load – check that it sits next to index.html.');
 			return;
 		}
-		Model.replaceTree(NOVADM_SAMPLE_TREE);
+		Model.replaceTree(Parser.ensureRoot(NOVADM_SAMPLE_TREE)); /* a sample without a root node gets one, like an imported file */
 		Model.resetProfiles();
 		history = Parser.emptyHistory();
 		refreshAll();
@@ -100,6 +100,11 @@ NovaDM.TreeIO = (function (Model, Render, EditorForm, Popovers, Parser) {
 				Model.applyProfileState(doc.profile);
 				history = doc.history;
 				refreshAll();
+				if (doc.addedRoot) { 
+					setTimeout(function () {
+						alert('"' + file.name + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node was added above its top-level nodes. The scenario space is unchanged.');
+					}, 0);
+				}
 			}
 		};
 		reader.readAsText(file);

@@ -32,6 +32,7 @@
 
 	--color-always: #2E7D32;
 	--color-never: #B3261E;
+	--color-always-light: #E8F3E9;
 
 	/* Tree viewport / editor panel widths — must sum to 100%.
 	   Both .viewport-tree, .viewport-editor-col, and the popover offset read from these,
@@ -452,6 +453,18 @@ main {
 	white-space: nowrap;
 }
 
+.constraint-warning {
+	flex-shrink: 0;
+	padding: 5px 12px;
+	background-color: var(--color-accent-light);
+	color: var(--color-accent);
+	border-radius: var(--radius-sm);
+	font-size: 0.85rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+.constraint-warning[hidden] { display: none; }
+
 .scenario-metrics {
 	display: flex;
 	align-items: baseline;
@@ -577,6 +590,7 @@ main {
 	margin-right: 2px;
 }
 .constraint-dot:hover { border-color: var(--color-ink-muted); }
+.constraint-dot-spacer { width: 12px; height: 12px; flex-shrink: 0; margin-right: 2px; } /* keeps rows aligned where a node has no dot */
 .constraint-dot.always { border-color: var(--color-always); background-color: var(--color-always); }
 .constraint-dot.never { border-color: var(--color-never); background-color: var(--color-never); }
 
@@ -586,6 +600,28 @@ main {
 .node-text { color: var(--color-ink); }
 .node-text .node-value { color: var(--color-ink-muted); font-family: var(--font-mono); font-size: 0.82rem; }
 .node-placeholder { color: var(--color-ink-muted); font-style: italic; }
+
+/* Per-value constraint chips inside a node's (a; b; c) list. Inherit the muted mono look of .node-value.
+   State is shown by more than colour: a check for always, strikethrough for never. */
+.value-chip {
+	padding: 0 4px;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	line-height: 1.35;
+	cursor: pointer;
+}
+button.value-chip:hover { border-color: var(--color-ink-muted); }
+.value-chip.always { color: var(--color-always); background-color: var(--color-always-light); font-weight: 600; }
+.value-chip.never { color: var(--color-never); background-color: var(--color-danger-light); text-decoration: line-through; }
+span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
+.field[hidden] { display: none; } /* .field's display would otherwise override the hidden attribute */
+
+/* Editor panel: the same chips, bordered so they read as buttons. */
+.value-chip-row { display: flex; flex-wrap: wrap; gap: 6px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-ink-muted); }
+.value-chip-row .value-chip { padding: 2px 8px; border-color: var(--color-border); }
 
 .root-drop-zone { min-height: 2px; border-radius: var(--radius-sm); margin: 0 0 2px; }
 .root-drop-zone.drop-target { outline: 2px dashed var(--color-accent); outline-offset: -2px; background: var(--color-accent-light); }
@@ -601,19 +637,10 @@ main {
 .tt-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
 .tt-edge { stroke: var(--color-border); stroke-width: 1.5; }
 
-.tt-root-dot {
-	position: absolute;
-	width: 10px; height: 10px;
-	margin-left: -5px; /* Centers the dot on its x, since left:Npx marks its center. */
-	border-radius: 50%;
-	background: var(--color-ink-muted);
-	cursor: default;
-}
-.tt-root-dot.drop-target { outline: 2px dashed var(--color-accent); outline-offset: 3px; background: var(--color-accent-light); }
-.tt-root-dot.drop-invalid { outline: 2px dashed #B3261E; outline-offset: 3px; background: #FBEDEC; }
 
-/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order – 
-   fixed pixel height matters here since render.js's edge math assumes it exactly. */
+/* Compound selector overrides the shared .tree-row rules regardless of stylesheet order.
+   The height here is only the base (kind row + label row): render.js sets the real height inline
+   per box (taller when the node lists value lines), and its edge math uses that same number. */
 .tree-row.tt-node-box {
 	position: absolute;
 	height: 56px;
@@ -638,3 +665,11 @@ main {
 	font-size: 0.78rem;
 }
 .tt-node-box .node-badge { flex-shrink: 0; }
+/* Rows 3+: one value per line under the label. 18px lines + 2px gap = TT_VALUE_LINE (20) in render.js. */
+.tt-node-values {
+	display: flex; flex-direction: column; align-items: center; gap: 2px;
+	max-width: 100%;
+	font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-ink-muted);
+}
+.tt-value-line { height: 18px; max-width: 100%; }
+.tt-value-line .value-chip { display: block; max-width: 100%; line-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
