@@ -295,13 +295,13 @@ NovaDM.Parser = (function (Model) {
 	function validateSpecs(specs) {
 		if (!Array.isArray(specs)) return 'The tree data is not a list of nodes.';
 		if (specs.length > 1) {
-			return 'The tree has ' + specs.length + ' top-level nodes, but it must have a single ' +
-				Model.TOP_LEVEL_KIND + ' root node that holds the rest.';
+			return 'The tree has ' + specs.length + ' top-level nodes, but it must have a single' +
+				' root node that holds the rest.';
 		}
-		return validateSiblingSpecs(specs, 'Root', 0, {});
+		return validateSiblingSpecs(specs, 'Root', {});
 	}
 
-	function validateSiblingSpecs(list, where, depth, seenIds) {
+	function validateSiblingSpecs(list, where, seenIds) {
 		var seenKind = null;
 		for (var i = 0; i < list.length; i++) {
 			var spec = list[i];
@@ -317,10 +317,6 @@ NovaDM.Parser = (function (Model) {
 			if (Model.KINDS.indexOf(spec.kind) === -1) {
 				return here + ' has an unknown kind (' + JSON.stringify(spec.kind) + '); expected ' +
 					Model.KINDS.join(' or ') + '.';
-			}
-			if (depth <= 1 && spec.kind !== Model.TOP_LEVEL_KIND) {
-				return here + ' is ' + spec.kind + ', but ' + (depth === 0 ? 'the root' : 'the root\'s children') +
-					' must be ' + Model.TOP_LEVEL_KIND + '.';
 			}
 			if (seenKind !== null && spec.kind !== seenKind) {
 				return here + ' is ' + spec.kind + ', but its siblings are ' + seenKind +
@@ -342,7 +338,7 @@ NovaDM.Parser = (function (Model) {
 			if (spec.children !== undefined && !Array.isArray(spec.children)) {
 				return here + ' has children that are not a list.';
 			}
-			var problem = validateSiblingSpecs(spec.children || [], here, depth + 1, seenIds);
+			var problem = validateSiblingSpecs(spec.children || [], here, seenIds);
 			if (problem) return problem;
 		}
 		return null;

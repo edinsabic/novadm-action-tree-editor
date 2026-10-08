@@ -12,13 +12,8 @@ NovaDM.Model = (function (Util) {
 
 	var KINDS = ['AND', 'XOR'];
 	var NODE_CLASSES = ['', 'Subject', 'Approach', 'Feature'];
-	var TOP_LEVEL_KIND = 'AND'; /* The root node is always AND (see spec for details). */
-
-	/**
-	 * Decision: always/never can only be set on leaves (chips for values and dot for nodes). 
-	 * Set to false to allow constraints on any node again.
-	 */
-	var LEAF_ONLY_CONSTRAINTS = true;
+	var TOP_LEVEL_KIND = 'AND';
+	var LEAF_ONLY_CONSTRAINTS = false;
 
 	var root = { id: 'root', children: [] };
 	var selectedId = null;
@@ -108,10 +103,8 @@ NovaDM.Model = (function (Util) {
 
 	function canAcceptKind(parentNode, kind, excludeId) {
 		if (parentNode === root) {
-			var hasRootNode = parentNode.children.some(function (c) { return c.id !== excludeId; });
-			return kind === TOP_LEVEL_KIND && !hasRootNode;
+			return !parentNode.children.some(function (c) { return c.id !== excludeId; });
 		}
-		if (isRootNode(parentNode) && kind !== TOP_LEVEL_KIND) return false;
 		var existing = siblingKind(parentNode, excludeId);
 		return existing === null || existing === kind;
 	}
@@ -184,8 +177,8 @@ NovaDM.Model = (function (Util) {
 	/* ---------- Always/never constraints ---------- */
 
 	function isConstrainable(node) {
-		if (isRootNode(node)) return false;
-		return !LEAF_ONLY_CONSTRAINTS || (node.children.length === 0 && !hasOptions(node));
+		if (isRootNode(node) || hasOptions(node)) return false;
+		return !LEAF_ONLY_CONSTRAINTS || node.children.length === 0;
 	}
 
 	function activeNodeConstraint(node) {
@@ -322,46 +315,48 @@ NovaDM.Model = (function (Util) {
 
 	/* ---------- Scenario space size ---------- */
 
-	function ownChoices(node) {
-		var vals = node.value;
-		if (vals.length === 0) return 1;
-		var vc = valueConstraints[node.id] || {};
-		var forced = vals.filter(function (v) { return vc[v] === 'always'; });
-		if (forced.length > 1) return 0;
-		if (forced.length === 1) return 1;
-		return vals.filter(function (v) { return vc[v] !== 'never'; }).length;
+	function activeValueConstraints(node) {
+		return (hasOptions(node) && valueConstraints[node.id]) || {};
 	}
 
-	function containsAlways(node) {
-		if (activeNodeConstraint(node) === 'always') return true;
-		var vc = valueConstraints[node.id];
-		if (vc && node.value.some(function (v) { return vc[v] === 'always'; })) return true;
-		return node.children.some(containsAlways);
-	}
+	function isAllowed(result) { return !result.red; }
 
 	/**
 	 * Counts the valid scenarios: AND = product of its children, XOR = sum, times the node's own
-	 * value choices. "never" removes a node or value, "always" pins every XOR above it (and the
-	 * value choice) to its branch; contradictory constraints give 0.
+	 * value choices. Always/never are applied without the And propagation rule, so a forbidden
+	 * child of an AND is left out. Returns 0 if the constraints contradict each other.
 	 */
 	function scenarioSpaceSize() {
-		function count(node) {
-			if (activeNodeConstraint(node) === 'never') return 0;
-			var own = ownChoices(node);
-			if (own === 0 || node.children.length === 0) return own;
+		var contradiction = false;
+
+		function evaluate(node) {
+			var constraint = activeNodeConstraint(node);
+			var vc = activeValueConstraints(node);
+			var alwaysValues = node.value.filter(function (v) { return vc[v] === 'always'; });
+			var allowedValues = node.value.filter(function (v) { return vc[v] !== 'never'; });
+			var own = node.value.length === 0 || alwaysValues.length > 0 ? 1 : allowedValues.length;
+
+			var children = node.children.map(evaluate);
+			var greenChildren = children.filter(function (c) { return c.green; });
+			var green = constraint === 'always' || alwaysValues.length > 0 || greenChildren.length > 0;
+			var red = constraint === 'never' || own === 0;
 
 			var sub;
-			if (node.kind === 'AND') {
-				sub = node.children.reduce(function (p, c) { return p * count(c); }, 1);
+			if (node.kind === 'XOR' && children.length > 0) {
+				var pool = (greenChildren.length > 0 ? greenChildren : children).filter(isAllowed);
+				if (pool.length === 0) red = true;
+				if (greenChildren.length > 1) contradiction = true;
+				sub = pool.reduce(function (s, c) { return s + c.count; }, 0);
 			} else {
-				var forced = node.children.filter(containsAlways);
-				if (forced.length > 1) return 0;
-				var pool = forced.length ? forced : node.children;
-				sub = pool.reduce(function (s, c) { return s + count(c); }, 0);
+				sub = children.filter(isAllowed).reduce(function (p, c) { return p * c.count; }, 1);
 			}
-			return own * sub;
+			if (alwaysValues.length > 1 || (green && red)) contradiction = true;
+			return { count: red ? 0 : own * sub, green: green, red: red };
 		}
-		return root.children.reduce(function (p, c) { return p * count(c); }, 1);
+
+		var top = root.children.map(evaluate);
+		if (contradiction) return 0;
+		return top.reduce(function (p, c) { return p * c.count; }, 1);
 	}
 
 	return {
