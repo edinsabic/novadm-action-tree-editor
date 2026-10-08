@@ -1,29 +1,31 @@
 # NovaDM action tree editor
 
-A browser-based visual editor for NovaDM action trees, built as part of an MSc thesis at Aarhus University on visual authoring tools for renovation decision-making.
+A browser-based, client-side visual editor for NovaDM action trees, built as part of an MSc thesis at Aarhus University on visual authoring tools for renovation decision-making.
 
-NovaDM encodes renovation decisions as hierarchical AND/XOR action trees (subjects, features, approaches). This tool imports, pastes, visualises, and exports `.ndm` action tree files.
+NovaDM is a formal domain model for building renovation design space exploration, with action trees representing the decision-making process. This tool builds, visualises, imports and exports these trees as `.json` files, allowing them to be edited, versioned, and shared by exporting their `.json` representation. The tool is implemented in vanilla JavaScript, HTML and CSS, with no build step or server required.
 
 ## Status
 
-Early prototype. The tree editor (`editor/`) works for import, paste, render, and export. Node creation/editing, and the Home, Examples, and Help pages, are not built yet.
+Version 1.0.0. The tree editor (`editor/`) builds and edits trees in two layouts, with always/never profiles, a version history and undo/redo. The Scenario space tab, the cost, CO₂, score metrics, etc., are not yet implemented, but are planned for a future version.
 
 ## Quick start
 
 Open `editor/index.html` in a browser. No install, no build step, no server required.
 
-- **Import** a `.ndm` file, or **paste** `.ndm` text directly
-- **Load an example** for a worked case, taken from a real renovation report
-- **Export** the current tree back to `.ndm`
+- **Drag** AND/XOR nodes from the editor panel onto the tree, and edit the selected node in the panel
+- **Click** a leaf's dot or an option chip to mark it always or never, and save the result as a **profile**
+- **Save, open, restore and merge** versions of the tree in the version history
+- **Import** or **export** a `.json` file holding the tree, its profiles and its history
+- **Load example tree** for a worked example; more examples, such as the K45 case, are in `examples/`
 
 ## Repository structure
 
 ```
-editor/       Tree editor (core tool)
-src/          Modular JS source (model, parser, layout, canvas, etc.)
-examples/     Starter .ndm trees
-styles/       Shared stylesheet
-spec/         Grammar and architecture notes (to add)
+editor/       Tree editor page
+src/          JavaScript modules (model, file format, rendering, history, etc.)
+styles/       Stylesheet
+examples/     Example trees and default tree
+spec/         Grammar, file format and design notes
 ```
 
 ## Motivation
