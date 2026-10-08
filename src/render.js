@@ -100,7 +100,7 @@ NovaDM.Render = (function (Model) {
 			el.className = 'constraint-warning';
 			el.setAttribute('role', 'alert');
 			el.hidden = true;
-			el.textContent = 'Warning: the applied constraints are contradictory, so the scenario space is 0.';
+			el.textContent = 'Warning: the applied constraints are contradictory.';
 			var anchor = scenarioSizeEl ? (scenarioSizeEl.closest('.metric') || scenarioSizeEl.parentNode) : null;
 			if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(el, anchor.nextSibling);
 			else treeContent.parentNode.insertBefore(el, treeContent);

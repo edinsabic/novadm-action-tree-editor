@@ -615,7 +615,6 @@ main {
 }
 button.value-chip:hover { border-color: var(--color-ink-muted); }
 .value-chip.always { color: var(--color-always); background-color: var(--color-always-light); font-weight: 600; }
-.value-chip.always::before { content: '\2713\00a0'; }
 .value-chip.never { color: var(--color-never); background-color: var(--color-danger-light); text-decoration: line-through; }
 span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 .field[hidden] { display: none; } /* .field's display would otherwise override the hidden attribute */
