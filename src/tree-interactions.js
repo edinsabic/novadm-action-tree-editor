@@ -21,6 +21,12 @@ NovaDM.TreeInteractions = (function (Model, Render, EditorForm) {
 	}
 
 	treeContent.addEventListener('click', function (e) {
+		var deleteBtn = e.target.closest('[data-delete-node]');
+		if (deleteBtn) {
+			var dNode = Model.findNode(Model.root, deleteBtn.getAttribute('data-delete-node'));
+			if (dNode) EditorForm.deleteNode(dNode);
+			return;
+		}
 		var valueBtn = e.target.closest('[data-value-toggle]');
 		if (valueBtn) {
 			Model.cycleValueConstraint(valueBtn.getAttribute('data-value-toggle'), valueBtn.getAttribute('data-value'));

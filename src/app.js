@@ -31,18 +31,15 @@ window.NovaDM = window.NovaDM || {};
 			btn.classList.add('active');
 			Render.setLayout(btn.dataset.layout);
 			Render.renderTree();
+			if (btn.dataset.layout === 'traditional') Render.fitTraditionalView();
+			else Render.setZoom(100);
 		});
 	});
 
 	/* ---------- Zoom ---------- */
-	var treeContent = Render.treeContent;
-	var zoomLabel = document.getElementById('zoom-label');
-	var zoomPercent = 100; /* CSS `zoom` (not `transform: scale`) scales everything inside treeContent as one unit. */
-
-	function applyZoom() { treeContent.style.zoom = zoomPercent / 100; zoomLabel.textContent = zoomPercent + '%'; }
-	document.getElementById('zoom-in-btn').addEventListener('click', function () { zoomPercent = Math.min(200, zoomPercent + 10); applyZoom(); });
-	document.getElementById('zoom-out-btn').addEventListener('click', function () { zoomPercent = Math.max(30, zoomPercent - 10); applyZoom(); });
-	document.getElementById('zoom-reset-btn').addEventListener('click', function () { zoomPercent = 100; applyZoom(); });
+	document.getElementById('zoom-in-btn').addEventListener('click', function () { Render.setZoom(Render.getZoom() + 10); });
+	document.getElementById('zoom-out-btn').addEventListener('click', function () { Render.setZoom(Render.getZoom() - 10); });
+	document.getElementById('zoom-reset-btn').addEventListener('click', function () { Render.setZoom(50); });
 
 	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
 		activateTab('scenario-space');

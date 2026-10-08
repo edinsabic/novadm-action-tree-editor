@@ -80,6 +80,13 @@ NovaDM.Render = (function (Model) {
 			'" title="Profile constraint: click to cycle default / always / never" aria-label="Profile constraint for this node"></button>';
 	}
 
+	function deleteButtonHtml(node) {
+		var title = 'Delete node' + (node.children.length ? ' & ' + node.children.length + ' child' + (node.children.length > 1 ? 'ren' : '') : '');
+		return '<button type="button" class="node-delete-btn" data-delete-node="' + node.id + '" title="' + escapeHtml(title) + '" aria-label="' + escapeHtml(title) + '">' +
+			'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+			'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></button>';
+	}
+
 	function escapeHtml(s) {
 		return String(s).replace(/[&<>"']/g, function (c) {
 			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -129,6 +136,38 @@ NovaDM.Render = (function (Model) {
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && root.children.length > 0);
 		treeContent.innerHTML = html;
 		highlightSelected();
+		recordChange();
+	}
+
+	function recordChange() {
+		if (NovaDM.Undo) NovaDM.Undo.record();
+	}
+
+	/* ---------- Zoom ---------- */
+	var zoomLabel = document.getElementById('zoom-label');
+	var MIN_ZOOM = 30;
+	var MAX_ZOOM = 200;
+	var MIN_FIT_ZOOM = 50;
+	var zoomPercent = 100;
+
+	function setZoom(percent) {
+		zoomPercent = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, percent));
+		treeContent.style.zoom = zoomPercent / 100;
+		zoomLabel.textContent = zoomPercent + '%';
+	}
+	function getZoom() { return zoomPercent; }
+
+	function fitTraditionalView() {
+		var canvas = treeContent.querySelector('.tt-canvas');
+		if (currentLayout !== 'traditional' || !canvas) return;
+		treeContent.style.zoom = 1;
+		var style = getComputedStyle(treeContent);
+		var availW = treeContent.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+		var availH = treeContent.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+		var k = Math.min(availW / canvas.offsetWidth, availH / canvas.offsetHeight, 1);
+		setZoom(Math.max(MIN_FIT_ZOOM, Math.floor(k * 20) * 5));
+		treeContent.scrollLeft = (treeContent.scrollWidth - treeContent.clientWidth) / 2;
+		treeContent.scrollTop = 0;
 	}
 
 	function renderNode(node) {
@@ -140,6 +179,7 @@ NovaDM.Render = (function (Model) {
 			(hasChildren ? (node.expanded ? '\u25BE' : '\u25B8') : '') + '</button>';
 		html += badgeHtml(node);
 		html += nodeLabelHtml(node);
+		html += deleteButtonHtml(node);
 		html += '</div>';
 		if (hasChildren && node.expanded) {
 			html += '<ul class="tree-children">' + node.children.map(renderNode).join('') + '</ul>';
@@ -234,6 +274,7 @@ NovaDM.Render = (function (Model) {
 					(hasValueLines(node) ? '<div class="tt-node-values">' + node.value.map(function (v) {
 						return '<div class="tt-value-line">' + valueChipHtml(node, v, true) + '</div>';
 					}).join('') + '</div>' : '') +
+					deleteButtonHtml(node) +
 				'</div>'
 			);
 			if (hasChildren && node.expanded) {
@@ -267,7 +308,11 @@ NovaDM.Render = (function (Model) {
 		escapeHtml: escapeHtml,
 		renderTree: renderTree,
 		highlightSelected: highlightSelected,
+		recordChange: recordChange,
 		setLayout: setLayout,
-		getLayout: getLayout
+		getLayout: getLayout,
+		setZoom: setZoom,
+		getZoom: getZoom,
+		fitTraditionalView: fitTraditionalView
 	};
 })(NovaDM.Model);

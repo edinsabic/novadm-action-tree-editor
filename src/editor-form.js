@@ -63,12 +63,14 @@ NovaDM.EditorForm = (function (Model, Render) {
 		document.getElementById('f-value').addEventListener('input', function (e) { node.value = Model.parseValues(e.target.value); Render.renderTree(); renderValueChips(node); });
 		document.getElementById('add-and-child').addEventListener('click', function () { addChildTo(node, 'AND'); });
 		document.getElementById('add-xor-child').addEventListener('click', function () { addChildTo(node, 'XOR'); });
-		document.getElementById('delete-node').addEventListener('click', function () {
-			if (isRoot && !confirm('Delete the root node and the entire tree?')) return;
-			Model.removeNode(node.id);
-			Model.setSelectedId(null);
-			Render.renderTree(); renderEditorForm();
-		});
+		document.getElementById('delete-node').addEventListener('click', function () { deleteNode(node); });
+	}
+
+	function deleteNode(node) {
+		if (Model.isRootNode(node) && !confirm('Delete the root node and the entire tree?')) return;
+		Model.removeNode(node.id);
+		Model.setSelectedId(null);
+		Render.renderTree(); renderEditorForm();
 	}
 
 	/** Only nodes with several values have options to constrain; the row hides itself otherwise. */
@@ -89,6 +91,7 @@ NovaDM.EditorForm = (function (Model, Render) {
 
 	return {
 		renderEditorForm: renderEditorForm,
-		addChildTo: addChildTo
+		addChildTo: addChildTo,
+		deleteNode: deleteNode
 	};
 })(NovaDM.Model, NovaDM.Render);

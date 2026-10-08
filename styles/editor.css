@@ -252,6 +252,9 @@ main {
 	color: var(--color-ink-muted);
 	flex-wrap: wrap;
 }
+.viewport-tree > .viewport-toolbar { column-gap: 14px; row-gap: 6px; }
+.toolbar-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.btn-icon:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn, .btn-icon {
 	border: 1px solid var(--color-border); border-radius: var(--radius-sm);
 	background-color: var(--color-surface); color: var(--color-ink-muted); font-size: 0.78rem;
@@ -259,7 +262,7 @@ main {
 .btn { padding: 4px 10px; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-icon { width: 22px; height: 22px; padding: 0; }
-.btn:hover:not(:disabled), .btn-icon:hover { border-color: var(--color-border); color: var(--color-ink); background-color: var(--color-bg); }
+.btn:hover:not(:disabled), .btn-icon:hover:not(:disabled) { border-color: var(--color-border); color: var(--color-ink); background-color: var(--color-bg); }
 
 #zoom-label {
 	font-size: 0.8rem;
@@ -654,10 +657,28 @@ span.value-chip { cursor: inherit; } /* read-only chips (traditional layout) */
 /* Rejected drop on blank space (e.g. an XOR dropped into an empty tree, where the root strip has no width). */
 .viewport-content.drop-invalid { outline: 2px dashed #B3261E; outline-offset: -2px; }
 
-/* --- Traditional layout --- */
-.viewport-content.tt-mode { overflow-x: auto; }
+.node-delete-btn {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	margin-left: auto;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background-color: transparent;
+	color: var(--color-danger);
+}
+.tree-row.selected > .node-delete-btn { display: flex; }
+.node-delete-btn:hover { background-color: var(--color-danger-light); border-color: var(--color-danger-border); }
+.tt-node-box > .node-delete-btn { position: absolute; top: 3px; right: 3px; margin: 0; }
 
-.tt-canvas { position: relative; }
+/* --- Traditional layout --- */
+.viewport-content.tt-mode { display: flex; overflow-x: auto; }
+
+.tt-canvas { position: relative; flex-shrink: 0; margin: auto; }
 
 .tt-edges { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
 .tt-edge { stroke: var(--color-border); stroke-width: 1.5; }

@@ -44,15 +44,23 @@
 
 				<div class="viewport-box viewport-tree">
 					<div class="viewport-toolbar">
-						<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
-						<span id="zoom-label">100%</span>
-						<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
-						<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
-						<button id="load-example-btn" type="button" class="btn">Load example tree</button>
-						<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
-					<button id="import-tree-btn" type="button" class="btn">Import tree</button>
-					<button id="export-tree-btn" type="button" class="btn">Export tree</button>
-					<input id="import-file-input" type="file" hidden />
+						<div class="toolbar-group" role="group" aria-label="Zoom">
+							<button id="zoom-out-btn" type="button" class="btn-icon" aria-label="Zoom out">−</button>
+							<span id="zoom-label">100%</span>
+							<button id="zoom-in-btn" type="button" class="btn-icon" aria-label="Zoom in">+</button>
+							<button id="zoom-reset-btn" type="button" class="btn">Reset zoom</button>
+						</div>
+						<div class="toolbar-group" role="group" aria-label="Undo and redo">
+							<button id="undo-btn" type="button" class="btn-icon" aria-label="Undo" title="Undo (Ctrl+Z)">&#8630;</button>
+							<button id="redo-btn" type="button" class="btn-icon" aria-label="Redo" title="Redo (Ctrl+Y)">&#8631;</button>
+						</div>
+						<div class="toolbar-group" role="group" aria-label="Tree file">
+							<button id="load-example-btn" type="button" class="btn">Load example tree</button>
+							<button id="clear-tree-btn" type="button" class="btn">Clear tree</button>
+							<button id="import-tree-btn" type="button" class="btn">Import tree</button>
+							<button id="export-tree-btn" type="button" class="btn">Export tree</button>
+							<input id="import-file-input" type="file" hidden />
+						</div>
 					</div>
 					<div id="tree-viewport-content" class="viewport-content"></div>
 				</div>
@@ -136,6 +144,7 @@
 <script src="../src/editor-form.js"></script>
 <script src="../src/tree-interactions.js"></script>
 <script src="../src/popovers.js"></script>
+<script src="../src/undo.js"></script>
 <script src="../src/tree-io.js"></script>
 <script src="../src/app.js"></script>
 

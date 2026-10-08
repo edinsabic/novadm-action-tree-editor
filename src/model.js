@@ -312,11 +312,6 @@ NovaDM.Model = (function () {
 		return into;
 	}
 
-	function collectNodeIds(node, into) {
-		node.children.forEach(function (c) { into[c.id] = true; collectNodeIds(c, into); });
-		return into;
-	}
-
 	return {
 		KINDS: KINDS,
 		NODE_CLASSES: NODE_CLASSES,

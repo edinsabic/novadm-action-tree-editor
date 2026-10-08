@@ -87,6 +87,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 				updatePillLabels(); renderProfilePane();
 			});
 		});
+		Render.recordChange();
 	}
 
 	/* ---------- Version pane: graph + details card ---------- */
@@ -121,6 +122,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm) {
 			}
 		});
 		renderDetails();
+		Render.recordChange();
 	}
 
 	function selectVersion(id) {
