@@ -11,6 +11,7 @@ NovaDM.Render = (function (Model, Util) {
 	var MIN_ZOOM = 30;
 	var MAX_ZOOM = 200;
 	var MIN_FIT_ZOOM = 50;
+	var SCIENTIFIC_FROM = 1e6;
 
 	var escapeHtml = Util.escapeHtml;
 
@@ -104,11 +105,16 @@ NovaDM.Render = (function (Model, Util) {
 	}
 
 	function emptyTreeHtml() {
-		var kind = Model.TOP_LEVEL_KIND;
-		return '<div class="root-drop-zone" data-root-drop="true"' +
-			' title="The tree needs one root node, and it must be ' + kind + '"></div>' +
-			'<div class="empty-tree-message">No nodes yet.<br>Drag an ' + kind + ' node from the editor panel' +
+		return '<div class="root-drop-zone" data-root-drop="true" title="The tree needs one root node"></div>' +
+			'<div class="empty-tree-message">No nodes yet.<br>Drag an AND or XOR node from the editor panel' +
 			' to create the root node, or click "Load example tree" / "Import tree…".</div>';
+	}
+
+	function scenarioSizeHtml(size) {
+		if (size < SCIENTIFIC_FROM) return String(size);
+		if (!isFinite(size)) return '&gt; 10<sup>308</sup>';
+		var parts = size.toExponential(2).split('e');
+		return parts[0] + ' × 10<sup>' + Number(parts[1]) + '</sup>';
 	}
 
 	function renderTree() {
@@ -116,7 +122,7 @@ NovaDM.Render = (function (Model, Util) {
 		var isEmpty = nodes.length === 0;
 		var size = Model.scenarioSpaceSize();
 
-		scenarioSizeEl.textContent = size;
+		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
 		constraintWarningEl.hidden = size !== 0;
 		exportBtn.disabled = isEmpty;
 		treeContent.classList.toggle('empty-hint', isEmpty);

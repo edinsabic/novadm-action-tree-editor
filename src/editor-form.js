@@ -15,7 +15,6 @@ NovaDM.EditorForm = (function (Model, Render, Util) {
 	}
 
 	function formHtml(node) {
-		var isRoot = Model.isRootNode(node);
 		var lockedKind = Model.siblingKind(node, null);
 		var classOptions = Model.NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' +
@@ -30,7 +29,7 @@ NovaDM.EditorForm = (function (Model, Render, Util) {
 				'</div>' +
 				'<div class="field">' +
 					'<label>Class</label>' +
-					'<select id="f-class"' + (isRoot ? ' disabled title="The root node has no class"' : '') + '>' +
+					'<select id="f-class">' +
 						classOptions +
 					'</select>' +
 				'</div>' +

@@ -18,19 +18,21 @@ none). `root` is a virtual container that is never drawn or saved; it
 holds exactly one node, the explicit **root node**.
 
 - **Rule 1** – all children of a given node must share the same `kind`.
-- **Rule 2** – the root node is AND (per the formal action-tree spec),
-  and so are its children. This is the `TOP_LEVEL_KIND` constant in
-  `model.js` – change that one constant to relax or alter it.
+- **Rule 2** – the root node may be AND or XOR, so a user can build and
+  explore a single subtree on its own. A full action tree implicitly
+  hangs below an AND, which is why an older file without a root node
+  gets an AND root added on import (`TOP_LEVEL_KIND` in `model.js`).
 
 ## Profiles: always/never node constraints
 
 The action tree itself is treated as fixed; a **profile** is a set of
 per-node constraints layered on top of it, not a variant of the tree.
-Only leaves can be constrained (`LEAF_ONLY_CONSTRAINTS` in `model.js`;
-never the root node). A leaf with one value has a constraint dot; a node
-with several values has one chip per value instead. Each is in one of
-three states, cycled by clicking it (white/default -> green/always ->
-red/never -> default):
+Any node except the root node can be constrained. A node with at most
+one value has a constraint dot; a node with several values has one chip
+per value instead, and no dot (marking every chip never forbids the
+node). Setting `LEAF_ONLY_CONSTRAINTS` in `model.js` to `true` limits
+dots to leaves. Each dot or chip is in one of three states, cycled by
+clicking it (white/default -> green/always -> red/never -> default):
 
 - **always (green)** – every valid configuration must include this node
 - **never (red)** – no valid configuration may include this node
@@ -50,9 +52,29 @@ changes this list; it is exported and imported with the file (see
 **Scenario space size** (`Model.scenarioSpaceSize()`, the live `Size`
 metric in the bottom bar) counts valid scenarios: AND = product of its
 children, XOR = sum of its children, times the node's own choice of
-values. `never` removes a node or value; `always` pins every XOR above
-it (and a node's value choice) to that branch. Contradictory constraints
-give 0, and a warning is shown.
+values. Constraints follow the colouring of Schultz & Kamari (2021):
+always = green, never = red, then
+
+1. a green child makes its parent green;
+2. a green child of an XOR makes its siblings red (the same holds for
+   values: an `always` value rules out the node's other values);
+3. an XOR whose children are all red is red (likewise a node whose
+   values are all `never`).
+
+The paper's optional fourth rule, "an AND with a red child is red", is
+**not** applied: a red child of an AND is pruned, i.e. left out of the
+product as if that subtree were not there. This lets a user switch off a
+part of the tree (e.g. mark `structural_element = facade` never) and see
+how the scenario space shrinks. A red root node gives 0.
+
+A contradiction is a node that is both green and red: two `always`
+children of one XOR, two `always` values of one node, or a `never` node
+with an `always` node or value below it. Any contradiction gives 0, and
+a warning is shown.
+
+Sizes from 10^6 up are shown rounded to two decimals as `y × 10^x`
+(e.g. 2.35 × 10^23). The count is a JavaScript number, so it is exact up
+to 2^53 and overflows above about 10^308.
 
 ## Version history
 
@@ -154,14 +176,24 @@ between them are valid JSON and are written on purpose):
 - Each section is read by its own small function in `parser.js`, and
   `validateDocument()` checks all of them before the live editor is touched.
 
-Each snapshot's `tree` is a list holding the single AND root node.
+Each snapshot's `tree` is a list holding the single root node (AND or
+XOR).
 
-Older files still import: `version: 4` / `3` (no explicit root node: one
-is added above the top-level nodes, the user is told, and the scenario
-space is unchanged; version 3 has no `currentValues`), `version: 2` / `1`
-(a single `tree` key, no profiles, no history) and a bare array of nodes.
-In the last two cases profiles are reset and history starts with one
-version, the tree just loaded.
+### Format versions
+
+`TREE_FILE_FORMAT.version` in `parser.js` is the version the editor
+writes; the comment next to it lists the versions in short. Every version
+bump gets a row here and a line in that comment. All older versions keep
+importing.
+
+| Version | What it introduced | On import |
+|---|---|---|
+| 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | Read as is. |
+| 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | No explicit root node: an AND root is added above the top-level nodes, the user is told, and the scenario space is unchanged. |
+| 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |
+| 2 | A single `tree` key; `value` is an array of strings. No profiles, no history. | An AND root is added as above; profiles are reset and history starts with one version, the tree just loaded. |
+| 1 | A single `tree` key; `value` is text (`"a; b"`, split by `Model.parseValues`). | As version 2. |
+| – | A bare array of nodes (no wrapper object). | As version 2. |
 
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
