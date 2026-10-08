@@ -1,0 +1,3245 @@
+{
+	"format": "novadm-action-tree",
+	"version": 5,
+
+	"versionControl": {
+		"head": "Initial version",
+		"edges": []
+	},
+
+	"profile": {
+		"active": null,
+		"current": {},
+		"currentValues": {},
+		"saved": []
+	},
+
+	"actionTree": [
+		{
+			"id": "Initial version",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["exterior_walls"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n4",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n5",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "exterior_walls_replacement_new_wall",
+													"value": [],
+													"children": [
+														{
+															"id": "n6",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_replacement_new_wall_approach",
+															"value": ["cast_in_situ", "bricked", "skeletonconstruction"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n7",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "exterior_walls_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n8",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_refurbish",
+															"value": ["none"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n9",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n10",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "exterior_walls_insulation_from_outside",
+													"value": [],
+													"children": [
+														{
+															"id": "n11",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_from_outside_material",
+															"value": ["mineral_wool_panel", "cellulose_fiber_panel", "glassfoam", "PIR_PUR_Panel"],
+															"children": []
+														},
+														{
+															"id": "n12",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_from_outside_thickness",
+															"value": ["0.1", "0.15", "0.2", "0.25", "0.3"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n13",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "exterior_walls_insulation_from_inside",
+													"value": [],
+													"children": [
+														{
+															"id": "n14",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_from_inside_material",
+															"value": ["rigid_foam_board", "mineral_wool", "woodfibre"],
+															"children": []
+														},
+														{
+															"id": "n15",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_from_inside_thickness",
+															"value": ["0.1", "0.15", "0.2"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n16",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "exterior_walls_insulation_cavity_wall",
+													"value": [],
+													"children": [
+														{
+															"id": "n17",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_cavity_wall_material",
+															"value": ["papiruld", "granuleret_glasuld", "XPS"],
+															"children": []
+														},
+														{
+															"id": "n18",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_walls_insulation_cavity_wall_thickness",
+															"value": ["0.1", "0.15", "0.2"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n19",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_walls_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n20",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_walls_air_tightening_mechanism",
+													"value": ["membrane", "solid_plate"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n21",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_walls_damp_proofing",
+											"value": [],
+											"children": [
+												{
+													"id": "n22",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_walls_damp_proofing_material",
+													"value": ["butyl_rubber", "hot_bitumen", "polythene_sheets", "plastic_sheets", "bituminous_felts", "none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n23",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_walls_final_finish_from_outside",
+											"value": [],
+											"children": [
+												{
+													"id": "n24",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_walls_final_finish_from_outside_material",
+													"value": ["brick", "wood", "concrete", "architectural_paneling", "other"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n25",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_walls_surface_screeding_from_inside",
+											"value": [],
+											"children": [
+												{
+													"id": "n26",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_walls_surface_screeding_from_inside_material",
+													"value": ["stucco", "plaster"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n27",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_walls_final_finish_from_inside",
+											"value": [],
+											"children": [
+												{
+													"id": "n28",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_walls_final_finish_from_inside_material",
+													"value": ["paint", "stone_tile", "wallpaper", "plaster"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n29",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["interior_walls"],
+							"children": [
+								{
+									"id": "n30",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n31",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n32",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "interior_walls_replacement_new_wall",
+													"value": [],
+													"children": [
+														{
+															"id": "n33",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "interior_walls_replacement_new_wall_approach",
+															"value": ["cast_in_situ", "bricked", "skeletonconstruction"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n34",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "interior_walls_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n35",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "interior_walls_refurbish",
+															"value": ["none"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n36",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "interior_walls_surface_screeding",
+											"value": [],
+											"children": [
+												{
+													"id": "n37",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "interior_walls_surface_screeding_material",
+													"value": ["stucco", "plaster"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n38",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "interior_walls_regular_final_finish",
+											"value": [],
+											"children": [
+												{
+													"id": "n39",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "interior_walls_regular_final_finish_material",
+													"value": ["paint", "stone_tile", "wallpaper", "plaster"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n40",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "interior_walls_bathroom_final_finish",
+											"value": [],
+											"children": [
+												{
+													"id": "n41",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "interior_walls_bathroom_final_finish_material",
+													"value": ["paint", "ceramic_tile", "stone_tile"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n42",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["curtain_walls"],
+							"children": [
+								{
+									"id": "n43",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n44",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n45",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "curtain_walls_replacement_new_wall",
+													"value": [],
+													"children": [
+														{
+															"id": "n46",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "curtain_walls_replacement_new_wall_glazing",
+															"value": ["double", "triple"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n47",
+													"kind": "AND",
+													"nodeClass": "",
+													"label": "",
+													"value": [],
+													"children": [
+														{
+															"id": "n48",
+															"kind": "AND",
+															"nodeClass": "Approach",
+															"label": "curtain_walls_replacement_of_curtain_panels",
+															"value": [],
+															"children": [
+																{
+																	"id": "n49",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "curtain_walls_replacement_of_curtain_panels_glazing",
+																	"value": ["double", "triple"],
+																	"children": []
+																},
+																{
+																	"id": "n50",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "curtain_walls_replacement_of_curtain_panels_panel_joints",
+																	"value": ["none", "spider", "other"],
+																	"children": []
+																}
+															]
+														},
+														{
+															"id": "n51",
+															"kind": "AND",
+															"nodeClass": "Approach",
+															"label": "curtain_walls_replacement_of_curtain_mullions",
+															"value": [],
+															"children": [
+																{
+																	"id": "n52",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "curtain_walls_replacement_of_curtain_mullions_material",
+																	"value": ["steel", "aluminium", "metal", "plastic"],
+																	"children": []
+																},
+																{
+																	"id": "n53",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "curtain_walls_replacement_of_curtain_mullions_profile_shape",
+																	"value": ["rectangular", "triangular", "circular"],
+																	"children": []
+																}
+															]
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n54",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "curtain_walls_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n55",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "curtain_walls_air_tightening_mechanism",
+													"value": ["membrane"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n56",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "curtain_walls_damp_proofing",
+											"value": [],
+											"children": [
+												{
+													"id": "n57",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "curtain_walls_damp_proofing_material",
+													"value": ["butyl_rubber", "hot_bitumen", "polythene_sheets", "plastic_sheets", "bituminous_felts"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n58",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["flat_roof"],
+							"children": [
+								{
+									"id": "n59",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n60",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n61",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "flat_roof_replacement_new_roof",
+													"value": [],
+													"children": [
+														{
+															"id": "n62",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_replacement_new_roof_approach",
+															"value": ["wood_elements", "steel_elements"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n63",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "flat_roof_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n64",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_refurbish_approach",
+															"value": ["none"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n65",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n66",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "flat_roof_insulation_from_outside",
+													"value": [],
+													"children": [
+														{
+															"id": "n67",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_insulation_from_outside_material",
+															"value": ["mineral_wool_panel", "polyurethane_spray_foam", "XPS"],
+															"children": []
+														},
+														{
+															"id": "n68",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_insulation_from_outside_thickness",
+															"value": ["0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n69",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "flat_roof_insulation_from_inside",
+													"value": [],
+													"children": [
+														{
+															"id": "n70",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_insulation_from_inside_material",
+															"value": ["rigid_foam_boards", "mineral_wool", "woodfibre"],
+															"children": []
+														},
+														{
+															"id": "n71",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "flat_roof_insulation_from_inside_thickness",
+															"value": ["0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n72",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "flat_roof_final_finish_from_outside",
+											"value": [],
+											"children": [
+												{
+													"id": "n73",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "flat_roof_final_finish_from_outside_material",
+													"value": ["reinforced_bitumen_membrane", "green_roof_system"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n74",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "flat_roof_rain_gutter",
+											"value": [],
+											"children": [
+												{
+													"id": "n75",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "flat_roof_rain_gutter_material",
+													"value": ["steel", "aluminium", "cubber", "plastic"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n76",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "flat_roof_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n77",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "flat_roof_air_tightening_mechanism",
+													"value": ["membrane"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n78",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "flat_roof_damp_proofing",
+											"value": [],
+											"children": [
+												{
+													"id": "n79",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "flat_roof_damp_proofing_material",
+													"value": ["reinforced_bitumen_membrane", "membrane"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n80",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["slope_roof"],
+							"children": [
+								{
+									"id": "n81",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n82",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n83",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "slope_roof_replacement_new_roof",
+													"value": [],
+													"children": [
+														{
+															"id": "n84",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_replacement_new_roof_approach",
+															"value": ["wood_elements", "steel_elements"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n85",
+													"kind": "XOR",
+													"nodeClass": "Approach",
+													"label": "slope_roof_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n86",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_refurbish",
+															"value": ["none"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n87",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n88",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "slope_roof_insulation_from_outside",
+													"value": [],
+													"children": [
+														{
+															"id": "n89",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_insulation_from_outside_material",
+															"value": ["mineral_wool_panel", "polyurethane_spray_foam", "XPS"],
+															"children": []
+														},
+														{
+															"id": "n90",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_insulation_from_outside_thickness",
+															"value": ["0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n91",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "slope_roof_insulation_from_inside",
+													"value": [],
+													"children": [
+														{
+															"id": "n92",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_insulation_from_inside_material",
+															"value": ["rigid_foam_boards", "mineral_wool", "woodfibre"],
+															"children": []
+														},
+														{
+															"id": "n93",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "slope_roof_insulation_from_inside_thickness",
+															"value": ["0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4"],
+															"children": []
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n94",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n95",
+													"kind": "AND",
+													"nodeClass": "",
+													"label": "",
+													"value": [],
+													"children": [
+														{
+															"id": "n96",
+															"kind": "XOR",
+															"nodeClass": "Approach",
+															"label": "slope_roof_rafters",
+															"value": [],
+															"children": [
+																{
+																	"id": "n97",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "slope_roof_rafters_material",
+																	"value": ["wood", "steel"],
+																	"children": []
+																}
+															]
+														},
+														{
+															"id": "n98",
+															"kind": "XOR",
+															"nodeClass": "Approach",
+															"label": "slope_roof_sheating_outside",
+															"value": [],
+															"children": [
+																{
+																	"id": "n99",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "slope_roof_sheating_outside_material",
+																	"value": ["wood", "steel", "aluminium"],
+																	"children": []
+																}
+															]
+														},
+														{
+															"id": "n100",
+															"kind": "XOR",
+															"nodeClass": "Approach",
+															"label": "slope_roof_final_finish_from_outside",
+															"value": [],
+															"children": [
+																{
+																	"id": "n101",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "slope_roof_final_finish_from_outside_material",
+																	"value": ["slate_tile", "timber_tile", "clay_tile", "concrete_tile", "plastic_tile"],
+																	"children": []
+																}
+															]
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n102",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "slope_roof_rain_gutter",
+											"value": [],
+											"children": [
+												{
+													"id": "n103",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "slope_roof_rain_gutter_material",
+													"value": ["steel", "aluminium", "cubber", "plastic"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n104",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "slope_roof_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n105",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "slope_roof_air_tightening_mechanism",
+													"value": ["membrane"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n106",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "slope_roof_damp_proofing",
+											"value": [],
+											"children": [
+												{
+													"id": "n107",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "slope_roof_damp_proofing_material",
+													"value": ["membrane"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n108",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["ground_floor"],
+							"children": [
+								{
+									"id": "n109",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n110",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "ground_floor_insulation",
+											"value": [],
+											"children": [
+												{
+													"id": "n111",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ground_floor_insulation_material",
+													"value": ["mineral_wool_panel", "polyester_panel"],
+													"children": []
+												},
+												{
+													"id": "n112",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ground_floor_insulation_thickness",
+													"value": ["0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n113",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "ground_floor_surface_screeding",
+											"value": [],
+											"children": [
+												{
+													"id": "n114",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ground_floor_surface_screeding_material",
+													"value": ["stucco", "plaster"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n115",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "ground_floor_damp_proofing",
+											"value": [],
+											"children": [
+												{
+													"id": "n116",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ground_floor_damp_proofing_material",
+													"value": ["polythene_vapour_control_layer"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n117",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "ground_floor_final_finish",
+											"value": [],
+											"children": [
+												{
+													"id": "n118",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ground_floor_final_finish_material",
+													"value": ["ceramic_tile", "stone_tile", "laminate", "wood", "linoleum", "cement_sheats", "surface_treatment"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n119",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["upper_floor"],
+							"children": [
+								{
+									"id": "n120",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n121",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "upper_floor_insulation",
+											"value": [],
+											"children": [
+												{
+													"id": "n122",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "upper_floor_insulation_material",
+													"value": ["fiberglass_panel", "mineral_wool_panel", "polyester_panel"],
+													"children": []
+												},
+												{
+													"id": "n123",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "upper_floor_insulation_thickness",
+													"value": ["0.1", "0.15", "0.2"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n124",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "upper_floor_surface_screeding",
+											"value": [],
+											"children": [
+												{
+													"id": "n125",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "upper_floor_surface_screeding_material",
+													"value": ["stucco", "plaster"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n126",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "upper_floor_final_finish",
+											"value": [],
+											"children": [
+												{
+													"id": "n127",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "upper_floor_final_finish_material",
+													"value": ["ceramic_tile", "stone_tile", "laminate", "wood", "linoleum", "cement_sheats", "surface_treatment"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n128",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["ceilings"],
+							"children": [
+								{
+									"id": "n129",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n130",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "ceilings_suspended_ceiling",
+											"value": [],
+											"children": [
+												{
+													"id": "n131",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "ceilings_suspended_ceiling_material",
+													"value": ["plaster", "mineral_wool", "aluminium", "wood_concrete", "steel"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n132",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n133",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "ceilings_surface_screeding",
+													"value": [],
+													"children": [
+														{
+															"id": "n134",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "ceilings_surface_screeding_material",
+															"value": ["stucco", "plaster"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n135",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "ceilings_final_finish",
+													"value": [],
+													"children": [
+														{
+															"id": "n136",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "ceilings_final_finish_material",
+															"value": ["paint", "ceramic_tile", "stone_tile", "wallpaper", "plaster", "wall_treatment", "wood", "aluminium", "steel"],
+															"children": []
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n137",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["windows"],
+							"children": [
+								{
+									"id": "n138",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n139",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n140",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "windows_replacement_new_window",
+													"value": [],
+													"children": [
+														{
+															"id": "n141",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "windows_replacement_new_window_glazing",
+															"value": ["double", "triple"],
+															"children": []
+														},
+														{
+															"id": "n142",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "windows_replacement_new_window_material_frame",
+															"value": ["aluminium", "wood", "mixed_aluminium_&_wood", "fiberglass", "pvc", "upvc"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n143",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "windows_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n144",
+															"kind": "XOR",
+															"nodeClass": "",
+															"label": "",
+															"value": [],
+															"children": [
+																{
+																	"id": "n145",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "windows_refurbish_whole",
+																	"value": ["handle_and_locks_&_window_frame_&_glass"],
+																	"children": []
+																},
+																{
+																	"id": "n146",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "windows_refurbish_part",
+																	"value": ["handle_and_locks", "window_frame", "glass"],
+																	"children": []
+																}
+															]
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n147",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "windows_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n148",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "windows_air_tightening_mechanism",
+													"value": ["tape", "grommet"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n149",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "windows_flashing",
+											"value": [],
+											"children": [
+												{
+													"id": "n150",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "windows_flashing_material",
+													"value": ["aluminium", "steel"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n151",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["exterior_doors"],
+							"children": [
+								{
+									"id": "n152",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n153",
+											"kind": "XOR",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n154",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "exterior_doors_replacement_new_door",
+													"value": [],
+													"children": [
+														{
+															"id": "n155",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_doors_replacement_new_door_material_door",
+															"value": ["aluminium", "wood", "steel", "glass"],
+															"children": []
+														},
+														{
+															"id": "n156",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "exterior_doors_replacement_new_door_material_frame",
+															"value": ["aluminium", "wood", "steel", "mixed_aluminium_&_wood", "plastic"],
+															"children": []
+														}
+													]
+												},
+												{
+													"id": "n157",
+													"kind": "AND",
+													"nodeClass": "Approach",
+													"label": "exterior_doors_refurbish",
+													"value": [],
+													"children": [
+														{
+															"id": "n158",
+															"kind": "XOR",
+															"nodeClass": "",
+															"label": "",
+															"value": [],
+															"children": [
+																{
+																	"id": "n159",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "exterior_doors_refurbish_whole",
+																	"value": ["handle_and_locks_&_door_panel_&_door_frame"],
+																	"children": []
+																},
+																{
+																	"id": "n160",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "exterior_doors_refurbish_part",
+																	"value": ["handle_and_locks", "door_panel"],
+																	"children": []
+																}
+															]
+														}
+													]
+												}
+											]
+										},
+										{
+											"id": "n161",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "exterior_doors_air_tightening",
+											"value": [],
+											"children": [
+												{
+													"id": "n162",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "exterior_doors_air_tightening_mechanism",
+													"value": ["tape", "grommet"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n163",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_elements",
+							"value": ["interior_doors"],
+							"children": [
+								{
+									"id": "n164",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n165",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "interior_doors_replacement_new_door",
+											"value": [],
+											"children": [
+												{
+													"id": "n166",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "interior_doors_replacement_new_door_material_door",
+													"value": ["aluminium", "wood", "steel", "glass"],
+													"children": []
+												},
+												{
+													"id": "n167",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "interior_doors_replacement_new_door_material_frame",
+													"value": ["aluminium", "wood", "steel", "plastic"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n168",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "interior_doors_refurbish",
+											"value": [],
+											"children": [
+												{
+													"id": "n169",
+													"kind": "XOR",
+													"nodeClass": "",
+													"label": "",
+													"value": [],
+													"children": [
+														{
+															"id": "n170",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "interior_doors_refurbish_whole",
+															"value": ["handle_and_locks_&_door_panel_&_door_frame"],
+															"children": []
+														},
+														{
+															"id": "n171",
+															"kind": "XOR",
+															"nodeClass": "Feature",
+															"label": "interior_doors_refurbish_part",
+															"value": ["handle_and_locks", "door_panel"],
+															"children": []
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n172",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "mechanical_elements",
+							"value": ["HVAC_systems"],
+							"children": [
+								{
+									"id": "n173",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n174",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_adaptive_heating_control_system",
+											"value": [],
+											"children": [
+												{
+													"id": "n175",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_adaptive_heating_control_system_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n176",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_DHW_circulation_losses",
+											"value": [],
+											"children": [
+												{
+													"id": "n177",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_DHW_circulation_losses_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n178",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_exhaust_air_heat_pump",
+											"value": [],
+											"children": [
+												{
+													"id": "n179",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_exhaust_air_heat_pump_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n180",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_geothermal_heat_pump",
+											"value": [],
+											"children": [
+												{
+													"id": "n181",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_geothermal_heat_pump_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n182",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_individual_measuring_DHW",
+											"value": [],
+											"children": [
+												{
+													"id": "n183",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_individual_measuring_DHW_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n184",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_sewage_heat_recovery",
+											"value": [],
+											"children": [
+												{
+													"id": "n185",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_sewage_heat_recovery_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n186",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_ESX_ventilation",
+											"value": [],
+											"children": [
+												{
+													"id": "n187",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_ESX_ventilation_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n188",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_solar_energy_with_thermal_storage",
+											"value": [],
+											"children": [
+												{
+													"id": "n189",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_solar_energy_with_thermal_storage_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n190",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "HVAC_water_saving_tap",
+											"value": [],
+											"children": [
+												{
+													"id": "n191",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "HVAC_water_saving_tap_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n192",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "mechanical_elements",
+							"value": ["renewable_energy_sources_RES"],
+							"children": [
+								{
+									"id": "n193",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n194",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "RES_ground_source_heat_pump",
+											"value": [],
+											"children": [
+												{
+													"id": "n195",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "RES_ground_source_heat_pump_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n196",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "RES_solar_thermal_energy",
+											"value": [],
+											"children": [
+												{
+													"id": "n197",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "RES_solar_thermal_energy_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n198",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "RES_PV_panels",
+											"value": [],
+											"children": [
+												{
+													"id": "n199",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "RES_PV_panels_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n200",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "RES_heat_pipe_vacuum_pipe_collector",
+											"value": [],
+											"children": [
+												{
+													"id": "n201",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "RES_heat_pipe_vacuum_pipe_collector_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n202",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "mechanical_elements",
+							"value": ["sewage"],
+							"children": [
+								{
+									"id": "n203",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n204",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "replace_sewage_instalations",
+											"value": [],
+											"children": [
+												{
+													"id": "n205",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replace_sewage_instalations_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n206",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_sewage_instalations",
+											"value": [],
+											"children": [
+												{
+													"id": "n207",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_sewage_instalations_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n208",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["solar_shading"],
+							"children": [
+								{
+									"id": "n209",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n210",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "add_solar_shading",
+											"value": [],
+											"children": [
+												{
+													"id": "n211",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "add_solar_shading_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n212",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "replace_solar_shading",
+											"value": [],
+											"children": [
+												{
+													"id": "n213",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replace_solar_shading_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n214",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_solar_shading",
+											"value": [],
+											"children": [
+												{
+													"id": "n215",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_solar_shading_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n216",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["balcony"],
+							"children": [
+								{
+									"id": "n217",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n218",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "add_new_balcony",
+											"value": [],
+											"children": [
+												{
+													"id": "n219",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "add_new_balcony_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n220",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_existing_balcony",
+											"value": [],
+											"children": [
+												{
+													"id": "n221",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_existing_balcony_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n222",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["elevator"],
+							"children": [
+								{
+									"id": "n223",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n224",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "add_new_elevator",
+											"value": [],
+											"children": [
+												{
+													"id": "n225",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "add_new_elevator_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n226",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "replace_existing_elevator",
+											"value": [],
+											"children": [
+												{
+													"id": "n227",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replace_existing_elevator_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n228",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_existing_elevator",
+											"value": [],
+											"children": [
+												{
+													"id": "n229",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_existing_elevator_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n230",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["staircase"],
+							"children": [
+								{
+									"id": "n231",
+									"kind": "XOR",
+									"nodeClass": "Approach",
+									"label": "refurbish_existing_staircase",
+									"value": [],
+									"children": [
+										{
+											"id": "n232",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "refurbish_existing_staircase_type",
+											"value": ["none"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n233",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["ramp"],
+							"children": [
+								{
+									"id": "n234",
+									"kind": "XOR",
+									"nodeClass": "Approach",
+									"label": "refurbish_existing_ramp",
+									"value": [],
+									"children": [
+										{
+											"id": "n235",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "refurbish_existing_ramp_type",
+											"value": ["none"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n236",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["railing"],
+							"children": [
+								{
+									"id": "n237",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n238",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "add_new_railing",
+											"value": [],
+											"children": [
+												{
+													"id": "n239",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "add_new_railing_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n240",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "replace_existing_railing",
+											"value": [],
+											"children": [
+												{
+													"id": "n241",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replace_existing_railing_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n242",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_existing_railing",
+											"value": [],
+											"children": [
+												{
+													"id": "n243",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_existing_railing_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n244",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["chimney"],
+							"children": [
+								{
+									"id": "n245",
+									"kind": "XOR",
+									"nodeClass": "Approach",
+									"label": "refurbish_existing_chimney",
+									"value": [],
+									"children": [
+										{
+											"id": "n246",
+											"kind": "XOR",
+											"nodeClass": "Feature",
+											"label": "refurbish_existing_chimney_type",
+											"value": ["none"],
+											"children": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n247",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "individual_elements",
+							"value": ["fireplace"],
+							"children": [
+								{
+									"id": "n248",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n249",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "add_new_fireplace",
+											"value": [],
+											"children": [
+												{
+													"id": "n250",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "add_new_fireplace_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n251",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "replace_existing_fireplace",
+											"value": [],
+											"children": [
+												{
+													"id": "n252",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replace_existing_fireplace_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n253",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "refurbish_existing_fireplace",
+											"value": [],
+											"children": [
+												{
+													"id": "n254",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_existing_fireplace_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n255",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "structural_elements",
+							"value": ["structural_components"],
+							"children": [
+								{
+									"id": "n256",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n257",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_column",
+											"value": [],
+											"children": [
+												{
+													"id": "n258",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_column",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n259",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_primary_beams",
+											"value": [],
+											"children": [
+												{
+													"id": "n260",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_primary_beams",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n261",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_secondary_beams",
+											"value": [],
+											"children": [
+												{
+													"id": "n262",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_secondary_beams",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n263",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_slabs",
+											"value": [],
+											"children": [
+												{
+													"id": "n264",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_slabs",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n265",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_shear_wall",
+											"value": [],
+											"children": [
+												{
+													"id": "n266",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_shear_wall",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n267",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_foundation",
+											"value": [],
+											"children": [
+												{
+													"id": "n268",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_foundation",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n269",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_structural_joints",
+											"value": [],
+											"children": [
+												{
+													"id": "n270",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_structural_joints",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n271",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_trusses",
+											"value": [],
+											"children": [
+												{
+													"id": "n272",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_trusses",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n273",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "structural_concrete_reinforcement",
+											"value": [],
+											"children": [
+												{
+													"id": "n274",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "structural_concrete_reinforcement",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n275",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "electrical_elements",
+							"value": ["electrical_equipment"],
+							"children": [
+								{
+									"id": "n276",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n277",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_cables",
+											"value": [],
+											"children": [
+												{
+													"id": "n278",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_cables",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n279",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_conduits",
+											"value": [],
+											"children": [
+												{
+													"id": "n280",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_conduits",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n281",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_circuits",
+											"value": [],
+											"children": [
+												{
+													"id": "n282",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_circuits",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n283",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_fixtures_in_the_building",
+											"value": [],
+											"children": [
+												{
+													"id": "n284",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_fixtures_in_the_building",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n285",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_fire_alarm_device",
+											"value": [],
+											"children": [
+												{
+													"id": "n286",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_fire_alarm_device",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n287",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "electrical_door_bell",
+											"value": [],
+											"children": [
+												{
+													"id": "n288",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "electrical_door_bell",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n289",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "interior_elements",
+							"value": ["sanitary_appliances"],
+							"children": [
+								{
+									"id": "n290",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n291",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "replacement_new_bathroom",
+											"value": [],
+											"children": [
+												{
+													"id": "n292",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "replacement_new_bathroom_type",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n293",
+											"kind": "AND",
+											"nodeClass": "Approach",
+											"label": "refurbish_bathroom",
+											"value": [],
+											"children": [
+												{
+													"id": "n294",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "refurbish_bathroom_type",
+													"value": ["none"],
+													"children": []
+												},
+												{
+													"id": "n295",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "sanitary_appliances_urinal_and_toilet_type",
+													"value": ["toilet_standing_on_floor", "toilet_wallhung"],
+													"children": []
+												},
+												{
+													"id": "n296",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "sanitary_appliances_wash_basin_type",
+													"value": ["none"],
+													"children": []
+												},
+												{
+													"id": "n297",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "sanitary_appliances_shower_type",
+													"value": ["none"],
+													"children": []
+												},
+												{
+													"id": "n298",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "sanitary_appliances_bath_tube_type",
+													"value": ["new_bathtub", "replace_batthtub_with_shower"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n299",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "interior_elements",
+							"value": ["fixed_furniture_essential"],
+							"children": [
+								{
+									"id": "n300",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n301",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_fixed_kitchen_island",
+											"value": [],
+											"children": [
+												{
+													"id": "n302",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_fixed_kitchen_island",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n303",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_kitchen_cabinet",
+											"value": [],
+											"children": [
+												{
+													"id": "n304",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_kitchen_cabinet",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n305",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_kitchen_sink",
+											"value": [],
+											"children": [
+												{
+													"id": "n306",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_kitchen_sink",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n307",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_shelve",
+											"value": [],
+											"children": [
+												{
+													"id": "n308",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_shelve",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n309",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_mail_box",
+											"value": [],
+											"children": [
+												{
+													"id": "n310",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_mail_box",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n311",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_essential_wifi",
+											"value": [],
+											"children": [
+												{
+													"id": "n312",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_essential_wifi",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n313",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "interior_elements",
+							"value": ["movable_furniture_optional"],
+							"children": [
+								{
+									"id": "n314",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n315",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_curtain",
+											"value": [],
+											"children": [
+												{
+													"id": "n316",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_curtain",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n317",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_window_treatment",
+											"value": [],
+											"children": [
+												{
+													"id": "n318",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_window_treatment",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n319",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_kitchen_table",
+											"value": [],
+											"children": [
+												{
+													"id": "n320",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_kitchen_table",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n321",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_kitchen_chair",
+											"value": [],
+											"children": [
+												{
+													"id": "n322",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_kitchen_chair",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n323",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_dining_table",
+											"value": [],
+											"children": [
+												{
+													"id": "n324",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_dining_table",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n325",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_sofa_table",
+											"value": [],
+											"children": [
+												{
+													"id": "n326",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_sofa_table",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n327",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_sofa",
+											"value": [],
+											"children": [
+												{
+													"id": "n328",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_sofa",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n329",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_king_bed",
+											"value": [],
+											"children": [
+												{
+													"id": "n330",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_king_bed",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n331",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_queen_bed",
+											"value": [],
+											"children": [
+												{
+													"id": "n332",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_queen_bed",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n333",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_single_bed",
+											"value": [],
+											"children": [
+												{
+													"id": "n334",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_single_bed",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n335",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_king_bed_mattress",
+											"value": [],
+											"children": [
+												{
+													"id": "n336",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_queen_bed_mattress",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n337",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_single_bed_mattress",
+											"value": [],
+											"children": [
+												{
+													"id": "n338",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_single_bed_mattress",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n339",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_king_bed_top_mattress",
+											"value": [],
+											"children": [
+												{
+													"id": "n340",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_king_bed_top_mattress",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n341",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_queen_bed_top_mattress",
+											"value": [],
+											"children": [
+												{
+													"id": "n342",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_queen_bed_top_mattress",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n343",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_single_bed_top_mattress",
+											"value": [],
+											"children": [
+												{
+													"id": "n344",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_single_bed_top_mattress",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n345",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_refrigerator",
+											"value": [],
+											"children": [
+												{
+													"id": "n346",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_refrigerator",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n347",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_washing_machine",
+											"value": [],
+											"children": [
+												{
+													"id": "n348",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_washing_machine",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n349",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_dish_washing_machine",
+											"value": [],
+											"children": [
+												{
+													"id": "n350",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_dish_washing_machine",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n351",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_stove",
+											"value": [],
+											"children": [
+												{
+													"id": "n352",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_stove",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n353",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_wine_store",
+											"value": [],
+											"children": [
+												{
+													"id": "n354",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_wine_store",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n355",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_decorative_lightings",
+											"value": [],
+											"children": [
+												{
+													"id": "n356",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_decorative_lightings",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n357",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_recycle_bin",
+											"value": [],
+											"children": [
+												{
+													"id": "n358",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_recycle_bin",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n359",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_persian_carpet",
+											"value": [],
+											"children": [
+												{
+													"id": "n360",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_persian_carpet",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n361",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "furniture_optional_standing_hanger",
+											"value": [],
+											"children": [
+												{
+													"id": "n362",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "furniture_optional_standing_hanger",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n363",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "landscape_elements",
+							"value": ["landscape_equipment"],
+							"children": [
+								{
+									"id": "n364",
+									"kind": "AND",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n365",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_site_pavement",
+											"value": [],
+											"children": [
+												{
+													"id": "n366",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_site_pavement",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n367",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_planting_and_improving_current_greenery_condition",
+											"value": [],
+											"children": [
+												{
+													"id": "n368",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_planting_and_improving_current_greenery_condition",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n369",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_playground_for_kids",
+											"value": [],
+											"children": [
+												{
+													"id": "n370",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_playground_for_kids",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n371",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_waste_management_by_use_of_solid_waste_storage",
+											"value": [],
+											"children": [
+												{
+													"id": "n372",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_waste_management_by_use_of_solid_waste_storage",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n373",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_parking_components",
+											"value": [],
+											"children": [
+												{
+													"id": "n374",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_parking_components",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n375",
+											"kind": "XOR",
+											"nodeClass": "Approach",
+											"label": "landscaping_electrical_equipment",
+											"value": [],
+											"children": [
+												{
+													"id": "n376",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "landscaping_electrical_equipment",
+													"value": ["none"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
