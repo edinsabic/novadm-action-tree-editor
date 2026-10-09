@@ -1,0 +1,1427 @@
+{
+	"format": "novadm-action-tree",
+	"version": 5,
+
+	"versionControl": {
+		"head": "k45g",
+		"edges": [
+			{
+				"from": "k45a",
+				"to": "k45a2",
+				"comment": "Skylights: north and south facing chosen separately, each yes/no with its own area; skylight area moved off the roof"
+			},
+			{
+				"from": "k45a2",
+				"to": "k45b",
+				"comment": "Roof only: skylights back on the roof, one shared skylight area, NE and SW skylight each yes/no"
+			},
+			{
+				"from": "k45b",
+				"to": "k45c",
+				"comment": "Roof only: either no skylights, or a skylight area with at least one of NE/SW; if NE is added, SW is optional, and the other way round"
+			},
+			{
+				"from": "k45c",
+				"to": "k45c2",
+				"comment": "Roof only, alternative to k45c (not in the parse list): NE and SW skylight chosen separately, each either left out or given its own area"
+			},
+			{
+				"from": "k45c",
+				"to": "k45d",
+				"comment": "New set-up: roof windows, terrain and tinyhouses; original roof area (1062.7) and original terrain area (1866.2) kept constant; SW/NE roof window area, terrain open area, number, levels and size of tinyhouses"
+			},
+			{
+				"from": "k45d",
+				"to": "k45e",
+				"comment": "Construction added: original construction constant, ventilation open/closed, insulation U1/U2; original roof and terrain areas dropped. Notes: open ventilated: no need to insulate k45; closed ventilation: can be either insulated or not; closed + insulated = hothouse; uninsulated: can be either open/close - can then insulate tinyhouse; removing concrete reduces embedded CO2, but gains green - what is tradeoff?; leveling out terrain - more original terrain remove, less concrete need to level it; surface is uneven, so if you leave it then need concrete to level it; this should appear from the numbers; energy performance"
+			},
+			{
+				"from": "k45e",
+				"to": "k45f",
+				"comment": "Ventilation and insulation chosen as pairs: open + U1 or closed + U2. Notes from last meeting (10-01-2024): open ventilated: no need to insulate k45; closed ventilation: can be either insulated or not; closed + insulated = hothouse; uninsulated: can be either open/close - can then insulate tinyhouse; of interest: removing concrete reduces embedded CO2, but gains green - what is tradeoff?; leveling out terrain - more original terrain remove, less concrete need to level it; surface is uneven, so if you leave it then need concrete to level it; this should appear from the numbers; energy performance KPI is being developed by [...]"
+			},
+			{
+				"from": "k45f",
+				"to": "k45g",
+				"comment": "Design concepts A, B and C via gaps l_gap1/l_gap2; interior deck width and facade length replace roof windows, terrain and tinyhouses. Design concepts: A: l_gap1 and l_gap2 both 0, one building; B: l_gap1 = 0 and l_gap2 = 5, one housing area detached from one common area (two buildings); C: l_gap1 and l_gap2 both 5, two housing areas detached from one common area (three buildings); no_deck_width (b1) decides the distance from facade (in either side) to the interior first floor deck; housing_length (Lf1 and Lf2) decides the length of the facade of the housing area. For later, of interest: removing concrete reduces embedded CO2, but gains green - what is tradeoff?; leveling out terrain - more original terrain remove, less concrete need to level it; surface is uneven, so if you leave it then need concrete to level it; this should appear from the numbers; energy performance KPI is being developed by [...]"
+			}
+		]
+	},
+
+	"profile": {
+		"active": null,
+		"current": {},
+		"currentValues": {},
+		"saved": []
+	},
+
+	"actionTree": [
+		{
+			"id": "k45a",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n4",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_area",
+									"value": ["A1", "A2", "A3", "A4"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n5",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["skylight"],
+							"children": [
+								{
+									"id": "n6",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_transparency",
+									"value": ["clear", "transparent"],
+									"children": []
+								},
+								{
+									"id": "n7",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_insulation",
+									"value": ["not_insulated", "insulated"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n8",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof_cladding"],
+							"children": [
+								{
+									"id": "n9",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_cladding_insulation",
+									"value": ["no_change", "add_insulation"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n10",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["window_frame"],
+							"children": [
+								{
+									"id": "n11",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "window_frame_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n12",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "window_frame_insulation",
+									"value": ["not_insulated", "insulated"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n13",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["brick_facade"],
+							"children": [
+								{
+									"id": "n14",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "brick_facade_insulation",
+									"value": ["no_change", "add_insulation"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n15",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["ground_floor"],
+							"children": [
+								{
+									"id": "n16",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "ground_floor_remove_area",
+									"value": ["F1", "F2", "F3", "F4"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n17",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["original_floor"],
+							"children": [
+								{
+									"id": "n18",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_floor_refurbishment",
+									"value": ["no change", "level_or_regulate", "add_insulation_and_floor"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["stripped_terrain"],
+							"children": [
+								{
+									"id": "n20",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "stripped_terrain_new",
+									"value": ["greenhouse", "add_insulation_and_floor"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n21",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["layout"],
+							"children": [
+								{
+									"id": "n22",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "layout_number_of_floors",
+									"value": ["1", "2"],
+									"children": []
+								},
+								{
+									"id": "n23",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n24",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "add_tinyhouses",
+											"value": ["no"],
+											"children": []
+										},
+										{
+											"id": "n25",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "add_tinyhouses",
+											"value": ["yes"],
+											"children": [
+												{
+													"id": "n26",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_size",
+													"value": ["T1", "T2"],
+													"children": []
+												},
+												{
+													"id": "n27",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_number",
+													"value": ["N1", "N2"],
+													"children": []
+												},
+												{
+													"id": "n28",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_roof_accessible",
+													"value": ["no", "yes"],
+													"children": []
+												},
+												{
+													"id": "n29",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_roof_insulation",
+													"value": ["no", "yes"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45a2",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n30",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["skylights"],
+							"children": [
+								{
+									"id": "n31",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n32",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "north_facing_skylight",
+											"value": ["yes"],
+											"children": [
+												{
+													"id": "n33",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "north_facing_skylight_area",
+													"value": ["A1", "A2", "A3", "A4"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n34",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "north_facing_skylight",
+											"value": ["no"],
+											"children": []
+										}
+									]
+								},
+								{
+									"id": "n35",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n36",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "south_facing_skylight",
+											"value": ["yes"],
+											"children": [
+												{
+													"id": "n37",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "south_facing_skylight_area",
+													"value": ["A1", "A2", "A3", "A4"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n38",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "south_facing_skylight",
+											"value": ["no"],
+											"children": []
+										}
+									]
+								},
+								{
+									"id": "n39",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_transparency",
+									"value": ["clear", "transparent"],
+									"children": []
+								},
+								{
+									"id": "n40",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_insulation",
+									"value": ["not_insulated", "insulated"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n8",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof_cladding"],
+							"children": [
+								{
+									"id": "n9",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_cladding_insulation",
+									"value": ["no_change", "add_insulation"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n10",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["window_frame"],
+							"children": [
+								{
+									"id": "n11",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "window_frame_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n12",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "window_frame_insulation",
+									"value": ["not_insulated", "insulated"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n13",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["brick_facade"],
+							"children": [
+								{
+									"id": "n14",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "brick_facade_insulation",
+									"value": ["no_change", "add_insulation"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n15",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["ground_floor"],
+							"children": [
+								{
+									"id": "n16",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "ground_floor_remove_area",
+									"value": ["F1", "F2", "F3", "F4"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n17",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["original_floor"],
+							"children": [
+								{
+									"id": "n18",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_floor_refurbishment",
+									"value": ["no change", "level_or_regulate", "add_insulation_and floor"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n19",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["stripped_terrain"],
+							"children": [
+								{
+									"id": "n20",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "stripped_terrain_new",
+									"value": ["greenhouse", "add_insulation_and_floor"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n21",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["layout"],
+							"children": [
+								{
+									"id": "n22",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "layout_number_of_floors",
+									"value": ["1", "2"],
+									"children": []
+								},
+								{
+									"id": "n23",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n24",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "add_tinyhouses",
+											"value": ["no"],
+											"children": []
+										},
+										{
+											"id": "n25",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "add_tinyhouses",
+											"value": ["yes"],
+											"children": [
+												{
+													"id": "n26",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_size",
+													"value": ["T1", "T2"],
+													"children": []
+												},
+												{
+													"id": "n27",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_number",
+													"value": ["N1", "N2"],
+													"children": []
+												},
+												{
+													"id": "n28",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_roof_accessible",
+													"value": ["no", "yes"],
+													"children": []
+												},
+												{
+													"id": "n29",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "tinyhouse_roof_insulation",
+													"value": ["no", "yes"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45b",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n4",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "skylight_area",
+									"value": ["A1", "A2", "A3", "A4"],
+									"children": []
+								},
+								{
+									"id": "n41",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "NE_skylight",
+									"value": ["yes", "no"],
+									"children": []
+								},
+								{
+									"id": "n42",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "SW_skylight",
+									"value": ["yes", "no"],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45c",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n43",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n44",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "no_skylights",
+											"value": [],
+											"children": []
+										},
+										{
+											"id": "n45",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n46",
+													"kind": "XOR",
+													"nodeClass": "Feature",
+													"label": "skylight_area",
+													"value": ["A1", "A2", "A3", "A4"],
+													"children": []
+												},
+												{
+													"id": "n47",
+													"kind": "XOR",
+													"nodeClass": "",
+													"label": "",
+													"value": [],
+													"children": [
+														{
+															"id": "n48",
+															"kind": "AND",
+															"nodeClass": "",
+															"label": "",
+															"value": [],
+															"children": [
+																{
+																	"id": "n49",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "NE_skylight",
+																	"value": ["yes"],
+																	"children": []
+																},
+																{
+																	"id": "n50",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "SW_skylight",
+																	"value": ["yes", "no"],
+																	"children": []
+																}
+															]
+														},
+														{
+															"id": "n51",
+															"kind": "AND",
+															"nodeClass": "",
+															"label": "",
+															"value": [],
+															"children": [
+																{
+																	"id": "n52",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "SW_skylight",
+																	"value": ["yes"],
+																	"children": []
+																},
+																{
+																	"id": "n53",
+																	"kind": "XOR",
+																	"nodeClass": "Feature",
+																	"label": "NE_skylight",
+																	"value": ["yes", "no"],
+																	"children": []
+																}
+															]
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45c2",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n2",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof"],
+							"children": [
+								{
+									"id": "n3",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "roof_ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n43",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n54",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "NE_skylight",
+											"value": ["no"],
+											"children": []
+										},
+										{
+											"id": "n55",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "NE_skylight_area",
+											"value": ["A1", "A2", "A3", "A4"],
+											"children": []
+										}
+									]
+								},
+								{
+									"id": "n56",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n57",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "SW_skylight",
+											"value": ["no"],
+											"children": []
+										},
+										{
+											"id": "n58",
+											"kind": "AND",
+											"nodeClass": "Feature",
+											"label": "SW_skylight_area",
+											"value": ["A1", "A2", "A3", "A4"],
+											"children": []
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45d",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n59",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof_windows"],
+							"children": [
+								{
+									"id": "n60",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_roof_area",
+									"value": ["1062.7"],
+									"children": []
+								},
+								{
+									"id": "n61",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "SW_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								},
+								{
+									"id": "n62",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "NE_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n63",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["terrain"],
+							"children": [
+								{
+									"id": "n64",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_terrain_area",
+									"value": ["1866.2"],
+									"children": []
+								},
+								{
+									"id": "n65",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "terrain_open_area",
+									"value": ["0", "250", "500", "900"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n66",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["tinyhouses"],
+							"children": [
+								{
+									"id": "n67",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_tinyhouses",
+									"value": ["8", "12"],
+									"children": []
+								},
+								{
+									"id": "n68",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_levels",
+									"value": ["1", "2"],
+									"children": []
+								},
+								{
+									"id": "n69",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "size_of_tinyhouses",
+									"value": ["36", "64"],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45e",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n70",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["construction"],
+							"children": [
+								{
+									"id": "n71",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_construction",
+									"value": ["constant"],
+									"children": []
+								},
+								{
+									"id": "n72",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "ventilation",
+									"value": ["open", "closed"],
+									"children": []
+								},
+								{
+									"id": "n73",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "insulation",
+									"value": ["U1", "U2"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n59",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof_windows"],
+							"children": [
+								{
+									"id": "n61",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "SW_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								},
+								{
+									"id": "n62",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "NE_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n63",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["terrain"],
+							"children": [
+								{
+									"id": "n65",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "terrain_open_area",
+									"value": ["0", "250", "500", "900"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n66",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["tinyhouses"],
+							"children": [
+								{
+									"id": "n67",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_tinyhouses",
+									"value": ["8", "12"],
+									"children": []
+								},
+								{
+									"id": "n68",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_levels",
+									"value": ["1", "2"],
+									"children": []
+								},
+								{
+									"id": "n69",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "size_of_tinyhouses",
+									"value": ["36", "64"],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45f",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n70",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["construction"],
+							"children": [
+								{
+									"id": "n71",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_construction",
+									"value": ["constant"],
+									"children": []
+								},
+								{
+									"id": "n74",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n75",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n76",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "ventilation",
+													"value": ["open"],
+													"children": []
+												},
+												{
+													"id": "n77",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "insulation",
+													"value": ["U1"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n78",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n79",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "ventilation",
+													"value": ["closed"],
+													"children": []
+												},
+												{
+													"id": "n80",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "insulation",
+													"value": ["U2"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n59",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["roof_windows"],
+							"children": [
+								{
+									"id": "n61",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "SW_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								},
+								{
+									"id": "n62",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "NE_roof_window_area",
+									"value": ["35", "70", "150", "300"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n63",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["terrain"],
+							"children": [
+								{
+									"id": "n65",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "terrain_open_area",
+									"value": ["0", "250", "500", "900"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n66",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["tinyhouses"],
+							"children": [
+								{
+									"id": "n67",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_tinyhouses",
+									"value": ["8", "12"],
+									"children": []
+								},
+								{
+									"id": "n68",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "number_of_levels",
+									"value": ["1", "2"],
+									"children": []
+								},
+								{
+									"id": "n69",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "size_of_tinyhouses",
+									"value": ["36", "64"],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+		{
+			"id": "k45g",
+			"tree": [
+				{
+					"id": "n1",
+					"kind": "AND",
+					"nodeClass": "",
+					"label": "",
+					"value": [],
+					"children": [
+						{
+							"id": "n70",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["construction"],
+							"children": [
+								{
+									"id": "n71",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "original_construction",
+									"value": ["constant"],
+									"children": []
+								},
+								{
+									"id": "n74",
+									"kind": "XOR",
+									"nodeClass": "",
+									"label": "",
+									"value": [],
+									"children": [
+										{
+											"id": "n75",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n81",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap1",
+													"value": ["0"],
+													"children": []
+												},
+												{
+													"id": "n82",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap2",
+													"value": ["0"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n78",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n83",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap1",
+													"value": ["5"],
+													"children": []
+												},
+												{
+													"id": "n84",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap2",
+													"value": ["5"],
+													"children": []
+												}
+											]
+										},
+										{
+											"id": "n85",
+											"kind": "AND",
+											"nodeClass": "",
+											"label": "",
+											"value": [],
+											"children": [
+												{
+													"id": "n86",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap1",
+													"value": ["0"],
+													"children": []
+												},
+												{
+													"id": "n87",
+													"kind": "AND",
+													"nodeClass": "Feature",
+													"label": "l_gap2",
+													"value": ["5"],
+													"children": []
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"id": "n88",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["int_deck"],
+							"children": [
+								{
+									"id": "n89",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "no_deck_width",
+									"value": ["7", "8", "9"],
+									"children": []
+								}
+							]
+						},
+						{
+							"id": "n90",
+							"kind": "AND",
+							"nodeClass": "Subject",
+							"label": "architectural_element",
+							"value": ["facade"],
+							"children": [
+								{
+									"id": "n91",
+									"kind": "XOR",
+									"nodeClass": "Feature",
+									"label": "housing_length",
+									"value": ["14", "15", "16"],
+									"children": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
