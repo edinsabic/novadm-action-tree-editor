@@ -60,7 +60,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') + '"' +
 					' data-load-profile="' + name + '">' + name + '</button>' +
 					'<button type="button" class="profile-delete-btn" data-delete-profile="' + name + '"' +
-					' aria-label="Delete profile" title="Delete profile">&times;</button>' +
+					' aria-label="Delete profile" title="Delete profile">' + Render.trashIconHtml() + '</button>' +
 					'</li>';
 			}).join('') + '</ul>';
 		}

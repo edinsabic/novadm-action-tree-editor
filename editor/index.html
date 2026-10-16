@@ -63,8 +63,29 @@
 							<button id="export-tree-btn" class="btn" type="button">Export tree</button>
 							<input id="import-file-input" type="file" hidden />
 						</div>
+						<div class="toolbar-group toolbar-end">
+							<button id="generate-tree-btn" class="btn" type="button" aria-haspopup="dialog"
+								aria-expanded="false" title="Build a tree from a checklist of subjects">
+								Generate tree&hellip;</button>
+						</div>
 					</div>
 					<div id="tree-viewport-content" class="viewport-content"></div>
+
+					<div id="generator-panel" class="gen-panel" role="dialog" aria-label="Generate tree" hidden>
+						<div class="flyout-header">
+							<strong class="gen-title">Generate tree from subjects</strong>
+							<button class="flyout-close" type="button" data-gen="close"
+								aria-label="Close" title="Close">&times;</button>
+						</div>
+						<div id="generator-body" class="gen-body"></div>
+						<div class="gen-footer">
+							<span id="generator-count" class="note"></span>
+							<button class="btn" type="button" data-gen="select-all">Select all</button>
+							<button class="btn" type="button" data-gen="clear">Clear</button>
+							<button id="generator-generate-btn" class="btn primary" type="button"
+								data-gen="generate">Generate tree</button>
+						</div>
+					</div>
 				</div>
 
 				<div class="viewport-editor-col">
@@ -160,8 +181,11 @@
 
 </main>
 
+<div id="subject-menu" class="subject-menu" role="menu" aria-label="Subjects" hidden></div>
+
 <script src="../examples/sample-tree.js"></script>
 <script src="../src/util.js"></script>
+<script src="../src/subjects.js"></script>
 <script src="../src/model.js"></script>
 <script src="../src/parser.js"></script>
 <script src="../src/history.js"></script>
@@ -169,6 +193,7 @@
 <script src="../src/render.js"></script>
 <script src="../src/editor-form.js"></script>
 <script src="../src/tree-interactions.js"></script>
+<script src="../src/tree-generator.js"></script>
 <script src="../src/popovers.js"></script>
 <script src="../src/undo.js"></script>
 <script src="../src/tree-io.js"></script>
