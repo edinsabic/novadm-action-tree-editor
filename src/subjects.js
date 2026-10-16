@@ -62,8 +62,8 @@ NovaDM.Subjects = (function () {
 			]
 		},
 		novadmPaper: {
-			name: 'NovaDM paper (Kamari et al. 2019, Tables 1 and 2)',
-			shortName: 'NovaDM paper',
+			name: 'Constraint-based renovation design support through the renovation domain model, Automation in Construction 104, 2019 (Kamari et al.)',
+			shortName: 'NovaDM',
 			categories: [
 				{ key: 'architectural_elements', name: 'Architectural', subjects: [
 					{ key: 'exterior_walls', name: 'Exterior walls', depth: 'minor' },
