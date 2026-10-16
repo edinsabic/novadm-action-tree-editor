@@ -49,8 +49,8 @@ changes this list; it is exported and imported with the file (see
 `profile` below). Load example and Clear tree reset all profiles
 (`Model.resetProfiles()`); an import takes the file's profiles.
 
-**Scenario space size** (`Model.scenarioSpaceSize()`, the live `Size`
-metric in the bottom bar) counts valid scenarios: AND = product of its
+**Scenario space size** (`Model.scenarioSpaceSize()`, the live metric of
+that name in the bottom bar) counts valid scenarios: AND = product of its
 children, XOR = sum of its children, times the node's own choice of
 values. Constraints follow the colouring of Schultz & Kamari (2021):
 always = green, never = red, then

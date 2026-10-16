@@ -12,7 +12,7 @@
 
 <nav class="tabs" role="tablist" aria-label="Editor sections">
 	<button class="tab active" type="button" role="tab" aria-selected="true" data-tab="action-tree">Action tree</button>
-	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="scenario-space">Scenario space</button>
+	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="calculations">Calculations</button>
 </nav>
 
 <main>
@@ -22,7 +22,8 @@
 
 			<div class="control-row">
 				<div class="control-left">
-					<span class="layout-label">Tree layout</span>
+					<span class="viewport-box-label">Workspace panel</span>
+					<span class="control-label">Select the tree layout</span>
 					<div class="toggle-group" role="group" aria-label="Tree layout">
 						<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
 						<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
@@ -52,9 +53,9 @@
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Undo and redo">
 							<button id="undo-btn" class="btn-icon" type="button" aria-label="Undo"
-								title="Undo (Ctrl+Z)">&#8630;</button>
+								title="Undo (Ctrl+Z)" data-undo-action="undo">&#8630;</button>
 							<button id="redo-btn" class="btn-icon" type="button" aria-label="Redo"
-								title="Redo (Ctrl+Y)">&#8631;</button>
+								title="Redo (Ctrl+Y)" data-undo-action="redo">&#8631;</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Tree file">
 							<button id="load-example-btn" class="btn" type="button">Load example tree</button>
@@ -111,30 +112,30 @@
 			</div>
 
 			<div class="scenario-summary-bar">
-				<span class="scenario-summary-label">Scenario space (live)</span>
+				<span class="scenario-summary-label">Calculations (live)</span>
 				<div class="scenario-metrics">
 					<span class="metric">
-						<span class="metric-label">Size</span>
+						<span class="metric-label">Scenario space size</span>
 						<span class="metric-value" id="scenario-space-size-value">0</span>
 					</span>
 					<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
 						Warning: the applied constraints are contradictory.
 					</div>
-					<span class="metric">
-						<span class="metric-label">Cost</span>
-						<span class="metric-value">N/A</span>
-					</span>
-					<span class="metric">
-						<span class="metric-label">CO&#8322;</span>
-						<span class="metric-value">N/A</span>
-					</span>
-					<span class="metric">
-						<span class="metric-label">Score</span>
-						<span class="metric-value">N/A</span>
-					</span>
+					<div id="scenario-kpi-metrics" class="scenario-kpis">
+						<span class="metric muted"
+							title="Not calculated yet. Sample the scenario space in the Calculations tab.">
+							<span class="metric-label">Total cost</span>
+							<span class="metric-value">&ndash;</span>
+						</span>
+						<span class="metric muted"
+							title="Not calculated yet. Sample the scenario space in the Calculations tab.">
+							<span class="metric-label">CO&#8322;</span>
+							<span class="metric-value">&ndash;</span>
+						</span>
+					</div>
 				</div>
-				<button id="view-full-analysis-btn" class="scenario-summary-link" type="button">
-					View full analysis &rarr;
+				<button id="open-calculations-btn" class="scenario-summary-link" type="button">
+					Get your numbers in the Calculations tab &rarr;
 				</button>
 			</div>
 
@@ -175,8 +176,76 @@
 		</div>
 	</section>
 
-	<section id="scenario-space" class="tab-panel" role="tabpanel" hidden>
-		<div class="placeholder-panel">Scenario space.</div>
+	<section id="calculations" class="tab-panel calc-panel" role="tabpanel" hidden>
+		<div class="calc-workspace">
+
+			<div class="control-row">
+				<div class="control-left">
+					<span class="viewport-box-label">Workspace panel</span>
+					<span class="metric"
+						title="Every scenario of the tree. Profiles are not applied here, as in the sample.">
+						<span class="control-label">Scenario space size</span>
+						<span id="calc-space-size" class="control-value">&ndash;</span>
+					</span>
+					<span class="viewport-box-label">Mockup &middot; changes are not saved</span>
+				</div>
+				<div class="control-right" role="group" aria-labelledby="calc-sample-label">
+					<span id="calc-sample-label" class="control-label">Sample</span>
+					<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
+					<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
+					<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
+						<input id="calc-sample-size" type="number" min="1" max="10000" step="1" value="1000"
+							aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 10,000)" />
+						<button id="calc-sample-btn" class="pill-btn" type="button"
+							title="Sample this number of scenarios">scenarios</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="viewport-row">
+
+				<div class="viewport-box viewport-tree">
+					<div class="viewport-toolbar">
+						<div class="toolbar-group" role="group" aria-label="Zoom">
+							<button id="calc-zoom-out-btn" class="btn-icon" type="button" aria-label="Zoom out"
+								title="Zoom out">&minus;</button>
+							<span id="calc-zoom-label">100%</span>
+							<button id="calc-zoom-in-btn" class="btn-icon" type="button" aria-label="Zoom in"
+								title="Zoom in">+</button>
+							<button id="calc-zoom-reset-btn" class="btn" type="button">Reset zoom</button>
+						</div>
+						<div class="toolbar-group" role="group" aria-label="Undo and redo">
+							<button class="btn-icon" type="button" aria-label="Undo" title="Undo (Ctrl+Z)"
+								data-undo-action="undo">&#8630;</button>
+							<button class="btn-icon" type="button" aria-label="Redo" title="Redo (Ctrl+Y)"
+								data-undo-action="redo">&#8631;</button>
+						</div>
+						<div class="toolbar-group" role="group" aria-label="Attributes">
+							<button id="calc-add-derived-btn" class="btn" type="button">+ Calculated value</button>
+						</div>
+						<div class="toolbar-group" role="group" aria-label="Example">
+							<button id="calc-load-example-btn" class="btn" type="button"
+								title="Load the example. It also replaces the tree in the Action tree tab.">
+								Load example</button>
+						</div>
+					</div>
+					<div id="calc-graph" class="viewport-content calc-graph"></div>
+				</div>
+
+				<div class="viewport-editor-col">
+					<span class="viewport-box-label">Editor panel</span>
+					<div class="viewport-box viewport-editor-panel">
+						<div id="calc-editor-host" class="calc-editor"></div>
+					</div>
+				</div>
+
+			</div>
+
+			<div id="calc-report-head" class="calc-report-head"></div>
+
+		</div>
+
+		<div id="calc-report" class="calc-report" hidden></div>
 	</section>
 
 </main>

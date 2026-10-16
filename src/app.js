@@ -30,8 +30,8 @@ window.NovaDM = window.NovaDM || {};
 		tab.addEventListener('click', function () { activateTab(tab.dataset.tab); });
 	});
 
-	document.getElementById('view-full-analysis-btn').addEventListener('click', function () {
-		activateTab('scenario-space');
+	document.getElementById('open-calculations-btn').addEventListener('click', function () {
+		activateTab('calculations');
 	});
 
 	/* ---------- Tree layout ---------- */

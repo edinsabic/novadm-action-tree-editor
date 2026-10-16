@@ -514,7 +514,7 @@
 									"kind": "XOR",
 									"nodeClass": "Feature",
 									"label": "original_floor_refurbishment",
-									"value": ["no change", "level_or_regulate", "add_insulation_and floor"],
+									"value": ["no change", "level_or_regulate", "add_insulation_and_floor"],
 									"children": []
 								}
 							]
