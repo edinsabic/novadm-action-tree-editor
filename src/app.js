@@ -5,7 +5,7 @@ window.NovaDM = window.NovaDM || {};
  * and opening the example tree on start. Runs last, after every other
  * src/ module.
  */
-(function (Render, TreeIO) {
+(function (Render, TreeIO, CalculationsTab) {
 	'use strict';
 
 	var ZOOM_STEP = 10;
@@ -24,6 +24,7 @@ window.NovaDM = window.NovaDM || {};
 			tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
 		});
 		panels.forEach(function (panel) { panel.hidden = panel.id !== name; });
+		if (name === 'calculations') CalculationsTab.render();
 	}
 
 	tabs.forEach(function (tab) {
@@ -66,4 +67,4 @@ window.NovaDM = window.NovaDM || {};
 	/* ---------- Start ---------- */
 
 	TreeIO.newDocument(TreeIO.sampleSpecs() || []);
-})(NovaDM.Render, NovaDM.TreeIO);
+})(NovaDM.Render, NovaDM.TreeIO, NovaDM.CalculationsTab);

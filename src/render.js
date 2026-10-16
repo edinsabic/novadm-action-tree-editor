@@ -113,7 +113,7 @@ NovaDM.Render = (function (Model, Util) {
 	}
 
 	function scenarioSizeHtml(size) {
-		if (size < SCIENTIFIC_FROM) return String(size);
+		if (size < SCIENTIFIC_FROM) return size.toLocaleString('en-GB');
 		if (!isFinite(size)) return '&gt; 10<sup>308</sup>';
 		var parts = size.toExponential(2).split('e');
 		return parts[0] + ' × 10<sup>' + Number(parts[1]) + '</sup>';
@@ -135,6 +135,7 @@ NovaDM.Render = (function (Model, Util) {
 		else treeContent.innerHTML = '<ul class="tree-list">' + nodes.map(directoryNodeHtml).join('') + '</ul>';
 
 		highlightSelected();
+		if (NovaDM.CalculationsTab) NovaDM.CalculationsTab.treeChanged();
 		recordChange();
 	}
 
@@ -307,6 +308,7 @@ NovaDM.Render = (function (Model, Util) {
 		valueChipsHtml: valueChipsHtml,
 		deleteLabel: deleteLabel,
 		trashIconHtml: trashIconHtml,
+		scenarioSizeHtml: scenarioSizeHtml,
 		renderTree: renderTree,
 		recordChange: recordChange,
 		setLayout: setLayout,

@@ -73,9 +73,11 @@ children of one XOR, two `always` values of one node, or a `never` node
 with an `always` node or value below it. Any contradiction gives 0, and
 a warning is shown.
 
-Sizes from 10^6 up are shown rounded to two decimals as `y × 10^x`
-(e.g. 2.35 × 10^23). The count is a JavaScript number, so it is exact up
-to 2^53 and overflows above about 10^308.
+Sizes below 10^6 are shown in full, with a comma between thousands as
+in British English (e.g. 2,560). Sizes from 10^6 up are shown rounded to
+two decimals as `y × 10^x` (e.g. 2.35 × 10^23). The count is a
+JavaScript number, so it is exact up to 2^53 and overflows above about
+10^308.
 
 ## Version history
 

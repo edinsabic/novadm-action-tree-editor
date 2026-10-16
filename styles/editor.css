@@ -679,8 +679,9 @@ main {
 .scenario-metrics {
 	display: flex;
 	flex: 1;
+	flex-wrap: wrap;
 	align-items: baseline;
-	gap: 28px;
+	gap: 10px 28px;
 }
 
 .scenario-kpis {
@@ -1689,6 +1690,14 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	font-size: 1.1rem;
 	font-weight: 600;
 }
+
+.calc-report-close {
+	flex-shrink: 0;
+	align-self: flex-start;
+	margin-left: auto;
+}
+
+.calc-report-close:hover { background-color: var(--color-bg); }
 
 .calc-report {
 	display: flex;

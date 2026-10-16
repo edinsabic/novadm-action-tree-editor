@@ -1,20 +1,21 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Undo/redo for the whole document: the tree, the profiles and the version
+ * Undo/redo for the whole document: the tree, the profiles, the version
  * history (so saving, opening, restoring and merging versions are undoable
- * too). Every render calls record(); when the document differs from the
- * last recorded state, the previous state becomes one undo step. Typing in
- * one editor field counts as a single step until focus moves elsewhere.
+ * too) and the Calculations tab's data. Every render calls record();
+ * when the document differs from the last recorded state, the previous
+ * state becomes one undo step. Typing in one editor field counts as a
+ * single step until focus moves elsewhere.
  */
-NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
+NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab) {
 	'use strict';
 
 	var MAX_STEPS = 100;
 	var EDITABLE_TAGS = ['INPUT', 'TEXTAREA', 'SELECT'];
 
-	var undoBtn = document.getElementById('undo-btn');
-	var redoBtn = document.getElementById('redo-btn');
+	var undoBtns = document.querySelectorAll('[data-undo-action="undo"]');
+	var redoBtns = document.querySelectorAll('[data-undo-action="redo"]');
 
 	var undoStack = [];
 	var redoStack = [];
@@ -26,19 +27,21 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 		return JSON.stringify({
 			tree: Model.treeSpecs(),
 			profile: Model.getProfileState(),
-			history: History.getState()
+			history: History.getState(),
+			calculations: CalculationsTab.getState()
 		});
 	}
 
 	function typingKey() {
 		var el = document.activeElement;
+		if (el && el.hasAttribute('data-typing-key')) return el.getAttribute('data-typing-key');
 		if (!el || el.tagName !== 'INPUT' || el.type !== 'text' || !el.closest('#editor-form-host')) return null;
 		return el.id + ':' + Model.getSelectedId();
 	}
 
 	function updateButtons() {
-		undoBtn.disabled = undoStack.length === 0;
-		redoBtn.disabled = redoStack.length === 0;
+		undoBtns.forEach(function (btn) { btn.disabled = undoStack.length === 0; });
+		redoBtns.forEach(function (btn) { btn.disabled = redoStack.length === 0; });
 	}
 
 	/** Called after every render; turns a changed document into one undo step. */
@@ -85,6 +88,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);
 			Model.applyProfileState(doc.profile, versionTrees);
 			History.load(doc.history);
+			CalculationsTab.setState(doc.calculations);
 			Render.renderTree();
 			EditorForm.renderEditorForm();
 			Popovers.updatePillLabels();
@@ -111,14 +115,18 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 
 	/* ---------- Buttons and keyboard shortcuts ---------- */
 
-	undoBtn.addEventListener('click', function (e) {
-		e.stopPropagation();
-		undo();
+	undoBtns.forEach(function (btn) {
+		btn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			undo();
+		});
 	});
 
-	redoBtn.addEventListener('click', function (e) {
-		e.stopPropagation();
-		redo();
+	redoBtns.forEach(function (btn) {
+		btn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			redo();
+		});
 	});
 
 	document.addEventListener('keydown', function (e) {
@@ -138,4 +146,4 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers) {
 	updateButtons();
 
 	return { record: record };
-})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab);
