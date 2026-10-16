@@ -887,6 +887,7 @@ main {
 .subject-menu {
 	position: fixed;
 	z-index: 50;
+	overflow-y: auto;
 }
 
 .subject-menu-list {
@@ -895,20 +896,13 @@ main {
 	list-style: none;
 }
 
-.subject-menu-category { position: relative; }
-
 .subject-submenu {
-	position: absolute;
-	top: -5px;
-	left: 100%;
+	position: fixed;
+	z-index: 51;
 	display: none;
 	width: max-content;
 	max-width: 320px;
-}
-
-.subject-menu.opens-left .subject-submenu {
-	right: 100%;
-	left: auto;
+	overflow-y: auto;
 }
 
 .subject-menu-category.open > .subject-submenu { display: block; }

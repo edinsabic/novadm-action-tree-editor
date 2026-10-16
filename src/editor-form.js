@@ -9,7 +9,8 @@ window.NovaDM = window.NovaDM || {};
 NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 	'use strict';
 
-	var SUBMENU_WIDTH = 320;
+	var MENU_GAP = 4;
+	var SCREEN_MARGIN = 8;
 
 	var escapeHtml = Util.escapeHtml;
 	var formHost = document.getElementById('editor-form-host');
@@ -212,16 +213,38 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 			'</ul>';
 	}
 
+	/** Opens the menu below the button, or above it when there is more room there; it scrolls if neither fits. */
 	function openSubjectMenu(button, node) {
 		var rect = button.getBoundingClientRect();
 		subjectMenu.innerHTML = subjectMenuHtml(node);
 		subjectMenu.style.left = rect.left + 'px';
-		subjectMenu.style.top = (rect.bottom + 4) + 'px';
+		subjectMenu.style.top = '0px';
+		subjectMenu.style.maxHeight = '';
 		subjectMenu.style.minWidth = rect.width + 'px';
 		subjectMenu.hidden = false;
-		var menuRect = subjectMenu.getBoundingClientRect();
-		subjectMenu.classList.toggle('opens-left', menuRect.right + SUBMENU_WIDTH > window.innerWidth);
+
+		var height = subjectMenu.offsetHeight;
+		var below = window.innerHeight - rect.bottom - MENU_GAP - SCREEN_MARGIN;
+		var above = rect.top - MENU_GAP - SCREEN_MARGIN;
+		var opensAbove = height > below && above > below;
+		var room = opensAbove ? above : below;
+		var shown = Math.min(height, room);
+		subjectMenu.style.maxHeight = room + 'px';
+		subjectMenu.style.top = (opensAbove ? rect.top - MENU_GAP - shown : rect.bottom + MENU_GAP) + 'px';
 		button.setAttribute('aria-expanded', 'true');
+	}
+
+	function placeSubmenu(item) {
+		var submenu = item.querySelector('.subject-submenu');
+		var itemRect = item.getBoundingClientRect();
+		var menuRect = subjectMenu.getBoundingClientRect();
+		submenu.style.maxHeight = (window.innerHeight - 2 * SCREEN_MARGIN) + 'px';
+		var width = submenu.offsetWidth;
+		var height = submenu.offsetHeight;
+		var fitsRight = menuRect.right + width <= window.innerWidth - SCREEN_MARGIN;
+		var top = Math.min(itemRect.top - MENU_GAP - 1, window.innerHeight - SCREEN_MARGIN - height);
+		submenu.style.left = (fitsRight ? menuRect.right - MENU_GAP : menuRect.left - width + MENU_GAP) + 'px';
+		submenu.style.top = Math.max(SCREEN_MARGIN, top) + 'px';
 	}
 
 	function closeSubjectMenu() {
@@ -236,6 +259,7 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 		subjectMenu.querySelectorAll('.subject-menu-category').forEach(function (li) {
 			li.classList.toggle('open', li === item);
 		});
+		placeSubmenu(item);
 	}
 
 	function chooseSubject(id) {
@@ -271,6 +295,11 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 		if (category) openCategory(category);
 	});
 
+	subjectMenu.addEventListener('scroll', function () {
+		var open = subjectMenu.querySelector('.subject-menu-category.open');
+		if (open) placeSubmenu(open);
+	});
+
 	subjectMenu.addEventListener('click', function (e) {
 		var btn = e.target.closest('button');
 		if (!btn) return;
@@ -289,7 +318,9 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 
 	window.addEventListener('resize', closeSubjectMenu);
 
-	formHost.addEventListener('scroll', closeSubjectMenu);
+	document.addEventListener('scroll', function (e) {
+		if (!subjectMenu.contains(e.target)) closeSubjectMenu();
+	}, true);
 
 	return {
 		renderEditorForm: renderEditorForm,
