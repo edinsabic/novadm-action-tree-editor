@@ -36,7 +36,7 @@ window.NovaDM = window.NovaDM || {};
 
 	/* ---------- Tree layout ---------- */
 
-	var layoutButtons = document.querySelectorAll('.toggle-btn');
+	var layoutButtons = document.querySelectorAll('.toggle-btn[data-layout]');
 
 	layoutButtons.forEach(function (btn) {
 		btn.addEventListener('click', function () {
@@ -59,7 +59,7 @@ window.NovaDM = window.NovaDM || {};
 	});
 
 	document.getElementById('zoom-reset-btn').addEventListener('click', function () {
-		var activeLayout = document.querySelector('.toggle-btn.active').dataset.layout;
+		var activeLayout = document.querySelector('.toggle-btn.active[data-layout]').dataset.layout;
 		Render.setZoom(activeLayout === 'traditional' ? TRADITIONAL_ZOOM : DIRECTORY_ZOOM);
 	});
 

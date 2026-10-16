@@ -88,14 +88,16 @@ NovaDM.Render = (function (Model, Util) {
 		return 'Delete node' + (n ? ' & ' + n + ' child' + (n > 1 ? 'ren' : '') : '');
 	}
 
+	function trashIconHtml() {
+		return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
+			' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+			'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+	}
+
 	function deleteButtonHtml(node) {
 		var title = escapeHtml(deleteLabel(node));
 		return '<button type="button" class="node-delete-btn" data-delete-node="' + escapeHtml(node.id) + '"' +
-			' title="' + title + '" aria-label="' + title + '">' +
-			'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
-			' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-			'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>' +
-			'</button>';
+			' title="' + title + '" aria-label="' + title + '">' + trashIconHtml() + '</button>';
 	}
 
 	/* ---------- The tree ---------- */
@@ -304,6 +306,7 @@ NovaDM.Render = (function (Model, Util) {
 		badgeHtml: badgeHtml,
 		valueChipsHtml: valueChipsHtml,
 		deleteLabel: deleteLabel,
+		trashIconHtml: trashIconHtml,
 		renderTree: renderTree,
 		recordChange: recordChange,
 		setLayout: setLayout,

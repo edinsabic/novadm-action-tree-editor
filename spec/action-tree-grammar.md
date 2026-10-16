@@ -153,6 +153,50 @@ could replace `VersionGraph.create()` later.
   (`Render.fitTraditionalView()`, between 50% and 100%). It refits on
   switching to it and on loading or importing a tree.
 
+## Predefined subjects and Generate tree
+
+`subjects.js` holds lists of renovation subjects grouped by category.
+The **Subject list** switch (for now at the top of the Generate tree
+panel) picks the list the editor uses; `DEFAULT_LIST` is the one it
+starts with. The subject menu and the checklist always show the list in
+use; switching clears the checklist's ticks. The choice is a setting,
+not part of the document: it is not saved in the file and not undone.
+
+- `'energyAgency'` (default) – the Danish Energy Agency's renovation
+  measures from sparenergi.dk ("Spar energi med boligens energimærke"),
+  translated to English: 6 categories, 24 subjects.
+- `'novadmPaper'` – the 32 renovation alternatives (Table 2) grouped
+  by the 7 subject types (Table 1) of Kamari et al. (2019), *Automation
+  in Construction* 104. Keys follow `examples/full-tree.json`, so most of
+  its subjects are recognised.
+
+A subject is stored the way the example files store one: `label` is the
+category key and `value` the subject key (e.g. `roof_and_attic =
+attic_insulation`, like `architectural_elements = exterior_walls`). The
+file format is unchanged.
+
+- **Editor panel** – for a Subject node, the Label and Value fields are
+  replaced by a cascading menu (category › subject). Its last entry,
+  "+ Custom subject…", shows the Label and Value fields again for free
+  text. A Subject node from the other list keeps its name, with a note
+  saying which list it is from. One that is in neither list (e.g. from
+  an older file) shows as a custom subject.
+- **Generate tree** (top right of the tree panel) – a checklist of all
+  subjects. Each subject names the shallowest renovation depth it belongs
+  to (`depth`: `minor`, `moderate`, `deep` or `whole`); depths are
+  cumulative, so choosing Moderate also allows the Minor subjects and
+  greys out the rest, as in PARADIS. Whole building allows everything.
+  Generate tree replaces the tree with an AND root node holding one AND
+  Subject node per checked subject. The root node keeps its id, profiles
+  and the version history are kept, and the new tree is an unsaved,
+  undoable change.
+
+The depth of each subject is a first guess, inferred from PARADIS's
+four levels (Minor: exterior walls, windows, doors, balcony, solar
+shading; Moderate: adds roof, floors, ceilings, interior walls and
+doors; Deep: adds HVAC, renewable energy, structure, sewage; Whole: the
+rest). Edit the `depth` fields in `subjects.js` to change it.
+
 ## File format (`.json`, format id `novadm-action-tree`)
 
 `parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a
