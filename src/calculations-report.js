@@ -1,14 +1,15 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * The Calculations tab's report on a sample of scenarios, drawn at random from the scenario space of the tree
- * on screen: the banner until the first sample, then a card per KPI (mean, spread, histogram, lowest and highest
- * scenario) and a sortable table of the sampled scenarios. It also formats the numbers the rest of the tab shows.
+ * The Calculations tab's report on the scenarios of the tree on screen, a random sample or all of them: the
+ * banner until the first sample, then a card per KPI (mean, spread, histogram, lowest and highest scenario)
+ * and a sortable table of the scenarios. It also formats the numbers the rest of the tab shows.
  */
 NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	'use strict';
 
-	var REPORT_ROWS = 100;
+	var PAGE_SIZE = 100;
+	var BY_NUMBER = '#';
 	var CHART_WIDTH = 300;
 	var CAPTION_HEIGHT = 20;
 	var PLOT_HEIGHT = 84;
@@ -32,15 +33,15 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	var onShowScenario = null;
 	var onClose = null;
 	var shownRow = null;
-	var sortBy = null;
+	var sortBy = { name: BY_NUMBER, dir: 1 };
+	var page = 0;
 
 	function isNumber(value) { return typeof value === 'number'; }
 
 	/* ---------- Numbers ---------- */
 
 	function formatNumber(n) {
-		var decimals = Math.abs(n) >= 1000 ? 0 : 2;
-		return n.toLocaleString('en-GB', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+		return n.toLocaleString('en-GB', { maximumFractionDigits: Math.abs(n) >= 1000 ? 0 : 2 });
 	}
 
 	function formatCount(n) {
@@ -187,7 +188,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 
 	function sortedRows() {
 		var order = results.map(function (r, i) { return i; });
-		if (!sortBy) return order;
+		if (sortBy.name === BY_NUMBER) return sortBy.dir === 1 ? order : order.reverse();
 		return order.sort(function (a, b) {
 			var x = results[a][sortBy.name];
 			var y = results[b][sortBy.name];
@@ -197,15 +198,34 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	}
 
 	function sortHeaderHtml(name) {
-		var mark = sortBy && sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
+		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
+		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
 		return '<th><button type="button" class="calc-sort-btn" data-calc-sort="' + escapeHtml(name) + '"' +
-			' title="Sort by ' + escapeHtml(name) + '">' + escapeHtml(name) + mark + '</button></th>';
+			' title="' + escapeHtml(title) + '">' + escapeHtml(name) + mark + '</button></th>';
+	}
+
+	function pagerHtml(count, pages) {
+		if (pages < 2) return '';
+		var first = page * PAGE_SIZE + 1;
+		var last = Math.min(count, first + PAGE_SIZE - 1);
+		return '<div class="calc-pager">' +
+			'<button class="btn-icon" type="button" data-calc-page="-1" aria-label="Previous page"' +
+			' title="Previous ' + PAGE_SIZE + ' scenarios"' + (page === 0 ? ' disabled' : '') + '>&lsaquo;</button>' +
+			'<span>Scenarios ' + formatCount(first) + '&ndash;' + formatCount(last) + ' of ' + formatCount(count) +
+			' &middot; page ' + (page + 1) + ' of ' + pages + '</span>' +
+			'<button class="btn-icon" type="button" data-calc-page="1" aria-label="Next page"' +
+			' title="Next ' + PAGE_SIZE + ' scenarios"' + (page === pages - 1 ? ' disabled' : '') + '>' +
+			'&rsaquo;</button>' +
+			'</div>';
 	}
 
 	function scenarioTableHtml(columns) {
 		var order = sortedRows();
-		var shown = order.slice(0, REPORT_ROWS);
-		var head = '<tr><th>#</th>' + columns.map(function (c) { return sortHeaderHtml(c.name); }).join('') +
+		var pages = Math.max(1, Math.ceil(order.length / PAGE_SIZE));
+		page = Math.min(page, pages - 1);
+		var shown = order.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+		var head = '<tr>' + sortHeaderHtml(BY_NUMBER) +
+			columns.map(function (c) { return sortHeaderHtml(c.name); }).join('') +
 			optionBoxes.map(function (b) {
 				return '<th class="calc-option-col">' + escapeHtml(b.node.label) + '</th>';
 			}).join('') + '</tr>';
@@ -223,14 +243,15 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 						(e ? escapeHtml(e.value || 'chosen') : '<span class="calc-na">&ndash;</span>') + '</td>';
 				}).join('') + '</tr>';
 		}).join('');
-		var footer = shown.length < order.length
-			? 'Showing ' + formatCount(shown.length) + ' of ' + formatCount(order.length) + ' scenarios' +
-				(sortBy ? ', sorted by ' + escapeHtml(sortBy.name) + '.' : ' in the order they were drawn.') +
-				' Sort by a KPI to see the lowest or highest ones.'
-			: 'All ' + formatCount(order.length) + ' scenarios' +
-				(sortBy ? ', sorted by ' + escapeHtml(sortBy.name) + '.' : ', in the order they were drawn.');
-		return '<div class="calc-scenarios-wrap"><table class="calc-table calc-scenarios">' +
+		var listedIn = sortBy.name !== BY_NUMBER ? 'sorted by ' + escapeHtml(sortBy.name)
+			: (sample.full ? 'in tree order' : 'in the order they were drawn') +
+				(sortBy.dir === 1 ? '' : ', last first');
+		var footer = 'All ' + formatCount(order.length) + ' scenarios, ' +
+			(pages > 1 ? formatCount(PAGE_SIZE) + ' per page, ' : '') + listedIn + '.';
+		return pagerHtml(order.length, pages) +
+			'<div class="calc-scenarios-wrap"><table class="calc-table calc-scenarios">' +
 			'<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>' +
+			pagerHtml(order.length, pages) +
 			'<p class="note">' + footer + '</p>';
 	}
 
@@ -239,21 +260,30 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	function bannerHtml() {
 		return '<div class="calc-report-text">' +
 			'<strong class="calc-report-title">Explore the scenario space</strong>' +
-			'<span>Sample it with the buttons above: <b>30 scenarios</b>, or your own number of scenarios.' +
-			' A report then opens here: each KPI&rsquo;s mean, spread and distribution, its lowest and highest' +
-			' scenario, and every sampled scenario, which you can open in the graph.</span>' +
+			'<span>Sample it with the buttons above: <b>30 scenarios</b>, the <b>full scenario space</b>, or your own' +
+			' number of scenarios. A report then opens here: each KPI&rsquo;s mean, spread and distribution, its' +
+			' lowest and highest scenario, and the scenarios themselves, which you can open in the graph.</span>' +
 			'</div>';
 	}
 
 	function reportHeadHtml() {
-		var meta = sample.scenarios.length
-			? formatCount(sample.size) + ' random scenarios out of ' + Render.scenarioSizeHtml(sample.total) +
+		var count = formatCount(sample.size);
+		var meta;
+		if (!sample.scenarios.length) {
+			meta = 'The tree is empty, so there is nothing to ' + (sample.full ? 'list' : 'sample') + '.';
+		} else if (sample.full) {
+			meta = 'All ' + formatCount(sample.total) + ' scenarios of the space &middot; profiles are not applied';
+		} else {
+			meta = (sample.tooMany
+				? 'The tree now has too many scenarios to list, so these are ' + count + ' random ones'
+				: count + ' random scenarios') + ' out of ' + Render.scenarioSizeHtml(sample.total) +
 				' &middot; ' + formatCount(sample.distinct) + ' different ones (' +
 				formatShare(sample.distinct, sample.total) + ' of the space) &middot; every scenario is equally' +
-				' likely; profiles are not applied'
-			: 'The tree is empty, so there is nothing to sample.';
+				' likely; profiles are not applied';
+		}
+		var title = sample.full ? 'Full scenario space' : 'Sample report';
 		return '<div class="calc-report-text">' +
-			'<strong class="calc-report-title">Sample report</strong>' +
+			'<strong class="calc-report-title">' + title + '</strong>' +
 			'<span>' + meta + '</span>' +
 			'</div>' +
 			'<button class="flyout-close calc-report-close" type="button" data-calc-report="close"' +
@@ -274,7 +304,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			'</section>' +
 			'<section class="calc-report-section">' +
 			'<div class="calc-section-head"><h3>Sampled scenarios</h3>' +
-			'<span class="note">Click a number to open the scenario in the graph; click a KPI to sort.</span>' +
+			'<span class="note">Click a number to show that scenario in the graph: every box switches to its' +
+				' option. Click # or a KPI to sort.</span>' +
 			'<span class="calc-scale-legend">lowest' +
 			'<span class="calc-scale-bar" aria-hidden="true"></span>highest</span>' +
 			'</div>' +
@@ -295,6 +326,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	 * `derived` list and its `analysis`, the `optionBoxes`, `onShowScenario(index)` and `onClose()`.
 	 */
 	function render(input) {
+		if (input.sample !== sample) page = 0;
 		sample = input.sample;
 		results = input.results;
 		statsByName = input.statsByName;
@@ -320,12 +352,25 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	reportHost.addEventListener('click', function (e) {
 		var show = e.target.closest('[data-calc-show]');
 		var sort = e.target.closest('[data-calc-sort]');
+		var turn = e.target.closest('[data-calc-page]');
 		if (show) {
-			markShownRow(Number(show.getAttribute('data-calc-show')));
-			onShowScenario(shownRow);
+			var index = Number(show.getAttribute('data-calc-show'));
+			var onPage = Math.floor(sortedRows().indexOf(index) / PAGE_SIZE);
+			if (onPage === page) {
+				markShownRow(index);
+			} else {
+				page = onPage;
+				shownRow = index;
+				renderReport();
+			}
+			onShowScenario(index);
 		} else if (sort) {
 			var name = sort.getAttribute('data-calc-sort');
-			sortBy = sortBy && sortBy.name === name ? { name: name, dir: -sortBy.dir } : { name: name, dir: 1 };
+			sortBy = sortBy.name === name ? { name: name, dir: -sortBy.dir } : { name: name, dir: 1 };
+			page = 0;
+			renderReport();
+		} else if (turn) {
+			page += Number(turn.getAttribute('data-calc-page'));
 			renderReport();
 		}
 	});

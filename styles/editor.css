@@ -212,7 +212,12 @@ main {
 	font-weight: 500;
 }
 
-.pill-btn:hover { color: var(--color-ink); }
+.pill-btn:hover:not(:disabled) { color: var(--color-ink); }
+
+.pill-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
 
 .pill-btn.is-open {
 	background-color: var(--color-bg);
@@ -1382,10 +1387,22 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	text-align: right;
 }
 
+.calc-sample-custom input:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
 .calc-sample-custom .pill-btn {
 	border: none;
 	border-left: 1px solid var(--color-border);
 	border-radius: 0;
+}
+
+.calc-shown-scenario {
+	margin-left: auto;
+	color: var(--color-accent);
+	font-size: 0.78rem;
+	font-weight: 600;
 }
 
 .calc-graph { overflow: auto; }
@@ -1837,6 +1854,17 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	border-radius: 2px;
 	background-image: linear-gradient(to right, var(--color-scale-low), var(--color-scale-mid),
 		var(--color-scale-high));
+}
+
+.calc-pager {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	margin: 8px 0;
+	color: var(--color-ink-muted);
+	font-size: 0.78rem;
+	font-variant-numeric: tabular-nums;
 }
 
 .calc-scenarios-wrap {

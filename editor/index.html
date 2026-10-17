@@ -194,8 +194,8 @@
 					<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
 					<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
 					<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
-						<input id="calc-sample-size" type="number" min="1" max="10000" step="1" value="1000"
-							aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 10,000)" />
+						<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
+							aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 3,000)" />
 						<button id="calc-sample-btn" class="pill-btn" type="button"
 							title="Sample this number of scenarios">scenarios</button>
 					</div>
@@ -228,6 +228,7 @@
 								title="Load the example. It also replaces the tree in the Action tree tab.">
 								Load example</button>
 						</div>
+						<span id="calc-shown-scenario" class="calc-shown-scenario" role="status" hidden></span>
 					</div>
 					<div id="calc-graph" class="viewport-content calc-graph"></div>
 				</div>

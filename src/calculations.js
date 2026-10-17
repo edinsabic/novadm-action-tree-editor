@@ -194,13 +194,28 @@ NovaDM.Calculations = (function () {
 		return refs;
 	}
 
-	function unknownName(refs, byName, isLabel, isAttribute) {
-		var unknown = refs.names.filter(function (n) { return !byName[n] && !isLabel[n]; })
-			.concat(refs.lookups.map(function (l) { return isLabel[l.label] ? l.attribute : l.label; })
-				.filter(function (n) { return !isLabel[n] && !isAttribute[n]; }))
-			.concat(refs.totals.filter(function (a) { return !isAttribute[a]; }))
-			.concat(refs.selected.filter(function (l) { return !isLabel[l]; }));
-		return unknown[0] || null;
+	function checkNames(refs, byName, isLabel, isAttribute) {
+		var unknown = [];
+		var missing = [];
+
+		function label(name) {
+			if (isLabel[name]) return;
+			if (byName[name] || isAttribute[name]) unknown.push(name);
+			else if (missing.indexOf(name) === -1) missing.push(name);
+		}
+
+		refs.names.forEach(function (n) {
+			if (!byName[n]) label(n);
+		});
+		refs.lookups.forEach(function (l) {
+			label(l.label);
+			if (!isLabel[l.attribute] && !isAttribute[l.attribute]) unknown.push(l.attribute);
+		});
+		refs.totals.forEach(function (a) {
+			if (!isAttribute[a]) unknown.push(a);
+		});
+		refs.selected.forEach(function (l) { label(l); });
+		return { unknown: unknown[0] || null, missing: missing };
 	}
 
 	function orderAndMarkCycles(items, byName) {
@@ -230,15 +245,15 @@ NovaDM.Calculations = (function () {
 	}
 
 	/**
-	 * Parses every derived attribute of `data` and checks its names against the labels and
-	 * attributes. Returns { items, byName, order, labels, attributes }; an item has { name, ast,
-	 * refs, inputs (derived names), error }, and `order` lists inputs before what uses them.
+	 * Parses every derived attribute of `data` and checks its names against the labels and attributes. Returns
+	 * { items, byName, order, labels, attributes }; an item has { name, ast, refs, inputs (derived names), missing
+	 * (the labels it uses that are not in the tree), error }, and `order` lists inputs before what uses them.
 	 */
 	function analyze(data, treeLabels) {
 		var values = data.values || {};
 		var derived = data.derived || [];
 		var labels = unique(treeLabels.concat(Object.keys(values)));
-		var attributes = [];
+		var attributes = unique(data.attributes || []);
 		Object.keys(values).forEach(function (label) {
 			attributes = unique(attributes.concat(Object.keys(values[label] || {})));
 		});
@@ -247,7 +262,7 @@ NovaDM.Calculations = (function () {
 
 		var byName = Object.create(null);
 		var items = derived.map(function (d) {
-			var item = { name: d.name, ast: null, refs: null, inputs: [], error: null };
+			var item = { name: d.name, ast: null, refs: null, inputs: [], missing: [], error: null };
 			byName[d.name] = item;
 			return item;
 		});
@@ -261,8 +276,9 @@ NovaDM.Calculations = (function () {
 			}
 			item.refs = references(item.ast);
 			item.inputs = unique(item.refs.names.filter(function (n) { return byName[n]; }));
-			var unknown = unknownName(item.refs, byName, isLabel, isAttribute);
-			if (unknown) item.error = 'Unknown name: ' + unknown;
+			var names = checkNames(item.refs, byName, isLabel, isAttribute);
+			item.missing = names.missing;
+			if (names.unknown) item.error = 'Unknown name: ' + names.unknown;
 		});
 
 		var order = orderAndMarkCycles(items, byName);
@@ -428,6 +444,33 @@ NovaDM.Calculations = (function () {
 		return scenarios;
 	}
 
+	function enumerateFrom(node) {
+		var below = [[]];
+		if (node.kind === 'XOR' && node.children.length > 0) {
+			below = [];
+			node.children.forEach(function (c) { below = below.concat(enumerateFrom(c)); });
+		} else {
+			node.children.forEach(function (c) {
+				var options = enumerateFrom(c);
+				var combined = [];
+				below.forEach(function (start) {
+					options.forEach(function (rest) { combined.push(start.concat(rest)); });
+				});
+				below = combined;
+			});
+		}
+		var scenarios = [];
+		(node.value.length ? node.value : ['']).forEach(function (value) {
+			var entry = { id: node.id, label: node.label, value: value };
+			below.forEach(function (rest) { scenarios.push([entry].concat(rest)); });
+		});
+		return scenarios;
+	}
+
+	function enumerate(node) {
+		return node ? enumerateFrom(node) : [];
+	}
+
 	/* ---------- Chosen scenario ---------- */
 
 	function chooseInto(node, choices, scenario) {
@@ -508,6 +551,7 @@ NovaDM.Calculations = (function () {
 		count: count,
 		seededRandom: seededRandom,
 		sample: sample,
+		enumerate: enumerate,
 		scenarioFor: scenarioFor,
 		choicesFor: choicesFor,
 		statistics: statistics,

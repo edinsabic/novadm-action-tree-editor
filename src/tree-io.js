@@ -4,9 +4,9 @@ window.NovaDM = window.NovaDM || {};
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export (via parser.js's TREE_FILE_FORMAT). A document is
  * the tree, the profiles and the version history (see parser.js and
- * history.js).
+ * history.js), plus the Calculations tab's data, which files don't hold yet.
  */
-NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser) {
+NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
 
 	var FORMAT = Parser.TREE_FILE_FORMAT;
@@ -31,28 +31,47 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser)
 		return Parser.ensureRoot(NOVADM_SAMPLE_TREE);
 	}
 
-	function newDocument(specs) {
+	function newDocument(specs, calculations) {
 		Model.replaceTree(specs);
 		Model.resetProfiles();
 		History.reset();
+		CalculationsTab.reset(calculations);
 		refreshAll();
 	}
 
-	/* ---------- Example and clear buttons ---------- */
-
-	document.getElementById('load-example-btn').addEventListener('click', function () {
-		if (!treeIsEmpty() && !confirm('Replace the current tree with the example tree?')) return;
+	function loadExample() {
 		var specs = sampleSpecs();
 		if (!specs) {
 			alert('sample-tree.js was not found or did not load – check that it sits next to index.html.');
 			return;
 		}
-		newDocument(specs);
+		newDocument(specs, CalculationsTab.exampleData());
+	}
+
+	/* ---------- Example and clear buttons ---------- */
+
+	document.getElementById('load-example-btn').addEventListener('click', function () {
+		if (!treeIsEmpty() && !confirm('Replace the current tree, and the numbers and calculated values in the' +
+			' Calculations tab, with the example?')) {
+			return;
+		}
+		loadExample();
+	});
+
+	document.getElementById('calc-load-example-btn').addEventListener('click', function () {
+		if (!confirm('Load the example? It replaces the tree in the Action tree tab too, along with the numbers' +
+			' and calculated values here. You can undo this.')) {
+			return;
+		}
+		loadExample();
 	});
 
 	document.getElementById('clear-tree-btn').addEventListener('click', function () {
-		if (!treeIsEmpty() && !confirm('Clear the whole tree?')) return;
-		newDocument([]);
+		if (!treeIsEmpty() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
+			' numbers, only Total cost and CO₂.')) {
+			return;
+		}
+		newDocument([], null);
 	});
 
 	/* ---------- Export ---------- */
@@ -111,11 +130,15 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser)
 			alert('Could not import "' + fileName + '":\n' + problem);
 			return;
 		}
-		if (!treeIsEmpty() && !confirm('Replace the current tree with "' + fileName + '"?')) return;
+		if (!treeIsEmpty() && !confirm('Replace the current tree with "' + fileName + '"?\n\nThe Calculations tab' +
+			' starts over too, with no numbers, only Total cost and CO₂, because files don\'t hold its data yet.')) {
+			return;
+		}
 
 		Model.replaceTree(doc.tree);
 		Model.applyProfileState(doc.profile, doc.history.snapshots.map(function (s) { return s.tree; }));
 		History.load(doc.history);
+		CalculationsTab.reset(null);
 		refreshAll();
 		if (doc.addedRoot) {
 			setTimeout(function () {
@@ -146,4 +169,5 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Parser)
 		sampleSpecs: sampleSpecs,
 		newDocument: newDocument
 	};
-})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.Parser);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,
+	NovaDM.Parser);

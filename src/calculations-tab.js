@@ -4,13 +4,15 @@ window.NovaDM = window.NovaDM || {};
  * The Calculations tab: a graph from the labelled nodes of the action tree on screen and their numbers
  * to the derived attributes and KPIs, with an option picker per node; an editor panel for the
  * selected box; and a sample of scenarios, reported by calculations-report.js, whose KPI means also
- * fill the Action tree tab's bottom bar. Its data (numbers and derived attributes, starting from
- * NOVADM_SAMPLE_ATTRIBUTES) lives in memory: undo covers it, the file does not yet.
+ * fill the Action tree tab's bottom bar. Its data (numbers and derived attributes: the example's
+ * NOVADM_SAMPLE_ATTRIBUTES, or Total cost and CO2 for a new document) lives in memory: undo covers it,
+ * the file does not yet.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
 	'use strict';
 
-	var MAX_SAMPLE_SIZE = 10000;
+	var MAX_SAMPLE_SIZE = 3000;
+	var SEED_RANGE = 4294967296;
 	var LABEL_WIDTH = 370;
 	var INDENT = 16;
 	var DERIVED_WIDTH = 220;
@@ -41,8 +43,13 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var sizeValue = document.getElementById('calc-space-size');
 	var zoomLabel = document.getElementById('calc-zoom-label');
 	var sampleSizeInput = document.getElementById('calc-sample-size');
+	var quickSampleBtn = document.querySelector('[data-calc-sample]');
+	var sampleAllBtn = document.getElementById('calc-sample-all-btn');
+	var sampleBtn = document.getElementById('calc-sample-btn');
+	var addDerivedBtn = document.getElementById('calc-add-derived-btn');
+	var shownLabel = document.getElementById('calc-shown-scenario');
 
-	var data = initialData();
+	var data = starterData();
 	var analysis = Calculations.analyze(data, []);
 	var evaluatedTreeKey = null;
 	var sample = null;
@@ -56,9 +63,21 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function isNumber(value) { return typeof value === 'number'; }
 
-	function initialData() {
-		var source = typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined' ? {} : Util.clone(NOVADM_SAMPLE_ATTRIBUTES);
-		return { values: source.values || {}, derived: source.derived || [] };
+	function starterData() {
+		return {
+			attributes: ['price', 'co2'],
+			values: {},
+			derived: [
+				{ name: 'total_cost', displayName: 'Total cost', formula: 'total(price)', kpi: true },
+				{ name: 'total_co2', displayName: 'CO₂', formula: 'total(co2)', kpi: true }
+			]
+		};
+	}
+
+	function exampleData() {
+		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
+		var example = Util.clone(NOVADM_SAMPLE_ATTRIBUTES);
+		return { attributes: example.attributes || [], values: example.values || {}, derived: example.derived || [] };
 	}
 
 	function findDerived(name) {
@@ -145,7 +164,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function dropStaleSelection() {
 		if (!selected) return;
-		var gone = selected.kind === 'node' ? !selectedNode() : !findDerived(selected.name);
+		var gone = !rootNode() || (selected.kind === 'node' ? !selectedNode() : !findDerived(selected.name));
 		if (gone) selected = null;
 	}
 
@@ -161,6 +180,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var distinct = Object.create(null);
 		scenarios.forEach(function (s) { distinct[scenarioKey(s)] = true; });
 		sample = {
+			full: false,
+			tooMany: false,
 			size: size,
 			seed: seed,
 			treeKey: treeKey(),
@@ -168,7 +189,33 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			distinct: Object.keys(distinct).length,
 			scenarios: scenarios
 		};
-		CalculationsReport.markShownRow(null);
+		markShown(null);
+	}
+
+	function listFullSpace(seed, sizeIfTooMany) {
+		var root = rootNode();
+		var total = Calculations.count(root);
+		if (total > MAX_SAMPLE_SIZE) {
+			takeSample(sizeIfTooMany, seed);
+			sample.tooMany = true;
+			return;
+		}
+		sample = {
+			full: true,
+			tooMany: false,
+			size: total || sizeIfTooMany,
+			seed: seed,
+			treeKey: treeKey(),
+			total: total,
+			distinct: total,
+			scenarios: Calculations.enumerate(root)
+		};
+		markShown(null);
+	}
+
+	function drawAgain() {
+		if (sample.full || sample.tooMany) listFullSpace(sample.seed, sample.size);
+		else takeSample(sample.size, sample.seed);
 	}
 
 	function numbersOf(name) {
@@ -177,7 +224,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function evaluateAll() {
 		var key = treeKey();
-		if (sample && sample.treeKey !== key) takeSample(sample.size, sample.seed);
+		if (sample && sample.treeKey !== key) drawAgain();
 		analysis = Calculations.analyze(data, treeLabels());
 		results = sample
 			? sample.scenarios.map(function (s) { return Calculations.evaluateScenario(analysis, data, s); })
@@ -198,7 +245,12 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function renderSize() {
-		sizeValue.innerHTML = Render.scenarioSizeHtml(Calculations.count(rootNode()));
+		var total = Calculations.count(rootNode());
+		sizeValue.innerHTML = Render.scenarioSizeHtml(total);
+		[quickSampleBtn, sampleAllBtn, sampleSizeInput, sampleBtn, addDerivedBtn].forEach(function (control) {
+			control.disabled = total === 0;
+		});
+		sampleAllBtn.title = fullSpaceTitle(total);
 	}
 
 	function dataChanged() {
@@ -209,7 +261,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		Render.recordChange();
 	}
 
-	/** Renders the whole tab; samples again (same size and seed) when the tree changed since the last sample. */
+	/** Renders the whole tab, drawing the scenarios again (same size and seed) after a tree change. */
 	function render() {
 		dropStaleSelection();
 		evaluateAll();
@@ -231,11 +283,19 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function getState() { return data; }
 
 	function setState(state) {
-		data = state ? Util.clone(state) : initialData();
+		data = state ? Util.clone(state) : starterData();
 		dropStaleSelection();
 		evaluateAll();
 		if (isVisible()) renderTab();
 		renderSummary();
+	}
+
+	function reset(state) {
+		sample = null;
+		choices = { options: {}, branches: {} };
+		selected = null;
+		markShown(null);
+		setState(state);
 	}
 
 	/* ---------- Graph layout ---------- */
@@ -273,6 +333,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return inputs;
 	}
 
+	function hasReferences(item) {
+		var refs = item.refs;
+		return !!refs && refs.names.length + refs.lookups.length + refs.totals.length + refs.selected.length > 0;
+	}
+
 	function derivedColumns(inputsByName) {
 		var columns = Object.create(null);
 		var visiting = Object.create(null);
@@ -282,7 +347,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			if (visiting[name]) return 0;
 			visiting[name] = true;
 			var inputs = inputsByName[name];
-			var column = inputs.length ? 1 : 0;
+			var column = inputs.length || hasReferences(analysis.byName[name]) ? 1 : 0;
 			inputs.forEach(function (input) {
 				if (input.key.indexOf('d:') === 0) column = Math.max(column, columnOf(input.key.slice(2)) + 1);
 			});
@@ -306,7 +371,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	/**
-	 * Lays out the graph: one box per labelled tree node in tree order, indented by depth, then the constants,
+	 * Lays out the graph: the constants, then one box per labelled tree node in tree order, indented by depth,
 	 * all in column 0; every other derived attribute one column right of its rightmost input, stacked from the
 	 * top in the order of its inputs. Returns nodes, edges and size.
 	 */
@@ -333,14 +398,14 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var inputsByName = Object.create(null);
 		analysis.items.forEach(function (item) { inputsByName[item.name] = inputsOf(item, boxes); });
 		var columns = derivedColumns(inputsByName);
-
-		analysis.items.forEach(function (item) {
-			maxColumn = Math.max(maxColumn, columns[item.name]);
-			if (columns[item.name] !== 0) return;
+		var constants = analysis.items.filter(function (item) { return columns[item.name] === 0; });
+		boxes.forEach(function (box) { box.y += constants.length * (DERIVED_HEIGHT + NODE_GAP); });
+		constants.forEach(function (item, i) {
 			addNode({ key: 'd:' + item.name, kind: 'derived', name: item.name, rows: [],
-				x: columnX(0), y: y, width: DERIVED_WIDTH, height: DERIVED_HEIGHT });
-			y += DERIVED_HEIGHT + NODE_GAP;
+				x: columnX(0), y: MARGIN + i * (DERIVED_HEIGHT + NODE_GAP), width: DERIVED_WIDTH,
+				height: DERIVED_HEIGHT });
 		});
+		analysis.items.forEach(function (item) { maxColumn = Math.max(maxColumn, columns[item.name]); });
 
 		for (var column = 1; column <= maxColumn; column++) {
 			analysis.items.filter(function (item) { return columns[item.name] === column; })
@@ -472,11 +537,36 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'</div>' + rows + '</div>';
 	}
 
-	function derivedNodeHtml(node, values, highlight) {
+	function numberedAttributes() {
+		var found = Object.create(null);
+		treeBoxes().forEach(function (box) {
+			boxRows(box.node).forEach(function (attribute) { found[attribute] = true; });
+		});
+		return found;
+	}
+
+	function formulaNote(item, numbered) {
+		var notes = [];
+		if (item.missing.length) {
+			notes.push('Not in the tree: ' + item.missing.join(', ') + '. ' +
+				(item.missing.length === 1 ? 'It counts' : 'They count') + ' as not chosen.');
+		}
+		var empty = (item.refs ? item.refs.totals : []).filter(function (a, i, list) {
+			return list.indexOf(a) === i && !numbered[a];
+		});
+		if (empty.length) {
+			notes.push('No node in the tree has a number for ' + empty.join(' or ') + ' yet, so the total is 0.' +
+				' Click a box in the graph to type its numbers.');
+		}
+		return notes.join(' ');
+	}
+
+	function derivedNodeHtml(node, values, highlight, numbered) {
 		var item = analysis.byName[node.name];
 		var derived = findDerived(node.name);
 		var cls = 'calc-node calc-derived-node' + stateClasses(node, highlight) + (derived.kpi ? ' kpi' : '');
-		var title = item.error || node.name + ' = ' + derived.formula;
+		var note = item.error ? '' : formulaNote(item, numbered);
+		var title = item.error || node.name + ' = ' + derived.formula + (note ? '\n' + note : '');
 		return '<div class="' + cls + '" data-calc-derived="' + escapeHtml(node.name) + '"' +
 			' style="' + boxStyle(node) + '" title="' + escapeHtml(title) + '">' +
 			'<div class="calc-node-head">' +
@@ -487,20 +577,23 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function renderGraph() {
-		var layout = layoutGraph();
-		var isEmpty = layout.nodes.length === 0;
+		var isEmpty = !rootNode();
 		graphHost.classList.toggle('empty-hint', isEmpty);
 		if (isEmpty) {
 			graphHost.innerHTML = 'No nodes yet. Build a tree in the Action tree tab, or click "Load example".';
 			return;
 		}
 
+		var layout = layoutGraph();
 		var scenario = currentScenario();
 		var entries = entriesById(scenario);
 		var values = Calculations.evaluateScenario(analysis, data, scenario);
 		var highlight = highlightFor(layout);
+		var numbered = numberedAttributes();
 		var boxes = layout.nodes.map(function (node) {
-			return node.kind === 'box' ? boxHtml(node, entries, highlight) : derivedNodeHtml(node, values, highlight);
+			return node.kind === 'box'
+				? boxHtml(node, entries, highlight)
+				: derivedNodeHtml(node, values, highlight, numbered);
 		});
 
 		graphHost.innerHTML =
@@ -540,7 +633,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		}
 		renderGraph();
 		renderEditor();
-		CalculationsReport.markShownRow(null);
+		markShown(null);
 	}
 
 	function setZoom(percent) {
@@ -597,6 +690,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 					' data-typing-key="' + escapeHtml('formula:' + derived.name) + '">' + escapeHtml(derived.formula) +
 					'</textarea>' +
 				'<div id="calc-formula-error" class="calc-error-text" role="alert" hidden></div>' +
+				'<div id="calc-formula-note" class="note" hidden></div>' +
 			'</div>' +
 			'<div class="field">' +
 				'<label>Value in this scenario</label>' +
@@ -654,8 +748,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var errorEl = document.getElementById('calc-formula-error');
 		if (!errorEl || !selected) return;
 		var item = analysis.byName[selected.name];
+		var noteEl = document.getElementById('calc-formula-note');
 		errorEl.textContent = item && item.error ? item.error : '';
 		errorEl.hidden = !errorEl.textContent;
+		noteEl.textContent = item && !item.error ? formulaNote(item, numberedAttributes()) : '';
+		noteEl.hidden = !noteEl.textContent;
 		document.getElementById('calc-editor-value').innerHTML = valueHtml(currentResults()[selected.name]);
 	}
 
@@ -727,11 +824,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		revealSelected();
 	}
 
-	function addAttribute(label) {
+	function addAttribute() {
 		var name = askName('Name of the new attribute (e.g. lifetime):', 'attribute');
 		if (!name) return;
-		var byAttribute = own(data.values, label) ? data.values[label] : (data.values[label] = {});
-		byAttribute[name] = {};
+		data.attributes.push(name);
 		dataChanged();
 		renderEditor();
 	}
@@ -771,7 +867,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		if (!btn || !selected) return;
 		var node = selectedNode();
 		if (btn.getAttribute('data-calc-action') === 'delete-derived') deleteDerived(selected.name);
-		else if (node) addAttribute(node.label);
+		else if (node) addAttribute();
 	});
 
 	/* ---------- Report ---------- */
@@ -789,7 +885,14 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		});
 	}
 
+	function markShown(index) {
+		CalculationsReport.markShownRow(index);
+		shownLabel.textContent = index === null ? '' : 'Scenario #' + (index + 1) + ' from the report is on screen';
+		shownLabel.hidden = index === null;
+	}
+
 	function showScenario(index) {
+		markShown(index);
 		choices = Calculations.choicesFor(rootNode(), sample.scenarios[index]);
 		renderGraph();
 		renderEditor();
@@ -798,7 +901,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function clearSample() {
 		sample = null;
-		CalculationsReport.markShownRow(null);
+		markShown(null);
 		evaluateAll();
 		renderReport();
 		renderSummary();
@@ -808,7 +911,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function summaryTitle(d, stats) {
 		if (stats) {
-			return d.name + ': mean of a sample of ' + formatCount(sample.size) + ' scenarios (profiles not applied).' +
+			var scenarios = sample.full
+				? 'all ' + formatCount(sample.total)
+				: 'a sample of ' + formatCount(sample.size);
+			return d.name + ': mean of ' + scenarios + ' scenarios (profiles not applied).' +
 				' Min ' + formatNumber(stats.min) + ', max ' + formatNumber(stats.max) + '.';
 		}
 		if (sample && sample.scenarios.length) {
@@ -827,7 +933,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		}
 		kpiBar.innerHTML = kpis.map(function (d) {
 			var stats = sample ? statsByName[d.name] : null;
-			var value = stats ? '&asymp; ' + escapeHtml(formatNumber(stats.mean)) : '&ndash;';
+			var mean = stats ? escapeHtml(formatNumber(stats.mean)) : '';
+			var value = !stats ? '&ndash;' : sample.full ? mean : '&asymp; ' + mean;
 			return '<span class="metric' + (stats ? '' : ' muted') + '"' +
 				' title="' + escapeHtml(summaryTitle(d, stats)) + '">' +
 				'<span class="metric-label">' + escapeHtml(d.displayName || d.name) + '</span>' +
@@ -837,34 +944,84 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	/* ---------- Buttons ---------- */
 
-	function sampleNow(size) {
-		takeSample(size, Math.floor(Math.random() * 4294967296));
+	function sizeText(size) {
+		return Render.scenarioSizeHtml(size).replace('&gt;', '>').replace('<sup>', '^').replace('</sup>', '');
+	}
+
+	function fullSpaceTitle(total) {
+		if (total === 0) return 'The tree is empty, so there is nothing to list';
+		if (total > MAX_SAMPLE_SIZE) {
+			return 'The tree has ' + sizeText(total) + ' scenarios, too many to list (at most ' +
+				formatCount(MAX_SAMPLE_SIZE) + ')';
+		}
+		return 'List all ' + formatCount(total) + ' scenarios of the tree';
+	}
+
+	function newSeed() { return Math.floor(Math.random() * SEED_RANGE); }
+
+	function showNewSample() {
 		evaluateAll();
 		renderReport();
 		renderSummary();
 		reportHead.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
+	function sampleNow(size) {
+		var total = Calculations.count(rootNode());
+		if (size > total) {
+			alert('The scenario space has only ' + formatCount(total) + ' scenarios, fewer than the ' +
+				formatCount(size) + ' you asked for, so the report lists all of them.');
+			listFullSpace(newSeed(), total);
+		} else {
+			takeSample(size, newSeed());
+		}
+		showNewSample();
+	}
+
+	function typedSize() {
+		return Number(sampleSizeInput.value.replace(/[,\s]/g, ''));
+	}
+
 	function sampleCustom() {
-		var size = Number(sampleSizeInput.value);
+		var size = typedSize();
 		if (!(size >= 1 && size <= MAX_SAMPLE_SIZE && Math.floor(size) === size)) {
 			alert('Enter a whole number of scenarios from 1 to ' + formatCount(MAX_SAMPLE_SIZE) + '.');
 			return;
 		}
+		sampleSizeInput.value = formatCount(Math.min(size, Calculations.count(rootNode())));
 		sampleNow(size);
 	}
 
-	document.querySelector('[data-calc-sample]').addEventListener('click', function (e) {
-		sampleNow(Number(e.currentTarget.getAttribute('data-calc-sample')));
+	function sampleFullSpace() {
+		var total = Calculations.count(rootNode());
+		if (total > MAX_SAMPLE_SIZE) {
+			alert('The scenario space has ' + sizeText(total) + ' scenarios, too many to list (at most ' +
+				formatCount(MAX_SAMPLE_SIZE) + '). Sample up to ' + formatCount(MAX_SAMPLE_SIZE) +
+				' of them instead, with your own number of scenarios.');
+			return;
+		}
+		listFullSpace(newSeed(), total);
+		showNewSample();
+	}
+
+	quickSampleBtn.addEventListener('click', function () {
+		sampleNow(Number(quickSampleBtn.getAttribute('data-calc-sample')));
 	});
 
-	document.getElementById('calc-sample-btn').addEventListener('click', sampleCustom);
+	sampleAllBtn.addEventListener('click', sampleFullSpace);
+
+	sampleBtn.addEventListener('click', sampleCustom);
 
 	sampleSizeInput.addEventListener('keydown', function (e) {
 		if (e.key === 'Enter') sampleCustom();
 	});
 
-	document.getElementById('calc-add-derived-btn').addEventListener('click', addDerived);
+	sampleSizeInput.addEventListener('change', function () {
+		var size = typedSize();
+		if (size >= 1 && Math.floor(size) === size) sampleSizeInput.value = formatCount(size);
+	});
+
+	addDerivedBtn.addEventListener('click', addDerived);
 
 	document.getElementById('calc-zoom-in-btn').addEventListener('click', function () {
 		setZoom(zoomPercent + ZOOM_STEP);
@@ -880,6 +1037,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		render: render,
 		treeChanged: treeChanged,
 		getState: getState,
-		setState: setState
+		setState: setState,
+		reset: reset,
+		exampleData: exampleData
 	};
 })(NovaDM.Model, NovaDM.Calculations, NovaDM.Render, NovaDM.CalculationsReport, NovaDM.Util);
