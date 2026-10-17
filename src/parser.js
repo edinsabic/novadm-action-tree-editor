@@ -168,7 +168,7 @@ NovaDM.Parser = (function (Model) {
 	function singleTreeDocument(tree) {
 		var rooted = ensureRoot(tree);
 		fillMissingIds([rooted], null);
-		return { tree: rooted, profile: null, history: emptyHistory(), addedRoot: rooted !== tree };
+		return { tree: rooted, profile: null, history: emptyHistory(), source: '', addedRoot: rooted !== tree };
 	}
 
 	var TREE_FILE_FORMAT = {
@@ -183,7 +183,7 @@ NovaDM.Parser = (function (Model) {
 		defaultName: 'novadm-action-tree',
 
 		/**
-		 * @param {{tree: Array, profile: Object, history: Object}} doc
+		 * @param {{tree: Array, profile: Object, history: Object, source: string}} doc
 		 * @returns {string} the file's text
 		 */
 		serialize: function (doc) {
@@ -202,18 +202,17 @@ NovaDM.Parser = (function (Model) {
 			});
 			if (!snapshots.some(function (s) { return s.id === head; })) snapshots.unshift(headSnapshot(''));
 
-			return formatJson({
-				format: TREE_FILE_FORMAT.id,
-				version: TREE_FILE_FORMAT.version,
-				versionControl: { head: head, edges: history.edges },
-				profile: doc.profile || { active: null, current: {}, currentValues: {}, saved: [] },
-				actionTree: snapshots
-			}) + '\n';
+			var file = { format: TREE_FILE_FORMAT.id, version: TREE_FILE_FORMAT.version };
+			file.source = doc.source || '';
+			file.versionControl = { head: head, edges: history.edges };
+			file.profile = doc.profile || { active: null, current: {}, currentValues: {}, saved: [] };
+			file.actionTree = snapshots;
+			return formatJson(file) + '\n';
 		},
 
 		/**
 		 * @param {string} text the file's text
-		 * @returns {{tree: Array, profile: Object|null, history: Object, addedRoot: boolean}}
+		 * @returns {{tree: Array, profile: Object|null, history: Object, source: string, addedRoot: boolean}}
 		 * Throws an Error with a readable message if this is not a NovaDM file.
 		 */
 		parse: function (text) {
@@ -249,6 +248,7 @@ NovaDM.Parser = (function (Model) {
 				tree: headSnapshot.tree,
 				profile: profile,
 				history: { head: head, edges: versionControl.edges, snapshots: snapshots },
+				source: typeof data.source === 'string' ? data.source : '',
 				addedRoot: headSnapshot.tree !== findSnapshot(rawSnapshots, head).tree
 			};
 		}

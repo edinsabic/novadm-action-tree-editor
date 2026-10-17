@@ -204,7 +204,7 @@ rest). Edit the `depth` fields in `subjects.js` to change it.
 `parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a
 document looks on disk. The rest of the editor works with "specs" (a
 plain array of `{ id, kind, nodeClass, label, value, children }` objects,
-`id` optional) and a small document wrapper: `{ tree, profile, history }`.
+`id` optional) and a small document wrapper: `{ tree, profile, history, source }`.
 
 The current file (version 5) has three sections, always in this order (blank lines
 between them are valid JSON and are written on purpose):
@@ -213,6 +213,7 @@ between them are valid JSON and are written on purpose):
 {
 	"format": "novadm-action-tree",
 	"version": 5,
+	"source": "",
 
 	"versionControl": { "head": "Add scaffolding", "edges": [
 		{ "from": "Initial version", "to": "Add scaffolding", "comment": "..." } ] },
@@ -227,6 +228,15 @@ between them are valid JSON and are written on purpose):
 }
 ```
 
+- **`source`** – one line of text right after `version`, saying where
+  the tree comes from (the K45 files credit COWI and the PROBONO
+  project). Every export writes it, as `""` when there is none, so users
+  can fill it in by hand. The Action tree tab shows a non-empty one under
+  the tree. It belongs to the document, so it survives edits, undo/redo
+  and export; Load example tree takes `NOVADM_SAMPLE_SOURCE` from
+  `sample-tree.js`, and Clear tree empties it. It needs no new version:
+  a version 5 file without it still imports (as `""`), and an editor
+  that doesn't know the field ignores it.
 - **`actionTree`** – the snapshots: a list of `{ id, created, tree }`. A
   snapshot id is free text (git-style, e.g. "Add scaffolding"); `created`
   is an optional `YYYY-MM-DD` date (older files have none). The editor
@@ -308,7 +318,10 @@ All `.json` examples are format version 5.
 - `examples/k45-case.json` is the K45 case: nine Subjects (roof,
   skylight, roof_cladding, window_frame, brick_facade, ground_floor,
   original_floor, stripped_terrain, layout) with XOR Features, one
-  version, scenario space size 417,792.
+  version, scenario space size 417,792. It and `k45-full-case.json` (all
+  K45 versions) carry a `source` line: "This renovation design concept
+  was developed by COWI as part of the Horizon 2020 research project
+  PROBONO (No. 101037075) funded by the European Union."
 
 These files aren't unified – known and deliberately deferred, not an
 oversight.

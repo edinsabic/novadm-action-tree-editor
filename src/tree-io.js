@@ -31,9 +31,14 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return Parser.ensureRoot(NOVADM_SAMPLE_TREE);
 	}
 
-	function newDocument(specs, calculations) {
+	function sampleSource() {
+		return typeof NOVADM_SAMPLE_SOURCE === 'undefined' ? '' : NOVADM_SAMPLE_SOURCE;
+	}
+
+	function newDocument(specs, calculations, source) {
 		Model.replaceTree(specs);
 		Model.resetProfiles();
+		Model.setSource(source);
 		History.reset();
 		CalculationsTab.reset(calculations);
 		refreshAll();
@@ -45,7 +50,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			alert('sample-tree.js was not found or did not load – check that it sits next to index.html.');
 			return;
 		}
-		newDocument(specs, CalculationsTab.exampleData());
+		newDocument(specs, CalculationsTab.exampleData(), sampleSource());
 	}
 
 	/* ---------- Example and clear buttons ---------- */
@@ -71,7 +76,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			' numbers, only Total cost and CO₂.')) {
 			return;
 		}
-		newDocument([], null);
+		newDocument([], null, '');
 	});
 
 	/* ---------- Export ---------- */
@@ -107,7 +112,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		var text = FORMAT.serialize({
 			tree: tree,
 			profile: Model.getProfileState(fileTrees),
-			history: history
+			history: history,
+			source: Model.getSource()
 		});
 		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
 	});
@@ -138,6 +144,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		Model.replaceTree(doc.tree);
 		Model.applyProfileState(doc.profile, doc.history.snapshots.map(function (s) { return s.tree; }));
 		History.load(doc.history);
+		Model.setSource(doc.source);
 		CalculationsTab.reset(null);
 		refreshAll();
 		if (doc.addedRoot) {
@@ -167,6 +174,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	return {
 		sampleSpecs: sampleSpecs,
+		sampleSource: sampleSource,
 		newDocument: newDocument
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,

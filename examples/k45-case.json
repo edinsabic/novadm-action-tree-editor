@@ -1,6 +1,7 @@
 {
 	"format": "novadm-action-tree",
 	"version": 5,
+	"source": "This renovation design concept was developed by COWI as part of the Horizon 2020 research project PROBONO (No. 101037075) funded by the European Union.",
 
 	"versionControl": {
 		"head": "Initial version",

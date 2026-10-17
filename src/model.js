@@ -22,6 +22,7 @@ NovaDM.Model = (function (Util) {
 	var valueConstraints = {};
 	var profiles = [];
 	var activeProfileName = null;
+	var source = '';
 
 	/* ---------- Ids ---------- */
 
@@ -254,6 +255,10 @@ NovaDM.Model = (function (Util) {
 		resetNodeConstraints();
 	}
 
+	function getSource() { return source; }
+
+	function setSource(text) { source = text || ''; }
+
 	function getProfileState(trees) {
 		var state = {
 			active: activeProfileName,
@@ -402,6 +407,8 @@ NovaDM.Model = (function (Util) {
 		deleteProfile: deleteProfile,
 		loadProfile: loadProfile,
 		resetProfiles: resetProfiles,
+		getSource: getSource,
+		setSource: setSource,
 		getProfileState: getProfileState,
 		applyProfileState: applyProfileState,
 		scenarioSpaceSize: scenarioSpaceSize

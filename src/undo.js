@@ -3,7 +3,7 @@ window.NovaDM = window.NovaDM || {};
 /**
  * Undo/redo for the whole document: the tree, the profiles, the version
  * history (so saving, opening, restoring and merging versions are undoable
- * too) and the Calculations tab's data. Every render calls record();
+ * too), the file's source line and the Calculations tab's data. Every render calls record();
  * when the document differs from the last recorded state, the previous
  * state becomes one undo step. Typing in one editor field counts as a
  * single step until focus moves elsewhere.
@@ -28,7 +28,8 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 			tree: Model.treeSpecs(),
 			profile: Model.getProfileState(),
 			history: History.getState(),
-			calculations: CalculationsTab.getState()
+			calculations: CalculationsTab.getState(),
+			source: Model.getSource()
 		});
 	}
 
@@ -88,6 +89,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);
 			Model.applyProfileState(doc.profile, versionTrees);
 			History.load(doc.history);
+			Model.setSource(doc.source);
 			CalculationsTab.setState(doc.calculations);
 			Render.renderTree();
 			EditorForm.renderEditorForm();

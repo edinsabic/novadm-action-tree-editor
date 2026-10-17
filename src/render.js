@@ -19,6 +19,7 @@ NovaDM.Render = (function (Model, Util) {
 	var exportBtn = document.getElementById('export-tree-btn');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
 	var constraintWarningEl = document.getElementById('constraint-warning');
+	var sourceEl = document.getElementById('tree-source');
 	var zoomLabel = document.getElementById('zoom-label');
 
 	var currentLayout = 'directory';
@@ -134,6 +135,8 @@ NovaDM.Render = (function (Model, Util) {
 		else if (currentLayout === 'traditional') treeContent.innerHTML = traditionalHtml(nodes);
 		else treeContent.innerHTML = '<ul class="tree-list">' + nodes.map(directoryNodeHtml).join('') + '</ul>';
 
+		sourceEl.textContent = Model.getSource();
+		sourceEl.hidden = !Model.getSource();
 		highlightSelected();
 		if (NovaDM.CalculationsTab) NovaDM.CalculationsTab.treeChanged();
 		recordChange();
