@@ -237,7 +237,12 @@ The tab works on `{ attributes, units, values, derived }`:
   separate numbers. Numbers of a label that is not in the tree are kept
   but not drawn, so undo or adding the node again brings them back.
   Renaming a label or an option detaches its numbers; they come back if
-  it is renamed back.
+  it is renamed back. A plain number counts for every option, so once a
+  node with a plain number gets options, every row shows it. Typing in
+  one of those rows turns it into one number per option, and the other
+  options keep the plain number. A node without options that shares its
+  label with a node that has numbers per option stores its number under
+  the option `''`, so neither node loses its numbers.
 - `derived` – the calculated values, `{ name, formula, displayName?,
   unit?, kpi? }`. `displayName` is the name in the Action tree tab's
   bottom bar, and `kpi: true` makes it a KPI.
@@ -258,7 +263,8 @@ Where the data comes from:
 - A new document starts the tab over: no sample, no option picks and
   nothing selected. Loading the example, clearing the tree and importing
   a file replace the Calculations data in the same undo step as the
-  tree.
+  tree. They ask first, unless the tree is empty and the Calculations
+  data is still the starter data, so there is nothing to lose.
 
 ### Formula language
 
@@ -276,9 +282,10 @@ primary = number | text | name [ "." name ]
   the option chosen for it in the scenario. In arithmetic an option is
   read as a number (`"7.5%"` -> 0.075, `"14"` -> 14). Text is written in
   single quotes: `roof_replacement = 'replace'`. Keywords and function
-  names are case-insensitive. Names are case-sensitive and use letters,
-  digits and `_`, don't start with a digit and aren't keywords, so a
-  name such as "U-value" is refused: its `-` would mean minus.
+  names are case-insensitive. Names are case-sensitive and use letters
+  (any alphabet, so `vægge` and `tag_ø` work), digits and `_`, don't
+  start with a digit and aren't keywords, so a name such as "U-value" is
+  refused: its `-` would mean minus.
 - `label.attribute` is the label's number for the chosen option, or its
   plain number. `total(attribute)` adds up the attribute over every node
   in the scenario that has a number for its chosen option.
@@ -349,16 +356,22 @@ the Action tree tab (`Render.renderTree()` calls
 - **A box**: the label and a table with one row per option ("when
   chosen" for a node without options) and one column per attribute,
   headed e.g. "price (DKK)"; the row of the option on screen is
-  highlighted. The number boxes show a comma between thousands
-  ("52,000"), added when the box loses focus. Decimals are kept as
-  typed, an empty box means no number, and text that isn't a number is
-  ignored and put back. Under the table come the **Units** list (one
+  highlighted. A number box takes a decimal comma or a decimal point
+  ("1,5" and "1.5" are both 1.5). A separator that appears more than
+  once, or comes before the other kind, separates thousands: "1.234,5"
+  and "1,234.5" are both 1234.5, and "1.000.000" is a million. A single
+  "1,000" is therefore 1. When the box loses focus it shows the number
+  with a space between thousands and a decimal point ("1 234.5"), so
+  editing it again can't be misread. An empty box means no number, and
+  text that isn't a number is ignored and put back. Under the table come the **Units** list (one
   drop-down per attribute) and "+ Attribute", which adds an attribute at
   the end of the list.
 - **A calculated value**: its name, a KPI box, the formula box
   (evaluated again on every keystroke; an error shows in red below it,
   the notes in grey), its **Unit**, its value in the scenario on screen
-  and Delete. "+ Calculated value" in the toolbar adds one.
+  and Delete. Before deleting, the confirm names the calculated values
+  whose formulas use it, as those then read its name as a label that
+  isn't in the tree. "+ Calculated value" in the toolbar adds one.
 - The panel is kept deliberately simple: there is no help on the formula
   language in it yet.
 
@@ -390,6 +403,8 @@ the Action tree tab (`Render.renderTree()` calls
 The control row reads "Sample", then **30 scenarios**, **Full scenario
 space**, and your own number of scenarios: a box that shows a comma
 between thousands ("1,000"), then its "scenarios" button or Enter. The
+number is a count, so the box ignores commas, points and spaces
+("1.000" is also a thousand). The
 **scenario space size** next to the title is counted without profiles,
 as the sample is (`Calculations.count`), so with a profile active it can
 differ from the Action tree tab's. On an empty tree every sample control
@@ -422,7 +437,10 @@ and "+ Calculated value" is disabled.
   numbers only move because of the change, and undoing it gives them
   back. A full listing is listed again; if the tree now has more than
   3,000 scenarios, it becomes a random sample of the same size, and the
-  report says so.
+  report says so. While the tab is hidden, a tree change only updates
+  the size and the bottom bar; the sample is drawn again when the tab
+  opens, so typing in the Action tree tab stays fast with a large
+  sample.
 - Undo and redo keep the sample; a new document drops it.
 
 ### Report
@@ -445,7 +463,8 @@ and "+ Calculated value" is disabled.
   a choice, 100 rows per page, with ‹ and › above and below ("Scenarios
   101–200 of 2,560 · page 2 of 26"). It sorts by `#` (the default; click
   it again for the last first) or by a KPI; sorting and a new sample go
-  back to page 1. KPI cells are coloured from green (lowest) to red
+  back to page 1. When the sorted KPI leaves the table (no longer a KPI,
+  or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) to red
   (highest), per column.
 - **Opening a scenario**: clicking a `#`, or a card's lowest or highest
   button (which first turns to the right page), sets every drop-down in

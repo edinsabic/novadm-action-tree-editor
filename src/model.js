@@ -2,9 +2,9 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM action-tree data model: the node shape, tree queries and mutations,
- * always/never constraints, profiles and the scenario space size. No DOM
- * references live here: render.js and the interaction modules read and
- * write this state and redraw.
+ * always/never constraints, profiles, the file's source line and the
+ * scenario space size. No DOM references live here: render.js and the
+ * interaction modules read and write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
  */
 NovaDM.Model = (function (Util) {

@@ -1,12 +1,13 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Engine of the Calculations tab: the formula language of derived
- * attributes (parse, references, evaluate one scenario), scenario counts,
- * uniform sampling and statistics. No DOM.
+ * Engine of the Calculations tab: the formula language of calculated
+ * values (parse, references, evaluate one scenario), scenario counts,
+ * uniform sampling, listing every scenario, the scenario picked by hand,
+ * and statistics. No DOM.
  * Language and sampling: ../spec/action-tree-grammar.md
  */
-NovaDM.Calculations = (function () {
+NovaDM.Calculations = (function (Util) {
 	'use strict';
 
 	var KEYWORDS = ['if', 'then', 'else', 'total', 'selected'];
@@ -18,7 +19,7 @@ NovaDM.Calculations = (function () {
 	var TOKEN_PATTERNS = [
 		{ type: 'space', re: /^\s+/ },
 		{ type: 'number', re: /^\d+(\.\d+)?/ },
-		{ type: 'name', re: /^[A-Za-z_]\w*/ },
+		{ type: 'name', re: /^[\p{L}_][\p{L}\d_]*/u },
 		{ type: 'text', re: /^'[^']*'/ },
 		{ type: 'symbol', re: /^[-+*\/()=<>.]/ }
 	];
@@ -30,9 +31,7 @@ NovaDM.Calculations = (function () {
 		'/': function (a, b) { return b === 0 ? null : a / b; }
 	};
 
-	function own(obj, key) {
-		return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
-	}
+	var own = Util.own;
 
 	function unique(list) {
 		return list.filter(function (item, i) { return list.indexOf(item) === i; });
@@ -45,7 +44,7 @@ NovaDM.Calculations = (function () {
 	}
 
 	function isName(text) {
-		return /^[A-Za-z_]\w*$/.test(text) && KEYWORDS.indexOf(text.toLowerCase()) === -1;
+		return /^[\p{L}_][\p{L}\d_]*$/u.test(text) && KEYWORDS.indexOf(text.toLowerCase()) === -1;
 	}
 
 	/* ---------- Tokens ---------- */
@@ -491,9 +490,14 @@ NovaDM.Calculations = (function () {
 		return scenario;
 	}
 
+	function entriesById(scenario) {
+		var entries = Object.create(null);
+		scenario.forEach(function (e) { entries[e.id] = e; });
+		return entries;
+	}
+
 	function choicesFor(node, scenario) {
-		var byId = Object.create(null);
-		scenario.forEach(function (e) { byId[e.id] = e; });
+		var byId = entriesById(scenario);
 		var choices = { options: {}, branches: {} };
 
 		function visit(n) {
@@ -509,6 +513,10 @@ NovaDM.Calculations = (function () {
 	}
 
 	/* ---------- Statistics ---------- */
+
+	function numbersOf(results, name) {
+		return results.map(function (r) { return r[name]; }).filter(function (v) { return typeof v === 'number'; });
+	}
 
 	function statistics(numbers) {
 		if (numbers.length === 0) return null;
@@ -542,8 +550,6 @@ NovaDM.Calculations = (function () {
 
 	return {
 		isName: isName,
-		parse: parse,
-		references: references,
 		analyze: analyze,
 		numberFor: numberFor,
 		evaluateScenario: evaluateScenario,
@@ -553,8 +559,10 @@ NovaDM.Calculations = (function () {
 		sample: sample,
 		enumerate: enumerate,
 		scenarioFor: scenarioFor,
+		entriesById: entriesById,
 		choicesFor: choicesFor,
+		numbersOf: numbersOf,
 		statistics: statistics,
 		histogram: histogram
 	};
-})();
+})(NovaDM.Util);

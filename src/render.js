@@ -113,11 +113,15 @@ NovaDM.Render = (function (Model, Util) {
 			' to create the root node, or click "Load example tree" / "Import tree…".</div>';
 	}
 
-	function scenarioSizeHtml(size) {
+	function scenarioSizeText(size) {
 		if (size < SCIENTIFIC_FROM) return size.toLocaleString('en-GB');
-		if (!isFinite(size)) return '&gt; 10<sup>308</sup>';
+		if (!isFinite(size)) return '> 10^308';
 		var parts = size.toExponential(2).split('e');
-		return parts[0] + ' × 10<sup>' + Number(parts[1]) + '</sup>';
+		return parts[0] + ' × 10^' + Number(parts[1]);
+	}
+
+	function scenarioSizeHtml(size) {
+		return Util.escapeHtml(scenarioSizeText(size)).replace(/\^(\d+)$/, '<sup>$1</sup>');
 	}
 
 	function renderTree() {
@@ -311,6 +315,7 @@ NovaDM.Render = (function (Model, Util) {
 		valueChipsHtml: valueChipsHtml,
 		deleteLabel: deleteLabel,
 		trashIconHtml: trashIconHtml,
+		scenarioSizeText: scenarioSizeText,
 		scenarioSizeHtml: scenarioSizeHtml,
 		renderTree: renderTree,
 		recordChange: recordChange,

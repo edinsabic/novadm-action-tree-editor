@@ -15,7 +15,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	var importBtn = document.getElementById('import-tree-btn');
 	var importInput = document.getElementById('import-file-input');
 
-	function treeIsEmpty() { return Model.root.children.length === 0; }
+	function nothingToLose() { return Model.root.children.length === 0 && CalculationsTab.isUntouched(); }
 
 	function refreshAll() {
 		Render.renderTree();
@@ -35,11 +35,16 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return typeof NOVADM_SAMPLE_SOURCE === 'undefined' ? '' : NOVADM_SAMPLE_SOURCE;
 	}
 
-	function newDocument(specs, calculations, source) {
+	function newDocument(specs, calculations, source, history, profile) {
 		Model.replaceTree(specs);
-		Model.resetProfiles();
+		if (history) {
+			Model.applyProfileState(profile, history.snapshots.map(function (s) { return s.tree; }));
+			History.load(history);
+		} else {
+			Model.resetProfiles();
+			History.reset();
+		}
 		Model.setSource(source);
-		History.reset();
 		CalculationsTab.reset(calculations);
 		refreshAll();
 	}
@@ -56,7 +61,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	/* ---------- Example and clear buttons ---------- */
 
 	document.getElementById('load-example-btn').addEventListener('click', function () {
-		if (!treeIsEmpty() && !confirm('Replace the current tree, and the numbers and calculated values in the' +
+		if (!nothingToLose() && !confirm('Replace the current tree, and the numbers and calculated values in the' +
 			' Calculations tab, with the example?')) {
 			return;
 		}
@@ -72,7 +77,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	});
 
 	document.getElementById('clear-tree-btn').addEventListener('click', function () {
-		if (!treeIsEmpty() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
+		if (!nothingToLose() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
 			' numbers, only Sum and GWP.')) {
 			return;
 		}
@@ -136,17 +141,12 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			alert('Could not import "' + fileName + '":\n' + problem);
 			return;
 		}
-		if (!treeIsEmpty() && !confirm('Replace the current tree with "' + fileName + '"?\n\nThe Calculations tab' +
+		if (!nothingToLose() && !confirm('Replace the current tree with "' + fileName + '"?\n\nThe Calculations tab' +
 			' starts over too, with no numbers, only Sum and GWP, because files don\'t hold its data yet.')) {
 			return;
 		}
 
-		Model.replaceTree(doc.tree);
-		Model.applyProfileState(doc.profile, doc.history.snapshots.map(function (s) { return s.tree; }));
-		History.load(doc.history);
-		Model.setSource(doc.source);
-		CalculationsTab.reset(null);
-		refreshAll();
+		newDocument(doc.tree, null, doc.source, doc.history, doc.profile);
 		if (doc.addedRoot) {
 			setTimeout(function () {
 				alert('"' + fileName + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node' +

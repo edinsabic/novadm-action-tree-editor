@@ -26,7 +26,6 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 
 	var sample = null;
 	var results = [];
-	var statsByName = Object.create(null);
 	var derived = [];
 	var analysis = null;
 	var optionBoxes = [];
@@ -68,21 +67,11 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		return escapeHtml(String(value));
 	}
 
-	function entriesById(scenario) {
-		var entries = Object.create(null);
-		scenario.forEach(function (e) { entries[e.id] = e; });
-		return entries;
-	}
-
 	/* ---------- KPI cards ---------- */
 
 	function derivedUnit(name) {
 		var match = derived.filter(function (d) { return d.name === name; })[0];
 		return match && match.unit ? match.unit : '';
-	}
-
-	function numbersOf(name) {
-		return results.map(function (r) { return r[name]; }).filter(isNumber);
 	}
 
 	function reportColumns() {
@@ -100,7 +89,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		return {
 			fallback: fallback,
 			list: names.map(function (name) {
-				return { name: name, stats: statsByName[name], numbers: numbersOf(name) };
+				var numbers = Calculations.numbersOf(results, name);
+				return { name: name, stats: Calculations.statistics(numbers), numbers: numbers };
 			})
 		};
 	}
@@ -236,6 +226,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	}
 
 	function scenarioTableHtml(columns) {
+		var sortColumnGone = !columns.some(function (c) { return c.name === sortBy.name; });
+		if (sortBy.name !== BY_NUMBER && sortColumnGone) sortBy = { name: BY_NUMBER, dir: 1 };
 		var order = sortedRows();
 		var pages = Math.max(1, Math.ceil(order.length / PAGE_SIZE));
 		page = Math.min(page, pages - 1);
@@ -246,7 +238,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 				return '<th class="calc-option-col">' + escapeHtml(b.node.label) + '</th>';
 			}).join('') + '</tr>';
 		var body = shown.map(function (i) {
-			var entries = entriesById(sample.scenarios[i]);
+			var entries = Calculations.entriesById(sample.scenarios[i]);
 			return '<tr data-calc-row="' + i + '"' + (i === shownRow ? ' class="current"' : '') + '>' +
 				'<th>' + showButton(i) + '</th>' +
 				columns.map(function (c) {
@@ -338,14 +330,13 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	}
 
 	/**
-	 * Shows the banner, or the report on `input.sample`. `input` also holds its `results` and `statsByName`, the
-	 * `derived` list and its `analysis`, the `optionBoxes`, `onShowScenario(index)` and `onClose()`.
+	 * Shows the banner, or the report on `input.sample`. `input` also holds its `results`, the `derived` list
+	 * and its `analysis`, the `optionBoxes`, `onShowScenario(index)` and `onClose()`.
 	 */
 	function render(input) {
 		if (input.sample !== sample) page = 0;
 		sample = input.sample;
 		results = input.results;
-		statsByName = input.statsByName;
 		derived = input.derived;
 		analysis = input.analysis;
 		optionBoxes = input.optionBoxes;
@@ -398,7 +389,6 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		formatCount: formatCount,
 		withUnit: withUnit,
 		nameWithUnit: nameWithUnit,
-		valueHtml: valueHtml,
-		entriesById: entriesById
+		valueHtml: valueHtml
 	};
 })(NovaDM.Calculations, NovaDM.Render, NovaDM.Util);

@@ -52,9 +52,9 @@
 							<button id="zoom-reset-btn" class="btn" type="button">Reset zoom</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Undo and redo">
-							<button id="undo-btn" class="btn-icon" type="button" aria-label="Undo"
+							<button class="btn-icon" type="button" aria-label="Undo"
 								title="Undo (Ctrl+Z)" data-undo-action="undo">&#8630;</button>
-							<button id="redo-btn" class="btn-icon" type="button" aria-label="Redo"
+							<button class="btn-icon" type="button" aria-label="Redo"
 								title="Redo (Ctrl+Y)" data-undo-action="redo">&#8631;</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Tree file">
@@ -122,18 +122,7 @@
 					<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
 						Warning: the applied constraints are contradictory.
 					</div>
-					<div id="scenario-kpi-metrics" class="scenario-kpis">
-						<span class="metric muted"
-							title="Not shown yet. Later this bar shows the scenario chosen in the Calculations tab.">
-							<span class="metric-label">Sum</span>
-							<span class="metric-value">&ndash;</span>
-						</span>
-						<span class="metric muted"
-							title="Not shown yet. Later this bar shows the scenario chosen in the Calculations tab.">
-							<span class="metric-label">GWP</span>
-							<span class="metric-value">&ndash;</span>
-						</span>
-					</div>
+					<div id="scenario-kpi-metrics" class="scenario-kpis"></div>
 				</div>
 				<button id="open-calculations-btn" class="scenario-summary-link" type="button">
 					Get your numbers in the Calculations tab &rarr;
