@@ -73,7 +73,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	document.getElementById('clear-tree-btn').addEventListener('click', function () {
 		if (!treeIsEmpty() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
-			' numbers, only Total cost and CO₂.')) {
+			' numbers, only Sum and GWP.')) {
 			return;
 		}
 		newDocument([], null, '');
@@ -137,7 +137,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			return;
 		}
 		if (!treeIsEmpty() && !confirm('Replace the current tree with "' + fileName + '"?\n\nThe Calculations tab' +
-			' starts over too, with no numbers, only Total cost and CO₂, because files don\'t hold its data yet.')) {
+			' starts over too, with no numbers, only Sum and GWP, because files don\'t hold its data yet.')) {
 			return;
 		}
 

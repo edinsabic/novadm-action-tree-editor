@@ -53,10 +53,18 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		return share >= 0.001 ? (share * 100).toFixed(1) + '%' : 'under 0.1%';
 	}
 
-	function valueHtml(value) {
+	function withUnit(text, unit) {
+		return unit ? text + '\u00a0' + unit : text;
+	}
+
+	function nameWithUnit(name, unit) {
+		return unit ? name + ' (' + unit + ')' : name;
+	}
+
+	function valueHtml(value, unit) {
 		if (Calculations.isError(value)) return '<span class="calc-error-text">error</span>';
 		if (value === null || value === undefined) return '<span class="calc-na">n/a</span>';
-		if (isNumber(value)) return escapeHtml(formatNumber(value));
+		if (isNumber(value)) return escapeHtml(withUnit(formatNumber(value), unit));
 		return escapeHtml(String(value));
 	}
 
@@ -67,6 +75,11 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	}
 
 	/* ---------- KPI cards ---------- */
+
+	function derivedUnit(name) {
+		var match = derived.filter(function (d) { return d.name === name; })[0];
+		return match && match.unit ? match.unit : '';
+	}
 
 	function numbersOf(name) {
 		return results.map(function (r) { return r[name]; }).filter(isNumber);
@@ -153,7 +166,9 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	}
 
 	function kpiCardHtml(column) {
-		var head = '<div class="calc-kpi-card-head"><span class="calc-kpi-name">' + escapeHtml(column.name) + '</span>';
+		var unit = derivedUnit(column.name);
+		var head = '<div class="calc-kpi-card-head"><span class="calc-kpi-name">' +
+			escapeHtml(nameWithUnit(column.name, unit)) + '</span>';
 		if (!column.stats) {
 			return '<article class="calc-kpi-card">' + head + '</div>' +
 				'<p class="note">No numbers: every scenario gives n/a or an error.</p></article>';
@@ -163,7 +178,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		return '<article class="calc-kpi-card">' + head +
 			'<span class="note">mean of ' + formatCount(column.numbers.length) + ' scenarios' +
 			(missing ? ' (' + formatCount(missing) + ' without a number)' : '') + '</span></div>' +
-			'<div class="calc-kpi-mean">' + escapeHtml(formatNumber(stats.mean)) + '</div>' +
+			'<div class="calc-kpi-mean">' + escapeHtml(withUnit(formatNumber(stats.mean), unit)) + '</div>' +
 			'<dl class="calc-kpi-stats">' + [['Min', stats.min], ['Median', stats.median], ['Max', stats.max],
 				['Std dev', stats.stdDev]].map(function (pair) {
 				return '<div><dt>' + pair[0] + '</dt><dd>' + escapeHtml(formatNumber(pair[1])) + '</dd></div>';
@@ -200,8 +215,9 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	function sortHeaderHtml(name) {
 		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
 		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
+		var heading = name === BY_NUMBER ? name : nameWithUnit(name, derivedUnit(name));
 		return '<th><button type="button" class="calc-sort-btn" data-calc-sort="' + escapeHtml(name) + '"' +
-			' title="' + escapeHtml(title) + '">' + escapeHtml(name) + mark + '</button></th>';
+			' title="' + escapeHtml(title) + '">' + escapeHtml(heading) + mark + '</button></th>';
 	}
 
 	function pagerHtml(count, pages) {
@@ -380,6 +396,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		markShownRow: markShownRow,
 		formatNumber: formatNumber,
 		formatCount: formatCount,
+		withUnit: withUnit,
+		nameWithUnit: nameWithUnit,
 		valueHtml: valueHtml,
 		entriesById: entriesById
 	};

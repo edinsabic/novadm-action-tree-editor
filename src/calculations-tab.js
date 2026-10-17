@@ -5,13 +5,14 @@ window.NovaDM = window.NovaDM || {};
  * to the derived attributes and KPIs, with an option picker per node; an editor panel for the
  * selected box; and a sample of scenarios, reported by calculations-report.js, whose KPI means also
  * fill the Action tree tab's bottom bar. Its data (numbers and derived attributes: the example's
- * NOVADM_SAMPLE_ATTRIBUTES, or Total cost and CO2 for a new document) lives in memory: undo covers it,
+ * NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) lives in memory: undo covers it,
  * the file does not yet.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
 	'use strict';
 
 	var MAX_SAMPLE_SIZE = 3000;
+	var BAR_SHOWS_MEANS = false;
 	var SEED_RANGE = 4294967296;
 	var LABEL_WIDTH = 370;
 	var INDENT = 16;
@@ -28,12 +29,21 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var MIN_ZOOM = 30;
 	var MAX_ZOOM = 200;
 	var NOT_CHOSEN = 'none';
+	var UNIT_GROUPS = [
+		{ name: 'Currency', units: ['DKK', 'EUR', 'USD'] },
+		{ name: 'Climate', units: ['kg CO₂e', 't CO₂e'] },
+		{ name: 'Other', units: ['m²', 'kWh', 'years'] }
+	];
+	var CUSTOM_UNIT = '*custom*';
+	var MAX_UNIT_LENGTH = 20;
 
 	var escapeHtml = Util.escapeHtml;
 	var formatNumber = CalculationsReport.formatNumber;
 	var formatCount = CalculationsReport.formatCount;
 	var valueHtml = CalculationsReport.valueHtml;
 	var entriesById = CalculationsReport.entriesById;
+	var withUnit = CalculationsReport.withUnit;
+	var nameWithUnit = CalculationsReport.nameWithUnit;
 
 	var panel = document.getElementById('calculations');
 	var graphHost = document.getElementById('calc-graph');
@@ -58,6 +68,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var choices = { options: {}, branches: {} };
 	var selected = null;
 	var zoomPercent = 100;
+	var customUnitFor = null;
 
 	function own(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
 
@@ -66,10 +77,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function starterData() {
 		return {
 			attributes: ['price', 'co2'],
+			units: { price: 'DKK', co2: 'kg CO₂e' },
 			values: {},
 			derived: [
-				{ name: 'total_cost', displayName: 'Total cost', formula: 'total(price)', kpi: true },
-				{ name: 'total_co2', displayName: 'CO₂', formula: 'total(co2)', kpi: true }
+				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
+				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
 			]
 		};
 	}
@@ -77,11 +89,16 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function exampleData() {
 		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
 		var example = Util.clone(NOVADM_SAMPLE_ATTRIBUTES);
-		return { attributes: example.attributes || [], values: example.values || {}, derived: example.derived || [] };
+		return { attributes: example.attributes || [], units: example.units || {}, values: example.values || {},
+			derived: example.derived || [] };
 	}
 
 	function findDerived(name) {
 		return data.derived.filter(function (d) { return d.name === name; })[0] || null;
+	}
+
+	function attributeUnit(name) {
+		return data.units && own(data.units, name) ? data.units[name] : '';
 	}
 
 	function isVisible() { return !panel.hidden; }
@@ -294,6 +311,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		sample = null;
 		choices = { options: {}, branches: {} };
 		selected = null;
+		customUnitFor = null;
 		markShown(null);
 		setState(state);
 	}
@@ -525,7 +543,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var rows = layoutNode.rows.map(function (attribute) {
 			var value = entry ? Calculations.numberFor(data.values, node.label, attribute, entry.value) : null;
 			return '<div class="calc-row"><span class="calc-row-name">' + escapeHtml(attribute) + '</span>' +
-				'<span>' + valueHtml(value) + '</span></div>';
+				'<span>' + valueHtml(value, attributeUnit(attribute)) + '</span></div>';
 		}).join('');
 		var cls = 'calc-node calc-label-node' + stateClasses(layoutNode, highlight) + (entry ? '' : ' muted');
 		var label = escapeHtml(node.label);
@@ -571,7 +589,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			' style="' + boxStyle(node) + '" title="' + escapeHtml(title) + '">' +
 			'<div class="calc-node-head">' +
 			'<span class="calc-derived-name">' + escapeHtml(node.name) + '</span>' +
-			'<span class="calc-derived-value">' + valueHtml(values[node.name]) + '</span>' +
+			'<span class="calc-derived-value">' + valueHtml(values[node.name], derived.unit) + '</span>' +
 			'</div>' +
 			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div></div>';
 	}
@@ -645,6 +663,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	graphHost.addEventListener('click', function (e) {
 		if (e.target.closest('select')) return;
+		customUnitFor = null;
 		var nodeEl = e.target.closest('[data-calc-node]');
 		var derivedEl = e.target.closest('[data-calc-derived]');
 		if (nodeEl) selected = { kind: 'node', id: nodeEl.getAttribute('data-calc-node') };
@@ -673,6 +692,56 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'</div>';
 	}
 
+	function isDefaultUnit(unit) {
+		return UNIT_GROUPS.some(function (group) { return group.units.indexOf(unit) !== -1; });
+	}
+
+	function unitOf(key) {
+		var derived = key.charAt(0) === 'd' ? findDerived(key.slice(2)) : null;
+		if (derived) return derived.unit || '';
+		return attributeUnit(key.slice(2));
+	}
+
+	function setUnit(key, unit) {
+		var name = key.slice(2);
+		var target = key.charAt(0) === 'd' ? findDerived(name) : null;
+		if (target) {
+			if (unit) target.unit = unit;
+			else delete target.unit;
+			return;
+		}
+		if (!data.units) data.units = {};
+		if (unit) data.units[name] = unit;
+		else delete data.units[name];
+	}
+
+	function unitFieldHtml(key, name) {
+		var unit = unitOf(key);
+		var custom = customUnitFor === key || (unit !== '' && !isDefaultUnit(unit));
+		var option = function (value, text) {
+			var chosen = value === CUSTOM_UNIT ? custom : !custom && value === unit;
+			return '<option value="' + escapeHtml(value) + '"' + (chosen ? ' selected' : '') + '>' + escapeHtml(text) +
+				'</option>';
+		};
+		return '<div class="calc-unit-field">' +
+			'<select data-calc-unit="' + escapeHtml(key) + '" aria-label="' + escapeHtml('Unit of ' + name) + '">' +
+				option('', 'No unit') +
+				UNIT_GROUPS.map(function (group) {
+					return '<optgroup label="' + escapeHtml(group.name) + '">' +
+						group.units.map(function (u) { return option(u, u); }).join('') + '</optgroup>';
+				}).join('') +
+				option(CUSTOM_UNIT, 'Custom unit\u2026') +
+			'</select>' +
+			(custom
+				? '<input type="text" class="calc-unit-custom" maxlength="' + MAX_UNIT_LENGTH + '"' +
+					' value="' + escapeHtml(unit) + '" placeholder="e.g. m³"' +
+					' aria-label="' + escapeHtml('Custom unit of ' + name) + '"' +
+					' data-calc-custom-unit="' + escapeHtml(key) + '"' +
+					' data-typing-key="' + escapeHtml('unit:' + key) + '" />'
+				: '') +
+			'</div>';
+	}
+
 	function derivedFormHtml(derived) {
 		return '<div class="editor-form">' +
 			'<div class="calc-editor-head">' +
@@ -693,6 +762,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 				'<div id="calc-formula-note" class="note" hidden></div>' +
 			'</div>' +
 			'<div class="field">' +
+				'<label>Unit</label>' +
+				unitFieldHtml('d:' + derived.name, derived.name) +
+				'<div class="note">A unit is only a label: changing it doesn&rsquo;t convert the value.</div>' +
+			'</div>' +
+			'<div class="field">' +
 				'<label>Value in this scenario</label>' +
 				'<div id="calc-editor-value" class="calc-editor-value"></div>' +
 			'</div>' +
@@ -703,9 +777,18 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'</div>';
 	}
 
+	function parseTyped(text) {
+		var clean = String(text).replace(/[,\s]/g, '');
+		return clean === '' || !isFinite(Number(clean)) ? null : Number(clean);
+	}
+
+	function formatTyped(n) {
+		return n === null ? '' : n.toLocaleString('en-GB', { maximumFractionDigits: 10 });
+	}
+
 	function numberInputHtml(label, attribute, option) {
 		var value = Calculations.numberFor(data.values, label, attribute, option);
-		return '<input type="number" step="any" value="' + (value === null ? '' : value) + '"' +
+		return '<input type="text" inputmode="decimal" value="' + escapeHtml(formatTyped(value)) + '"' +
 			' aria-label="' + escapeHtml(attribute + ' for ' + (option || label)) + '"' +
 			' data-typing-key="' + escapeHtml('value:' + label + '|' + attribute + '|' + option) + '"' +
 			' data-value-label="' + escapeHtml(label) + '" data-value-attribute="' + escapeHtml(attribute) + '"' +
@@ -717,7 +800,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var entry = entriesById(currentScenario())[node.id];
 		var table = '<div class="calc-table-wrap"><table class="calc-table calc-value-table">' +
 			'<thead><tr><th>Option</th>' + attributes.map(function (a) {
-				return '<th>' + escapeHtml(a) + '</th>';
+				return '<th data-heading-attribute="' + escapeHtml(a) + '">' +
+					escapeHtml(nameWithUnit(a, attributeUnit(a))) + '</th>';
 			}).join('') + '</tr></thead>' +
 			'<tbody>' + optionsOf(node).map(function (option) {
 				var isCurrent = entry && (option === '' || option === entry.value);
@@ -738,9 +822,22 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			(attributes.length ? table : '') +
 			'<div class="note">A number per option and attribute; empty means no value. The graph shows the' +
 				' numbers of the option on screen.</div>' +
+			(attributes.length ? unitsFieldHtml(attributes) : '') +
 			'<div class="editor-add-row">' +
 				'<button class="btn" type="button" data-calc-action="add-attribute">+ Attribute</button>' +
 			'</div>' +
+			'</div>';
+	}
+
+	function unitsFieldHtml(attributes) {
+		return '<div class="field">' +
+			'<label>Units</label>' +
+			'<div class="calc-units">' + attributes.map(function (a) {
+				return '<div class="calc-unit-row"><span class="calc-unit-name">' + escapeHtml(a) + '</span>' +
+					unitFieldHtml('a:' + a, a) + '</div>';
+			}).join('') + '</div>' +
+			'<div class="note">A unit applies to the attribute in every node, and is only a label: changing it' +
+				' doesn&rsquo;t convert the numbers.</div>' +
 			'</div>';
 	}
 
@@ -753,7 +850,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		errorEl.hidden = !errorEl.textContent;
 		noteEl.textContent = item && !item.error ? formulaNote(item, numberedAttributes()) : '';
 		noteEl.hidden = !noteEl.textContent;
-		document.getElementById('calc-editor-value').innerHTML = valueHtml(currentResults()[selected.name]);
+		document.getElementById('calc-editor-value').innerHTML =
+			valueHtml(currentResults()[selected.name], unitOf('d:' + selected.name));
 	}
 
 	function renderEditor() {
@@ -779,6 +877,33 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		if (!stored || typeof stored !== 'object') stored = byAttribute[attribute] = {};
 		if (number === null) delete stored[option];
 		else stored[option] = number;
+	}
+
+	function unitChosen(key, value) {
+		if (value === CUSTOM_UNIT) {
+			customUnitFor = key;
+			renderEditor();
+			var box = editorHost.querySelector('[data-calc-custom-unit="' + key + '"]');
+			box.focus();
+			box.select();
+			return;
+		}
+		if (customUnitFor === key) customUnitFor = null;
+		setUnit(key, value);
+		dataChanged();
+		renderEditor();
+		editorHost.querySelector('[data-calc-unit="' + key + '"]').focus();
+	}
+
+	function customUnitTyped(key, text) {
+		setUnit(key, text.trim().slice(0, MAX_UNIT_LENGTH));
+		dataChanged();
+		if (key.charAt(0) === 'd') {
+			renderDerivedStatus();
+			return;
+		}
+		var heading = editorHost.querySelector('[data-heading-attribute="' + key.slice(2) + '"]');
+		if (heading) heading.textContent = nameWithUnit(key.slice(2), unitOf(key));
 	}
 
 	function formulaChanged(derived, text) {
@@ -825,7 +950,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function addAttribute() {
-		var name = askName('Name of the new attribute (e.g. lifetime):', 'attribute');
+		var name = askName('Name of the new attribute (e.g. Uvalue):', 'attribute');
 		if (!name) return;
 		data.attributes.push(name);
 		dataChanged();
@@ -844,18 +969,30 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var t = e.target;
 		var derived = selected && selected.kind === 'derived' ? findDerived(selected.name) : null;
 		if (t.hasAttribute('data-value-attribute')) {
-			var number = t.value === '' || !isFinite(Number(t.value)) ? null : Number(t.value);
+			var number = parseTyped(t.value);
+			if (number === null && t.value.trim() !== '') return;
 			setNumber(t.getAttribute('data-value-label'), t.getAttribute('data-value-attribute'),
 				t.getAttribute('data-value-option'), number);
 			dataChanged();
 		} else if (t.id === 'calc-formula' && derived) {
 			formulaChanged(derived, t.value);
+		} else if (t.hasAttribute('data-calc-custom-unit')) {
+			customUnitTyped(t.getAttribute('data-calc-custom-unit'), t.value);
 		}
 	});
 
 	editorHost.addEventListener('change', function (e) {
 		var t = e.target;
 		var derived = selected && selected.kind === 'derived' ? findDerived(selected.name) : null;
+		if (t.hasAttribute('data-value-attribute')) {
+			t.value = formatTyped(Calculations.numberFor(data.values, t.getAttribute('data-value-label'),
+				t.getAttribute('data-value-attribute'), t.getAttribute('data-value-option')));
+			return;
+		}
+		if (t.hasAttribute('data-calc-unit')) {
+			unitChosen(t.getAttribute('data-calc-unit'), t.value);
+			return;
+		}
 		if (t.id !== 'calc-kpi' || !derived) return;
 		if (t.checked) derived.kpi = true;
 		else delete derived.kpi;
@@ -910,12 +1047,16 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	/* ---------- Action tree tab's bottom bar ---------- */
 
 	function summaryTitle(d, stats) {
+		if (!BAR_SHOWS_MEANS) {
+			return 'Not shown yet. Later this bar shows the scenario chosen in the Calculations tab.';
+		}
 		if (stats) {
 			var scenarios = sample.full
 				? 'all ' + formatCount(sample.total)
 				: 'a sample of ' + formatCount(sample.size);
 			return d.name + ': mean of ' + scenarios + ' scenarios (profiles not applied).' +
-				' Min ' + formatNumber(stats.min) + ', max ' + formatNumber(stats.max) + '.';
+				' Min ' + withUnit(formatNumber(stats.min), d.unit) +
+				', max ' + withUnit(formatNumber(stats.max), d.unit) + '.';
 		}
 		if (sample && sample.scenarios.length) {
 			return d.name + ' has no number: every sampled scenario gives n/a or an error.';
@@ -932,8 +1073,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			return;
 		}
 		kpiBar.innerHTML = kpis.map(function (d) {
-			var stats = sample ? statsByName[d.name] : null;
-			var mean = stats ? escapeHtml(formatNumber(stats.mean)) : '';
+			var stats = BAR_SHOWS_MEANS && sample ? statsByName[d.name] : null;
+			var mean = stats ? escapeHtml(withUnit(formatNumber(stats.mean), d.unit)) : '';
 			var value = !stats ? '&ndash;' : sample.full ? mean : '&asymp; ' + mean;
 			return '<span class="metric' + (stats ? '' : ' muted') + '"' +
 				' title="' + escapeHtml(summaryTitle(d, stats)) + '">' +
@@ -979,7 +1120,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function typedSize() {
-		return Number(sampleSizeInput.value.replace(/[,\s]/g, ''));
+		return parseTyped(sampleSizeInput.value);
 	}
 
 	function sampleCustom() {
