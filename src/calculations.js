@@ -15,6 +15,7 @@ NovaDM.Calculations = (function (Util) {
 	var COMPARISONS = ['=', '<', '>'];
 	var CHILD_KEYS = ['cond', 'yes', 'no', 'left', 'right', 'operand'];
 	var ERROR = { error: true };
+	var TOO_LONG = 'The formula is too long, or has too many brackets inside each other, to calculate.';
 
 	var TOKEN_PATTERNS = [
 		{ type: 'space', re: /^\s+/ },
@@ -269,11 +270,13 @@ NovaDM.Calculations = (function (Util) {
 		items.forEach(function (item, i) {
 			try {
 				item.ast = parse(derived[i].formula);
+				item.refs = references(item.ast);
 			} catch (err) {
-				item.error = err.message;
+				item.ast = null;
+				item.refs = null;
+				item.error = err instanceof RangeError ? TOO_LONG : err.message;
 				return;
 			}
-			item.refs = references(item.ast);
 			item.inputs = unique(item.refs.names.filter(function (n) { return byName[n]; }));
 			var names = checkNames(item.refs, byName, isLabel, isAttribute);
 			item.missing = names.missing;
@@ -306,7 +309,7 @@ NovaDM.Calculations = (function (Util) {
 		if (typeof value === 'number') return value;
 		if (typeof value === 'boolean') return value ? 1 : 0;
 		if (typeof value !== 'string') return null;
-		var match = /^\s*(-?\d+(?:\.\d+)?)\s*(%?)\s*$/.exec(value);
+		var match = /^(-?\d+(?:\.\d+)?)(%?)$/.exec(value.trim());
 		if (!match) return null;
 		return match[2] ? Number(match[1]) / 100 : Number(match[1]);
 	}
@@ -373,7 +376,16 @@ NovaDM.Calculations = (function (Util) {
 		};
 		analysis.order.forEach(function (name) {
 			var item = analysis.byName[name];
-			results[name] = item.error ? ERROR : evaluate(item.ast, ctx);
+			if (item.error) {
+				results[name] = ERROR;
+				return;
+			}
+			try {
+				results[name] = evaluate(item.ast, ctx);
+			} catch (err) {
+				if (!(err instanceof RangeError)) throw err;
+				results[name] = ERROR;
+			}
 		});
 		return results;
 	}

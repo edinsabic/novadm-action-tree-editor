@@ -242,7 +242,9 @@ The tab works on `{ attributes, units, values, derived }`:
   one of those rows turns it into one number per option, and the other
   options keep the plain number. A node without options that shares its
   label with a node that has numbers per option stores its number under
-  the option `''`, so neither node loses its numbers.
+  the option `''`, so neither node loses its numbers. Labels, options,
+  attributes and units are written as own keys (`Util.setOwn`), so a
+  name such as `__proto__` from a file works like any other.
 - `derived` – the calculated values, `{ name, formula, displayName?,
   unit?, kpi? }`. `displayName` is the name in the Action tree tab's
   bottom bar, and `kpi: true` makes it a KPI.
@@ -307,8 +309,9 @@ primary = number | text | name [ "." name ]
 - **Errors**: a syntax error (with its 1-based position), a cycle, an
   attribute used as a plain name, a calculated value in `selected()` or
   before a dot, an unknown attribute after a dot, or `total()` of an
-  attribute that doesn't exist. The value shows "error", and so does
-  everything that uses it. An attribute exists when it is in
+  attribute that doesn't exist, or a formula too long or too deeply
+  bracketed to calculate (about a few thousand terms). The value shows
+  "error", and so does everything that uses it. An attribute exists when it is in
   `attributes` or some label has a number for it.
 - When no node in the tree has a number for `total()`'s attribute, the
   total is 0 and has no arrows; the editor panel and the tooltip say so

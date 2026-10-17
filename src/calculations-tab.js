@@ -43,6 +43,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var valueHtml = CalculationsReport.valueHtml;
 	var entriesById = Calculations.entriesById;
 	var own = Util.own;
+	var setOwn = Util.setOwn;
 	var withUnit = CalculationsReport.withUnit;
 	var nameWithUnit = CalculationsReport.nameWithUnit;
 
@@ -705,7 +706,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			return;
 		}
 		if (!data.units) data.units = {};
-		if (unit) data.units[name] = unit;
+		if (unit) setOwn(data.units, name, unit);
 		else delete data.units[name];
 	}
 
@@ -867,20 +868,20 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function setNumber(label, attribute, option, number, options) {
-		var byAttribute = own(data.values, label) ? data.values[label] : (data.values[label] = {});
+		var byAttribute = own(data.values, label) ? data.values[label] : setOwn(data.values, label, {});
 		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
 		var isTable = !!stored && typeof stored === 'object' && Object.keys(stored).length > 0;
 		if (option === '' && !isTable) {
-			byAttribute[attribute] = number === null ? {} : number;
+			setOwn(byAttribute, attribute, number === null ? {} : number);
 			return;
 		}
 		if (!isTable) {
 			var plain = stored;
-			stored = byAttribute[attribute] = {};
-			if (typeof plain === 'number') options.forEach(function (o) { stored[o] = plain; });
+			stored = setOwn(byAttribute, attribute, {});
+			if (typeof plain === 'number') options.forEach(function (o) { setOwn(stored, o, plain); });
 		}
 		if (number === null) delete stored[option];
-		else stored[option] = number;
+		else setOwn(stored, option, number);
 	}
 
 	function unitChosen(key, value) {
