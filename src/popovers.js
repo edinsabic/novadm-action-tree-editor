@@ -10,8 +10,11 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	'use strict';
 
 	var MAX_COMMENT_CHARS = 64;
+	var MAX_PILL_LABEL_CHARS = 34;
 	var MAX_CONFLICTS_LISTED = 5;
 	var GRAPH_ZOOM_STEP = 1.2;
+	var PROFILE_PILL_TITLE = 'Create, select or delete profiles';
+	var VERSION_PILL_TITLE = 'Version history: open, save, merge or delete versions';
 
 	var escapeHtml = Util.escapeHtml;
 
@@ -36,9 +39,15 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	/* ---------- Profile pane ---------- */
 
+	function setPill(btn, name, suffix, title) {
+		var shown = Util.shorten(name, MAX_PILL_LABEL_CHARS);
+		btn.querySelector('.pill-btn-label').textContent = shown + suffix;
+		btn.title = shown === name ? title : name + '\n' + title;
+	}
+
 	function updatePillLabels() {
-		var active = Model.getActiveProfileName();
-		profileBtn.querySelector('.pill-btn-label').textContent = active || 'Create or select profile';
+		setPill(profileBtn, 'Profiles: ' + (Model.getActiveProfileName() || 'none'), '', PROFILE_PILL_TITLE);
+		setPill(versionBtn, 'Version: ' + History.getHead(), History.isDirty() ? ' · unsaved' : '', VERSION_PILL_TITLE);
 	}
 
 	function renderProfilePane() {
@@ -69,6 +78,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function afterProfileChange(constraintsChanged) {
+		History.storeProfiles();
 		if (constraintsChanged) {
 			Render.renderTree();
 			EditorForm.renderEditorForm();
@@ -164,9 +174,12 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		if (d.parents.length === 0) return '<div class="metric-label">First version</div>';
 		var c = d.changeCounts;
 		var label = '+' + c.added + ' added · ' + c.changed + ' changed · ' + c.removed + ' removed';
-		var title = 'Compared with "' + escapeHtml(d.parents[0]) + '"';
+		var title = escapeHtml('Compared with "' + d.parents[0] + '"');
+		var profiles = d.profileChanges
+			? '<div class="metric-label" title="' + title + '">Profiles: ' + escapeHtml(d.profileChanges) + '</div>'
+			: '';
 		if (c.added + c.changed + c.removed === 0) {
-			return '<div class="metric-label" title="' + title + '">' + label + '</div>';
+			return '<div class="metric-label" title="' + title + '">' + label + '</div>' + profiles;
 		}
 		var signs = { add: '+', remove: '−', modify: '~' };
 		var lines = d.changes.map(function (ch) {
@@ -176,7 +189,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		return '<details>' +
 			'<summary class="metric-label" title="' + title + '">' + label + '</summary>' +
 			'<div class="note">' + lines + '</div>' +
-			'</details>';
+			'</details>' + profiles;
 	}
 
 	function noticeHtml() {
@@ -223,7 +236,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 				(d.isDirty ? updateButtonHtml() : '');
 		}
 		var p = History.mergePreview(d.id);
-		var count = p.canMerge ? p.added + p.updated + p.removed : 0;
+		var count = p.canMerge ? p.count : 0;
 		return buttonHtml('open', 'Open', 'Switch the editor to this version', false) +
 			buttonHtml('restore', 'Restore',
 				'Make a new version with the contents of this one, on top of "' + head + '"', false) +

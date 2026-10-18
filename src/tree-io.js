@@ -15,7 +15,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	var importBtn = document.getElementById('import-tree-btn');
 	var importInput = document.getElementById('import-file-input');
 
-	function nothingToLose() { return Model.root.children.length === 0 && CalculationsTab.isUntouched(); }
+	function nothingToLose() {
+		return Model.root.children.length === 0 && CalculationsTab.isUntouched() &&
+			Model.getProfiles().length === 0 && History.snapshotCount() === 1;
+	}
 
 	function refreshAll() {
 		Render.renderTree();
@@ -35,10 +38,15 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return typeof NOVADM_SAMPLE_SOURCE === 'undefined' ? '' : NOVADM_SAMPLE_SOURCE;
 	}
 
-	function newDocument(specs, calculations, source, history, profile) {
+	function headProfile(history) {
+		var head = history.snapshots.filter(function (s) { return s.id === history.head; })[0];
+		return head ? head.profile : null;
+	}
+
+	function newDocument(specs, calculations, source, history) {
 		Model.replaceTree(specs);
 		if (history) {
-			Model.applyProfileState(profile, history.snapshots.map(function (s) { return s.tree; }));
+			Model.applyProfileState(headProfile(history), [specs]);
 			History.load(history);
 		} else {
 			Model.resetProfiles();
@@ -112,12 +120,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			return;
 		}
 		var tree = Model.treeSpecs();
-		var history = History.getState();
-		var fileTrees = history.snapshots.map(function (s) { return s.id === history.head ? tree : s.tree; });
 		var text = FORMAT.serialize({
 			tree: tree,
-			profile: Model.getProfileState(fileTrees),
-			history: history,
+			profile: Model.getProfileState([tree]),
+			history: History.getState(),
 			source: Model.getSource()
 		});
 		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
@@ -146,7 +152,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			return;
 		}
 
-		newDocument(doc.tree, null, doc.source, doc.history, doc.profile);
+		newDocument(doc.tree, null, doc.source, doc.history);
 		if (doc.addedRoot) {
 			setTimeout(function () {
 				alert('"' + fileName + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node' +

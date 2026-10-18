@@ -259,6 +259,10 @@ NovaDM.Model = (function (Util) {
 
 	function setSource(text) { source = text || ''; }
 
+	function emptyProfileState() {
+		return { active: null, current: {}, currentValues: {}, saved: [] };
+	}
+
 	function getProfileState(trees) {
 		var state = {
 			active: activeProfileName,
@@ -305,26 +309,28 @@ NovaDM.Model = (function (Util) {
 		}
 
 		trees.forEach(collect);
+		var saved = (state.saved || []).map(function (p) {
+			return {
+				name: p.name,
+				constraints: prune(p.constraints),
+				valueConstraints: pruneValues(p.valueConstraints)
+			};
+		});
+		var hasActive = saved.some(function (p) { return p.name === state.active; });
 		return {
-			active: state.active === undefined ? null : state.active,
+			active: hasActive ? state.active : null,
 			current: prune(state.current),
 			currentValues: pruneValues(state.currentValues),
-			saved: (state.saved || []).map(function (p) {
-				return {
-					name: p.name,
-					constraints: prune(p.constraints),
-					valueConstraints: pruneValues(p.valueConstraints)
-				};
-			})
+			saved: saved
 		};
 	}
 
-	function applyProfileState(state, otherTrees) {
-		var pruned = prunedProfileState(state || {}, [treeSpecs()].concat(otherTrees || []));
-		nodeConstraints = pruned.current;
-		valueConstraints = pruned.currentValues;
-		profiles = pruned.saved;
-		activeProfileName = findProfile(pruned.active) ? pruned.active : null;
+	function applyProfileState(state, trees) {
+		var applied = trees ? prunedProfileState(state || {}, trees) : Util.clone(state || emptyProfileState());
+		nodeConstraints = applied.current || {};
+		valueConstraints = applied.currentValues || {};
+		profiles = applied.saved || [];
+		activeProfileName = findProfile(applied.active) ? applied.active : null;
 	}
 
 	/* ---------- Scenario space size ---------- */
@@ -409,7 +415,9 @@ NovaDM.Model = (function (Util) {
 		resetProfiles: resetProfiles,
 		getSource: getSource,
 		setSource: setSource,
+		emptyProfileState: emptyProfileState,
 		getProfileState: getProfileState,
+		prunedProfileState: prunedProfileState,
 		applyProfileState: applyProfileState,
 		scenarioSpaceSize: scenarioSpaceSize
 	};

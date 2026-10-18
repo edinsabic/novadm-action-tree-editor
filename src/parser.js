@@ -7,7 +7,7 @@ window.NovaDM = window.NovaDM || {};
  * (extension / mimeType / defaultName) and rewrite serialize() / parse();
  * nothing else needs to change.
  */
-NovaDM.Parser = (function (Model) {
+NovaDM.Parser = (function (Model, Util) {
 	'use strict';
 
 	var DEFAULT_SNAPSHOT_ID = 'Initial version';
@@ -24,14 +24,6 @@ NovaDM.Parser = (function (Model) {
 		if (!Array.isArray(specs) || specs.length === 0) return specs;
 		if (specs.length === 1 && isBareRoot(specs[0])) return specs;
 		return [{ kind: Model.TOP_LEVEL_KIND, nodeClass: '', label: '', value: [], children: specs }];
-	}
-
-	function withRootedTree(snapshot) {
-		if (!snapshot || typeof snapshot !== 'object') return snapshot;
-		var copy = {};
-		Object.keys(snapshot).forEach(function (k) { copy[k] = snapshot[k]; });
-		copy.tree = ensureRoot(snapshot.tree);
-		return copy;
 	}
 
 	function emptyHistory() {
@@ -60,7 +52,7 @@ NovaDM.Parser = (function (Model) {
 		}, []);
 	}
 
-	function fillMissingIds(trees, profile) {
+	function fillMissingIds(trees, profiles) {
 		var taken = {};
 		var next = 1;
 		var rootId = null;
@@ -74,7 +66,9 @@ NovaDM.Parser = (function (Model) {
 		trees.forEach(function (tree) {
 			eachSpec(tree, function (spec) { if (typeof spec.id === 'string') taken[spec.id] = true; });
 		});
-		constraintIds(profile).forEach(function (id) { taken[id] = true; });
+		profiles.forEach(function (profile) {
+			constraintIds(profile).forEach(function (id) { taken[id] = true; });
+		});
 		trees.forEach(function (tree) {
 			eachSpec(tree, function (spec) {
 				if (spec.id !== undefined) return;
@@ -146,6 +140,7 @@ NovaDM.Parser = (function (Model) {
 		},
 		profile: function (section) {
 			if (section === undefined || section === null) return null;
+			if (typeof section !== 'object' || Array.isArray(section)) return section;
 			return {
 				active: section.active === undefined ? null : section.active,
 				current: section.current === undefined ? {} : section.current,
@@ -167,13 +162,36 @@ NovaDM.Parser = (function (Model) {
 
 	function singleTreeDocument(tree) {
 		var rooted = ensureRoot(tree);
-		fillMissingIds([rooted], null);
-		return { tree: rooted, profile: null, history: emptyHistory(), source: '', addedRoot: rooted !== tree };
+		fillMissingIds([rooted], []);
+		return { tree: rooted, history: emptyHistory(), source: '', addedRoot: rooted !== tree };
+	}
+
+	function readSnapshot(raw, fileVersion, sharedProfile) {
+		if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+		return {
+			id: raw.id,
+			created: raw.created,
+			tree: fileVersion < 5 ? ensureRoot(raw.tree) : raw.tree,
+			profile: fileVersion < 6 ? Util.clone(sharedProfile) : SECTION_PARSERS.profile(raw.profile)
+		};
+	}
+
+	function readSnapshots(data) {
+		var sharedProfile = null;
+		if (data.version < 6) {
+			sharedProfile = SECTION_PARSERS.profile(data.profile);
+			var problem = validateProfile(sharedProfile, 'Profile');
+			if (problem) throw new Error(problem);
+		}
+		return SECTION_PARSERS.actionTree(data.actionTree).map(function (raw) {
+			return readSnapshot(raw, data.version, sharedProfile);
+		});
 	}
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 5, /* 5: the tree is a single AND root node (older files get one added on import).
+		version: 6, /* 6: each snapshot holds its own profiles; the global `profile` section is gone.
+					** 5: the tree is a single AND root node (older files get one added on import).
 					** 4: profiles also hold per-value constraints (currentValues / valueConstraints).
 					** 3: versionControl / profile / actionTree sections. 
 					** 2: single `tree`, value is an array of strings. 
@@ -190,29 +208,28 @@ NovaDM.Parser = (function (Model) {
 			var history = doc.history || emptyHistory();
 			var head = history.head || DEFAULT_SNAPSHOT_ID;
 
-			function headSnapshot(created) {
-				var snap = { id: head };
-				if (created) snap.created = created;
-				snap.tree = doc.tree;
+			function fileSnapshot(s) {
+				var isHead = s.id === head;
+				var snap = { id: s.id };
+				if (s.created) snap.created = s.created;
+				snap.profile = (isHead ? doc.profile : s.profile) || Model.emptyProfileState();
+				snap.tree = isHead ? doc.tree : s.tree;
 				return snap;
 			}
 
-			var snapshots = history.snapshots.map(function (s) {
-				return s.id === head ? headSnapshot(s.created) : s;
-			});
-			if (!snapshots.some(function (s) { return s.id === head; })) snapshots.unshift(headSnapshot(''));
+			var snapshots = history.snapshots.map(fileSnapshot);
+			if (!snapshots.some(function (s) { return s.id === head; })) snapshots.unshift(fileSnapshot({ id: head }));
 
 			var file = { format: TREE_FILE_FORMAT.id, version: TREE_FILE_FORMAT.version };
 			file.source = doc.source || '';
 			file.versionControl = { head: head, edges: history.edges };
-			file.profile = doc.profile || { active: null, current: {}, currentValues: {}, saved: [] };
 			file.actionTree = snapshots;
 			return formatJson(file) + '\n';
 		},
 
 		/**
 		 * @param {string} text the file's text
-		 * @returns {{tree: Array, profile: Object|null, history: Object, source: string, addedRoot: boolean}}
+		 * @returns {{tree: Array, history: Object, source: string, addedRoot: boolean}}
 		 * Throws an Error with a readable message if this is not a NovaDM file.
 		 */
 		parse: function (text) {
@@ -231,11 +248,10 @@ NovaDM.Parser = (function (Model) {
 			if (data.version < 3) return singleTreeDocument(data.tree);
 
 			var versionControl = SECTION_PARSERS.versionControl(data.versionControl);
-			var profile = SECTION_PARSERS.profile(data.profile);
-			var rawSnapshots = SECTION_PARSERS.actionTree(data.actionTree);
-			var snapshots = data.version < 5 ? rawSnapshots.map(withRootedTree) : rawSnapshots;
+			var snapshots = readSnapshots(data);
 			if (snapshots.length === 0) throw new Error('The "actionTree" section holds no snapshots.');
-			fillMissingIds(snapshots.map(function (s) { return s && s.tree; }), profile);
+			fillMissingIds(snapshots.map(function (s) { return s && s.tree; }),
+				snapshots.map(function (s) { return s && s.profile; }));
 
 			var head = versionControl.head === null ? snapshots[snapshots.length - 1].id : versionControl.head;
 			var headSnapshot = findSnapshot(snapshots, head);
@@ -246,10 +262,9 @@ NovaDM.Parser = (function (Model) {
 
 			return {
 				tree: headSnapshot.tree,
-				profile: profile,
 				history: { head: head, edges: versionControl.edges, snapshots: snapshots },
 				source: typeof data.source === 'string' ? data.source : '',
-				addedRoot: headSnapshot.tree !== findSnapshot(rawSnapshots, head).tree
+				addedRoot: headSnapshot.tree !== findSnapshot(data.actionTree, head).tree
 			};
 		}
 	};
@@ -257,24 +272,24 @@ NovaDM.Parser = (function (Model) {
 	/* ---------- Validation ---------- */
 
 	function validateDocument(doc) {
-		return validateSpecs(doc.tree) || validateProfile(doc.profile) || validateHistory(doc.history);
+		return validateSpecs(doc.tree) || validateHistory(doc.history);
 	}
 
-	function validateProfile(profile) {
+	function validateProfile(profile, where) {
 		if (profile === null) return null;
-		if (typeof profile !== 'object') return 'The "profile" section is not an object.';
+		if (typeof profile !== 'object' || Array.isArray(profile)) return where + ' is not an object.';
 		if (profile.active !== null && typeof profile.active !== 'string') {
-			return 'Profile: "active" must be a profile name or null.';
+			return where + ': "active" must be a profile name or null.';
 		}
-		var problem = validateConstraints(profile.current, 'Profile > current') ||
-			validateValueConstraints(profile.currentValues, 'Profile > currentValues');
+		var problem = validateConstraints(profile.current, where + ' > current') ||
+			validateValueConstraints(profile.currentValues, where + ' > currentValues');
 		if (problem) return problem;
-		if (!Array.isArray(profile.saved)) return 'Profile: "saved" is not a list.';
+		if (!Array.isArray(profile.saved)) return where + ': "saved" is not a list.';
 
-		var names = {};
+		var names = Object.create(null);
 		for (var i = 0; i < profile.saved.length; i++) {
 			var p = profile.saved[i];
-			var here = 'Profile > saved #' + (i + 1);
+			var here = where + ' > saved #' + (i + 1);
 			if (!p || typeof p.name !== 'string' || !p.name.trim()) return here + ' has no name.';
 			if (names[p.name]) return here + ': there are two profiles called ' + JSON.stringify(p.name) + '.';
 			names[p.name] = true;
@@ -326,6 +341,8 @@ NovaDM.Parser = (function (Model) {
 			}
 			var problem = validateSpecs(s.tree);
 			if (problem) return name + ': ' + problem;
+			problem = validateProfile(s.profile, name + ' > profile');
+			if (problem) return problem;
 		}
 		for (var j = 0; j < history.edges.length; j++) {
 			var e = history.edges[j];
@@ -428,4 +445,4 @@ NovaDM.Parser = (function (Model) {
 		validateDocument: validateDocument,
 		validateSpecs: validateSpecs
 	};
-})(NovaDM.Model);
+})(NovaDM.Model, NovaDM.Util);

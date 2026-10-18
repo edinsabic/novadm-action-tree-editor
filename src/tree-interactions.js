@@ -6,7 +6,7 @@ window.NovaDM = window.NovaDM || {};
  * dropping new AND/XOR nodes from the palette). One set of listeners,
  * attached once.
  */
-(function (Model, Render, EditorForm) {
+(function (Model, History, Render, EditorForm) {
 	'use strict';
 
 	var INVALID_FLASH_MS = 400;
@@ -44,6 +44,7 @@ window.NovaDM = window.NovaDM || {};
 		var chip = e.target.closest('[data-value-toggle]');
 		if (chip) {
 			Model.cycleValueConstraint(chip.getAttribute('data-value-toggle'), chip.getAttribute('data-value'));
+			History.storeProfiles();
 			Render.renderTree();
 			EditorForm.renderEditorForm();
 			return;
@@ -51,6 +52,7 @@ window.NovaDM = window.NovaDM || {};
 		var dot = e.target.closest('[data-constraint-toggle]');
 		if (dot) {
 			Model.cycleNodeConstraint(dot.getAttribute('data-constraint-toggle'));
+			History.storeProfiles();
 			Render.renderTree();
 			return;
 		}
@@ -137,4 +139,4 @@ window.NovaDM = window.NovaDM || {};
 		});
 		item.addEventListener('dragend', function () { item.classList.remove('dragging'); });
 	});
-})(NovaDM.Model, NovaDM.Render, NovaDM.EditorForm);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm);

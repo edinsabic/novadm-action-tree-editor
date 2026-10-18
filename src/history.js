@@ -1,8 +1,9 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Version history: the snapshots of the tree and how they follow on from
- * each other. popovers.js draws it, version-graph.js lays the graph out.
+ * Version history: the snapshots of the tree and its profiles, and how they
+ * follow on from each other. popovers.js draws it, version-graph.js lays the
+ * graph out.
  */
 NovaDM.History = (function (Model, Parser, Util) {
 	'use strict';
@@ -58,12 +59,31 @@ NovaDM.History = (function (Model, Parser, Util) {
 		}));
 	}
 
+	function sortedJson(value) {
+		return JSON.stringify(value, function (key, v) {
+			if (!v || typeof v !== 'object' || Array.isArray(v)) return v;
+			var sorted = {};
+			Object.keys(v).sort().forEach(function (k) { Util.setOwn(sorted, k, v[k]); });
+			return sorted;
+		});
+	}
+
+	function countsText(c) {
+		return ['added', 'changed', 'removed'].filter(function (k) { return c[k] > 0; }).map(function (k) {
+			return c[k] + ' ' + k;
+		}).join(' · ');
+	}
+
 	/* ---------- State in / out ---------- */
+
+	function newSnapshot(id, tree, profile) {
+		return { id: id, created: today(), tree: clone(tree), profile: Model.prunedProfileState(profile, [tree]) };
+	}
 
 	function reset() {
 		head = DEFAULT_ID;
 		edges = [];
-		snapshots = [{ id: DEFAULT_ID, created: today(), tree: Model.treeSpecs() }];
+		snapshots = [newSnapshot(DEFAULT_ID, Model.treeSpecs(), Model.getProfileState())];
 	}
 
 	function load(fileHistory) {
@@ -71,7 +91,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		head = fileHistory.head || DEFAULT_ID;
 		edges = clone(fileHistory.edges || []);
 		snapshots = clone(fileHistory.snapshots || []);
-		if (!find(head)) snapshots.unshift({ id: head, created: today(), tree: Model.treeSpecs() });
+		snapshots.forEach(function (s) { s.profile = Model.prunedProfileState(s.profile || {}, [s.tree]); });
+		if (!find(head)) snapshots.unshift(newSnapshot(head, Model.treeSpecs(), Model.getProfileState()));
 		Model.reserveIds(allTrees());
 	}
 
@@ -86,6 +107,11 @@ NovaDM.History = (function (Model, Parser, Util) {
 	function isDirty() {
 		var h = find(head);
 		return !h || canon(Model.treeSpecs()) !== canon(h.tree);
+	}
+
+	function storeProfiles() {
+		var h = find(head);
+		if (h) h.profile = Model.getProfileState([h.tree]);
 	}
 
 	/* ---------- Reading the graph ---------- */
@@ -176,12 +202,37 @@ NovaDM.History = (function (Model, Parser, Util) {
 		return shown;
 	}
 
+	function savedByName(profile) {
+		var byName = Object.create(null);
+		((profile && profile.saved) || []).forEach(function (p) { byName[p.name] = p; });
+		return byName;
+	}
+
+	function profileSig(p) {
+		return p ? sortedJson([p.constraints || {}, p.valueConstraints || {}]) : undefined;
+	}
+
+	function profileChanges(before, after) {
+		var b = savedByName(before);
+		var a = savedByName(after);
+		var counts = { added: 0, changed: 0, removed: 0 };
+		Object.keys(a).forEach(function (name) {
+			if (!b[name]) counts.added++;
+			else if (profileSig(b[name]) !== profileSig(a[name])) counts.changed++;
+		});
+		Object.keys(b).forEach(function (name) {
+			if (!a[name]) counts.removed++;
+		});
+		return counts;
+	}
+
 	function describe(id) {
 		var snap = find(id);
 		if (!snap) return null;
 		var commented = edges.filter(function (e) { return e.to === id && e.comment; })[0];
 		var changes = changesOf(id);
 		var parents = parentsOf(id);
+		var parent = find(parents[0]);
 		return {
 			id: id,
 			created: snap.created || '',
@@ -193,14 +244,17 @@ NovaDM.History = (function (Model, Parser, Util) {
 			isDirty: id === head && isDirty(),
 			description: commented ? commented.comment : '',
 			changes: changes,
-			changeCounts: changes.counts || { added: 0, changed: 0, removed: 0 }
+			changeCounts: changes.counts || { added: 0, changed: 0, removed: 0 },
+			profileChanges: parent
+				? countsText(profileChanges(Model.prunedProfileState(parent.profile, [snap.tree]), snap.profile))
+				: ''
 		};
 	}
 
 	/* ---------- Changing the history ---------- */
 
-	function addVersion(name, tree, parentIds, comment) {
-		snapshots.push({ id: name, created: today(), tree: clone(tree) });
+	function addVersion(name, tree, profile, parentIds, comment) {
+		snapshots.push(newSnapshot(name, tree, profile));
 		parentIds.forEach(function (p) {
 			edges.push(comment ? { from: p, to: name, comment: comment } : { from: p, to: name });
 		});
@@ -211,21 +265,31 @@ NovaDM.History = (function (Model, Parser, Util) {
 		name = String(name || '').trim();
 		if (!name) return 'Please enter a name for the version.';
 		if (find(name)) return 'A version called "' + name + '" already exists.';
-		addVersion(name, Model.treeSpecs(), [head], String(comment || '').trim());
+		addVersion(name, Model.treeSpecs(), Model.getProfileState(), [head], String(comment || '').trim());
 		return null;
 	}
 
-	function canUpdateHead() { return childrenOf(head).length === 0; }
+	function canUpdateHead() {
+		var h = find(head);
+		return childrenOf(head).length === 0 || (!!h && canon(Model.treeSpecs()) === canon(h.tree));
+	}
 
 	function updateHead() {
 		var h = find(head);
-		if (h && canUpdateHead()) h.tree = Model.treeSpecs();
+		if (!h || !canUpdateHead()) return;
+		h.tree = Model.treeSpecs();
+		h.profile = Model.getProfileState([h.tree]);
+	}
+
+	function loadSnapshot(snap) {
+		Model.replaceTree(clone(snap.tree), allTrees());
+		Model.applyProfileState(snap.profile);
 	}
 
 	function checkout(id) {
 		var snap = find(id);
 		if (!snap) return false;
-		Model.replaceTree(clone(snap.tree), allTrees());
+		loadSnapshot(snap);
 		head = id;
 		return true;
 	}
@@ -234,9 +298,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		var snap = find(id);
 		if (!snap) return null;
 		var name = uniqueName('Restore ' + id);
-		var tree = clone(snap.tree);
-		addVersion(name, tree, [head], 'Restored from "' + id + '"');
-		Model.replaceTree(clone(tree), allTrees());
+		addVersion(name, snap.tree, snap.profile, [head], 'Restored from "' + id + '"');
+		loadSnapshot(find(name));
 		return name;
 	}
 
@@ -338,10 +401,42 @@ NovaDM.History = (function (Model, Parser, Util) {
 		return m === t ? 'keep' : 'conflict';
 	}
 
+	function conflictReason(b, m, t) {
+		if (b === undefined) return 'added differently on both sides';
+		if (t === undefined) return 'deleted on their side, changed on yours';
+		if (m === undefined) return 'changed on their side, deleted on yours';
+		return 'changed differently on both sides';
+	}
+
+	function mergeProfiles(base, mine, theirs, conflict) {
+		var B = savedByName(base);
+		var M = savedByName(mine);
+		var T = savedByName(theirs);
+		var counts = { added: 0, changed: 0, removed: 0 };
+		var saved = [];
+		var names = mine.saved.map(function (p) { return p.name; }).concat(theirs.saved.filter(function (p) {
+			return !M[p.name];
+		}).map(function (p) { return p.name; }));
+		names.forEach(function (name) {
+			var b = profileSig(B[name]), m = profileSig(M[name]), t = profileSig(T[name]);
+			var choice = pick(b, m, t);
+			if (choice === 'conflict') conflict('profile:' + name, 'profile "' + name + '"', conflictReason(b, m, t));
+			if (choice !== 'theirs') {
+				if (M[name]) saved.push(M[name]);
+			} else if (T[name]) {
+				counts[M[name] ? 'changed' : 'added']++;
+				saved.push(T[name]);
+			} else {
+				counts.removed++;
+			}
+		});
+		return { saved: saved, counts: counts, total: counts.added + counts.changed + counts.removed };
+	}
+
 	/**
 	 * Three-way merge of version `sourceId` ("theirs") into the tree on screen ("mine"), against
-	 * their nearest common ancestor ("base"), matched by node id: decides per node, applies the
-	 * result to a copy of the live tree and checks it with the import rules (Parser.validateSpecs).
+	 * their nearest common ancestor ("base"): decides per node (by id) and per profile (by name),
+	 * applies the result to a copy of the live tree and checks it with the import rules.
 	 */
 	function computeMerge(sourceId) {
 		var source = find(sourceId);
@@ -350,6 +445,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 		var baseSnap = baseId === null ? null : find(baseId);
 
 		var live = Model.treeSpecs();
+		var mineProfile = Model.getProfileState([live]);
 		var B = nodeTable(baseSnap ? baseSnap.tree : []);
 		var M = nodeTable(live);
 		var T = nodeTable(source.tree);
@@ -495,21 +591,33 @@ NovaDM.History = (function (Model, Parser, Util) {
 			if (here.parent === null || !removes[here.parent]) here.list.splice(here.list.indexOf(here.spec), 1);
 		});
 
-		var empty = added + updated + removed === 0;
+		var profiles = mergeProfiles(Model.prunedProfileState(baseSnap ? baseSnap.profile : {}, [live]),
+			Model.prunedProfileState(mineProfile, [live]), Model.prunedProfileState(source.profile, [live]), conflict);
+		var count = added + updated + removed + profiles.total;
 		return {
 			baseId: baseId,
 			tree: live,
+			profile: Model.prunedProfileState({
+				active: mineProfile.active,
+				current: mineProfile.current,
+				currentValues: mineProfile.currentValues,
+				saved: profiles.saved
+			}, [live]),
 			added: added,
 			updated: updated,
 			removed: removed,
+			profileCounts: profiles.counts,
+			count: count,
 			conflicts: conflicts,
-			empty: empty,
-			rejected: empty ? null : Parser.validateSpecs(live)
+			empty: count === 0,
+			rejected: count === 0 ? null : Parser.validateSpecs(live)
 		};
 	}
 
 	function mergeSummary(r) {
 		var parts = ['Added ' + r.added, 'Updated ' + r.updated, 'Removed ' + r.removed];
+		var profiles = countsText(r.profileCounts);
+		if (profiles) parts.push('Profiles: ' + profiles);
 		if (r.conflicts.length) parts.push(plural(r.conflicts.length, 'conflict') + ', kept yours');
 		return parts.join(' · ');
 	}
@@ -530,9 +638,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 		if (r.error) return { canMerge: false, problem: r.error };
 		var problem = mergeProblem(id, r);
 		return {
-			added: r.added,
-			updated: r.updated,
-			removed: r.removed,
+			count: r.count,
 			conflicts: r.conflicts,
 			summary: mergeSummary(r),
 			canMerge: !problem,
@@ -547,8 +653,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		if (problem) return { error: problem };
 		var summary = mergeSummary(r);
 		var name = uniqueName('Merge ' + id);
-		addVersion(name, r.tree, [head, id], 'Merged "' + id + '" into "' + head + '" (' + summary + ')');
-		Model.replaceTree(clone(r.tree), allTrees());
+		addVersion(name, r.tree, r.profile, [head, id], 'Merged "' + id + '" into "' + head + '" (' + summary + ')');
+		loadSnapshot(find(name));
 		return { name: name, conflicts: r.conflicts, summary: summary };
 	}
 
@@ -562,6 +668,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 		has: has,
 		snapshotCount: snapshotCount,
 		isDirty: isDirty,
+		storeProfiles: storeProfiles,
 		graphNodes: graphNodes,
 		describe: describe,
 		saveAsNew: saveAsNew,

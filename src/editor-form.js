@@ -6,7 +6,7 @@ window.NovaDM = window.NovaDM || {};
  * predefined subjects (subjects.js) in a cascading menu, or typed in as a
  * custom subject.
  */
-NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
+NovaDM.EditorForm = (function (Model, History, Render, Util, Subjects) {
 	'use strict';
 
 	var MENU_GAP = 4;
@@ -133,6 +133,7 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 			var chip = e.target.closest('[data-value-toggle]');
 			if (!chip) return;
 			Model.cycleValueConstraint(node.id, chip.getAttribute('data-value'));
+			History.storeProfiles();
 			Render.renderTree();
 			renderValueChips(node);
 		});
@@ -327,4 +328,4 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 		addChildTo: addChildTo,
 		deleteNode: deleteNode
 	};
-})(NovaDM.Model, NovaDM.Render, NovaDM.Util, NovaDM.Subjects);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.Util, NovaDM.Subjects);
