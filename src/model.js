@@ -2,9 +2,9 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM action-tree data model: the node shape, tree queries and mutations,
- * always/never constraints, profiles and the scenario space size. No DOM
- * references live here: render.js and the interaction modules read and
- * write this state and redraw.
+ * always/never constraints, profiles, the file's source line and the
+ * scenario space size. No DOM references live here: render.js and the
+ * interaction modules read and write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
  */
 NovaDM.Model = (function (Util) {
@@ -22,6 +22,7 @@ NovaDM.Model = (function (Util) {
 	var valueConstraints = {};
 	var profiles = [];
 	var activeProfileName = null;
+	var source = '';
 
 	/* ---------- Ids ---------- */
 
@@ -254,6 +255,10 @@ NovaDM.Model = (function (Util) {
 		resetNodeConstraints();
 	}
 
+	function getSource() { return source; }
+
+	function setSource(text) { source = text || ''; }
+
 	function getProfileState(trees) {
 		var state = {
 			active: activeProfileName,
@@ -402,6 +407,8 @@ NovaDM.Model = (function (Util) {
 		deleteProfile: deleteProfile,
 		loadProfile: loadProfile,
 		resetProfiles: resetProfiles,
+		getSource: getSource,
+		setSource: setSource,
 		getProfileState: getProfileState,
 		applyProfileState: applyProfileState,
 		scenarioSpaceSize: scenarioSpaceSize

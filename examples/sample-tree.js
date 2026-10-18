@@ -10,7 +10,10 @@
  * - `label` is the attribute name (e.g. "structural_element"), `value` the value/options
  *   string (e.g. "keep_current; replace").
  * Ids and `expanded` are assigned automatically when this is loaded — don't set them here.
+ * NOVADM_SAMPLE_SOURCE is the tree's source line, shown under the tree (empty: none).
  */
+var NOVADM_SAMPLE_SOURCE = '';
+
 var NOVADM_SAMPLE_TREE = [
 	{ kind: 'AND', children: [
 		{

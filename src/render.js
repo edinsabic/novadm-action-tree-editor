@@ -19,6 +19,7 @@ NovaDM.Render = (function (Model, Util) {
 	var exportBtn = document.getElementById('export-tree-btn');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
 	var constraintWarningEl = document.getElementById('constraint-warning');
+	var sourceEl = document.getElementById('tree-source');
 	var zoomLabel = document.getElementById('zoom-label');
 
 	var currentLayout = 'directory';
@@ -112,11 +113,15 @@ NovaDM.Render = (function (Model, Util) {
 			' to create the root node, or click "Load example tree" / "Import tree…".</div>';
 	}
 
-	function scenarioSizeHtml(size) {
-		if (size < SCIENTIFIC_FROM) return String(size);
-		if (!isFinite(size)) return '&gt; 10<sup>308</sup>';
+	function scenarioSizeText(size) {
+		if (size < SCIENTIFIC_FROM) return size.toLocaleString('en-GB');
+		if (!isFinite(size)) return '> 10^308';
 		var parts = size.toExponential(2).split('e');
-		return parts[0] + ' × 10<sup>' + Number(parts[1]) + '</sup>';
+		return parts[0] + ' × 10^' + Number(parts[1]);
+	}
+
+	function scenarioSizeHtml(size) {
+		return Util.escapeHtml(scenarioSizeText(size)).replace(/\^(\d+)$/, '<sup>$1</sup>');
 	}
 
 	function renderTree() {
@@ -134,7 +139,10 @@ NovaDM.Render = (function (Model, Util) {
 		else if (currentLayout === 'traditional') treeContent.innerHTML = traditionalHtml(nodes);
 		else treeContent.innerHTML = '<ul class="tree-list">' + nodes.map(directoryNodeHtml).join('') + '</ul>';
 
+		sourceEl.textContent = Model.getSource();
+		sourceEl.hidden = !Model.getSource();
 		highlightSelected();
+		if (NovaDM.CalculationsTab) NovaDM.CalculationsTab.treeChanged();
 		recordChange();
 	}
 
@@ -307,6 +315,8 @@ NovaDM.Render = (function (Model, Util) {
 		valueChipsHtml: valueChipsHtml,
 		deleteLabel: deleteLabel,
 		trashIconHtml: trashIconHtml,
+		scenarioSizeText: scenarioSizeText,
+		scenarioSizeHtml: scenarioSizeHtml,
 		renderTree: renderTree,
 		recordChange: recordChange,
 		setLayout: setLayout,

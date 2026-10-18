@@ -20,9 +20,20 @@ NovaDM.Util = (function () {
 		return JSON.parse(JSON.stringify(value));
 	}
 
+	function own(obj, key) {
+		return !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+	}
+
+	function setOwn(obj, key, value) {
+		Object.defineProperty(obj, key, { value: value, writable: true, enumerable: true, configurable: true });
+		return value;
+	}
+
 	return {
 		escapeHtml: escapeHtml,
 		shorten: shorten,
-		clone: clone
+		clone: clone,
+		own: own,
+		setOwn: setOwn
 	};
 })();
