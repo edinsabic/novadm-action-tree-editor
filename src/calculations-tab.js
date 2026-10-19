@@ -5,8 +5,8 @@ window.NovaDM = window.NovaDM || {};
  * to the calculated values and KPIs, with an option picker per node; an editor panel for the selected
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
  * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
- * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) lives
- * in memory: undo covers it, the file does not yet.
+ * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) is the
+ * open version's: history.js stores a copy per version, the file holds it per version, and undo covers it.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
 	'use strict';
@@ -35,7 +35,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		{ name: 'Other', units: ['m²', 'kWh', 'years'] }
 	];
 	var CUSTOM_UNIT = '*custom*';
-	var MAX_UNIT_LENGTH = 20;
+	var MAX_UNIT_LENGTH = Calculations.MAX_UNIT_LENGTH;
 
 	var escapeHtml = Util.escapeHtml;
 	var formatNumber = CalculationsReport.formatNumber;
@@ -61,6 +61,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var addDerivedBtn = document.getElementById('calc-add-derived-btn');
 	var shownLabel = document.getElementById('calc-shown-scenario');
 
+	var starterData = Calculations.starterData;
+
 	var data = starterData();
 	var analysis = Calculations.analyze(data, []);
 	var evaluatedTreeKey = null;
@@ -70,18 +72,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var selected = null;
 	var zoomPercent = 100;
 	var customUnitFor = null;
-
-	function starterData() {
-		return {
-			attributes: ['price', 'co2'],
-			units: { price: 'DKK', co2: 'kg CO₂e' },
-			values: {},
-			derived: [
-				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
-				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
-			]
-		};
-	}
 
 	function exampleData() {
 		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
@@ -98,7 +88,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return data.units && own(data.units, name) ? data.units[name] : '';
 	}
 
-	function isUntouched() { return JSON.stringify(data) === JSON.stringify(starterData()); }
+	function isUntouched() { return Calculations.signature(data) === Calculations.signature(starterData()); }
 
 	function isVisible() { return !panel.hidden; }
 
@@ -920,8 +910,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function nameProblem(name, kind) {
 		if (!Calculations.isName(name)) {
-			return '"' + name + '" is not a valid name. Use letters, digits and _, start with a letter or _,' +
-				' and avoid if, then, else, total and selected.';
+			return '"' + name + '" is not a valid name: ' + Calculations.NAME_RULE + '.';
 		}
 		if (kind === 'attribute') {
 			return analysis.attributes.indexOf(name) === -1 ? null : 'There is already an attribute "' + name + '".';

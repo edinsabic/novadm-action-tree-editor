@@ -2,28 +2,45 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Profile and version-history flyouts, opened from the pill buttons in the
- * control row above the tree. Each is its own dialog (not a shared flyout
- * with hidden panes); clicking the other tab in either header switches
- * straight to the other one.
+ * control rows (the version flyout from both tabs). Each is its own dialog
+ * (not a shared flyout with hidden panes); clicking the other tab in either
+ * header switches straight to the other one.
  */
 NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, Util) {
 	'use strict';
 
 	var MAX_COMMENT_CHARS = 64;
+	var MAX_PILL_LABEL_CHARS = 34;
 	var MAX_CONFLICTS_LISTED = 5;
+	var MAX_VERSIONS_NAMED = 3;
 	var GRAPH_ZOOM_STEP = 1.2;
+	var PROFILE_PILL_TITLE = 'Create, select or delete profiles';
+	var VERSION_PILL_TITLE = 'Version history: open, save, merge or delete versions';
+	var GONE_PROFILE_TITLE = 'None of its nodes are in this version\'s tree, so it\'s safe to delete';
+	var EMPTY_PROFILE_TITLE = 'It marks no nodes as always or never, so it\'s safe to delete';
+	var SAVE_PROFILE_TITLE = 'Save the always/never marks in the tree as a named profile in this version';
+	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile.' +
+		' Saved profiles stay as they are.';
 
 	var escapeHtml = Util.escapeHtml;
+	var plural = Util.plural;
 
 	var profileBtn = document.getElementById('profile-btn');
 	var versionBtn = document.getElementById('version-btn');
+	var calcVersionBtn = document.getElementById('calc-version-btn');
 	var profileFlyout = document.getElementById('profile-flyout');
 	var versionFlyout = document.getElementById('version-flyout');
 	var profilePane = document.getElementById('profile-pane');
 	var versionPane = document.getElementById('version-pane');
 	var panelsStack = document.getElementById('panels-stack');
+	var calcWorkspace = document.getElementById('calc-workspace');
+	var treeLayer = document.getElementById('tree-popover-layer');
+	var calcLayer = document.getElementById('calc-popover-layer');
+	var versionTabs = versionFlyout.querySelector('.flyout-tabs');
+	var versionTitle = versionFlyout.querySelector('.flyout-title');
 
 	var openFlyoutName = null;
+	var openedFrom = 'tree';
 	var selectedVersion = null;
 	var graph = null;
 	var graphView = null;
@@ -36,17 +53,31 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	/* ---------- Profile pane ---------- */
 
+	function setPill(btn, name, suffix, title) {
+		var shown = Util.shorten(name, MAX_PILL_LABEL_CHARS);
+		btn.querySelector('.pill-btn-label').textContent = shown + suffix;
+		btn.title = shown === name ? title : name + '\n' + title;
+	}
+
 	function updatePillLabels() {
-		var active = Model.getActiveProfileName();
-		profileBtn.querySelector('.pill-btn-label').textContent = active || 'Create or select profile';
+		setPill(profileBtn, 'Profiles: ' + (Model.getActiveProfileName() || 'none'), '', PROFILE_PILL_TITLE);
+		var unsaved = History.isDirty() ? ' · unsaved' : '';
+		setPill(versionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
+		setPill(calcVersionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
+	}
+
+	function isEmptyProfile(p) {
+		return Object.keys(p.constraints || {}).length === 0 && Object.keys(p.valueConstraints || {}).length === 0;
 	}
 
 	function renderProfilePane() {
 		var activeName = Model.getActiveProfileName();
 		var profiles = Model.getProfiles();
 		var html = '<div class="editor-add-row">' +
-			'<button type="button" class="btn" id="save-profile-btn">Save profile</button>' +
-			'<button type="button" class="btn" id="reset-profile-btn">Reset</button>' +
+			'<button type="button" class="btn" id="save-profile-btn" title="' + SAVE_PROFILE_TITLE + '">' +
+				'Save profile</button>' +
+			'<button type="button" class="btn" id="reset-profile-btn" title="' + CLEAR_MARKS_TITLE + '">' +
+				'Clear all marks</button>' +
 			'</div>' +
 			'<div class="popover-divider"></div>';
 
@@ -54,11 +85,15 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
 				' (chip) in the tree to mark it as always/never, then Save profile.</div>';
 		} else {
-			html += '<ul class="popover-list">' + profiles.map(function (p) {
+			var onScreen = Model.getProfileState([Model.treeSpecs()]).saved;
+			html += '<ul class="popover-list">' + profiles.map(function (p, i) {
 				var name = escapeHtml(p.name);
+				var why = !isEmptyProfile(onScreen[i]) ? ''
+					: isEmptyProfile(p) ? EMPTY_PROFILE_TITLE : GONE_PROFILE_TITLE;
 				return '<li class="profile-row">' +
 					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') + '"' +
-					' data-load-profile="' + name + '">' + name + '</button>' +
+					' data-load-profile="' + name + '"' + (why ? ' title="' + escapeHtml(why) + '"' : '') + '>' + name +
+					(why ? ' <span class="profile-empty">(empty)</span>' : '') + '</button>' +
 					'<button type="button" class="profile-delete-btn" data-delete-profile="' + name + '"' +
 					' aria-label="Delete profile" title="Delete profile">' + Render.trashIconHtml() + '</button>' +
 					'</li>';
@@ -69,11 +104,11 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function afterProfileChange(constraintsChanged) {
+		History.storeProfiles();
 		if (constraintsChanged) {
 			Render.renderTree();
 			EditorForm.renderEditorForm();
 		}
-		updatePillLabels();
 		renderProfilePane();
 	}
 
@@ -93,7 +128,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function resetProfile() {
-		if (Model.hasNodeConstraints() && !confirm('Reset every constraint back to default?')) return;
 		Model.resetNodeConstraints();
 		afterProfileChange(true);
 	}
@@ -131,7 +165,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'<button type="button" class="btn-icon" data-vg="zoom-in" aria-label="Zoom in">+</button>' +
 			'<button type="button" class="btn" data-vg="recenter" title="Fit the whole graph into view">' +
 			'Re-center</button>' +
-			'<button type="button" class="btn" data-vg="save" title="Save the tree on screen as a new version">' +
+			'<button type="button" class="btn" data-vg="save"' +
+			' title="Save the tree and numbers on screen as a new version">' +
 			'Save as new version…</button>' +
 			'</div>' +
 			'<div class="vg-box" id="vg-box"></div>' +
@@ -160,13 +195,20 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	function tagHtml(text) { return '<span class="vg-tag">' + text + '</span>'; }
 
+	function partChangesHtml(part, text, title) {
+		if (!text) return '';
+		return '<div class="metric-label" title="' + title + '">' + part + ': ' + escapeHtml(text) + '</div>';
+	}
+
 	function changesHtml(d) {
 		if (d.parents.length === 0) return '<div class="metric-label">First version</div>';
 		var c = d.changeCounts;
 		var label = '+' + c.added + ' added · ' + c.changed + ' changed · ' + c.removed + ' removed';
-		var title = 'Compared with "' + escapeHtml(d.parents[0]) + '"';
+		var title = escapeHtml('Compared with "' + d.parents[0] + '"');
+		var profiles = partChangesHtml('Profiles', d.profileChanges, title) +
+			partChangesHtml('Numbers', d.numberChanges, title);
 		if (c.added + c.changed + c.removed === 0) {
-			return '<div class="metric-label" title="' + title + '">' + label + '</div>';
+			return '<div class="metric-label" title="' + title + '">' + label + '</div>' + profiles;
 		}
 		var signs = { add: '+', remove: '−', modify: '~' };
 		var lines = d.changes.map(function (ch) {
@@ -176,7 +218,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		return '<details>' +
 			'<summary class="metric-label" title="' + title + '">' + label + '</summary>' +
 			'<div class="note">' + lines + '</div>' +
-			'</details>';
+			'</details>' + profiles;
 	}
 
 	function noticeHtml() {
@@ -208,7 +250,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	function updateButtonHtml() {
 		var canUpdate = History.canUpdateHead();
 		return buttonHtml('update', 'Update this version', canUpdate
-			? 'Overwrite this version with the tree on screen'
+			? 'Overwrite this version with the tree and numbers on screen'
 			: 'Other versions are based on this one, so it cannot be changed. Save as a new version instead.',
 			!canUpdate);
 	}
@@ -223,7 +265,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 				(d.isDirty ? updateButtonHtml() : '');
 		}
 		var p = History.mergePreview(d.id);
-		var count = p.canMerge ? p.added + p.updated + p.removed : 0;
+		var count = p.canMerge ? p.count : 0;
 		return buttonHtml('open', 'Open', 'Switch the editor to this version', false) +
 			buttonHtml('restore', 'Restore',
 				'Make a new version with the contents of this one, on top of "' + head + '"', false) +
@@ -271,15 +313,52 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		renderVersionPane();
 	}
 
+	function formatNumber(n) { return n.toLocaleString('en-GB', { maximumFractionDigits: 10 }); }
+
+	function namedVersions(ids) {
+		var more = ids.length - MAX_VERSIONS_NAMED;
+		return quoted(ids.slice(0, MAX_VERSIONS_NAMED)) + (more > 0 ? ' and ' + more + ' more' : '');
+	}
+
+	function numberName(c) { return c.attribute + ' of ' + c.label + (c.option ? ' · ' + c.option : ''); }
+
+	function correctionQuestion(found) {
+		if (found.length === 1) {
+			var c = found[0];
+			return formatNumber(c.from) + ' is also the ' + numberName(c) + ' in ' +
+				plural(c.versions.length, 'other version') + ' (' + namedVersions(c.versions) + ').\n\n' +
+				'Change it to ' + formatNumber(c.to) + ' there too?';
+		}
+		var versions = [];
+		found.forEach(function (c) {
+			c.versions.forEach(function (id) { if (versions.indexOf(id) === -1) versions.push(id); });
+		});
+		var lines = found.slice(0, MAX_CONFLICTS_LISTED).map(function (c) {
+			return '\n• ' + numberName(c) + ': ' + formatNumber(c.from) + ' → ' + formatNumber(c.to) +
+				' (in ' + namedVersions(c.versions) + ')';
+		}).join('');
+		var more = found.length - MAX_CONFLICTS_LISTED;
+		return plural(found.length, 'number') + ' you changed still have the old value in ' +
+			plural(versions.length, 'other version') + ':' + lines + (more > 0 ? '\n• … and ' + more + ' more' : '') +
+			'\n\nChange them there too?';
+	}
+
+	function offerCorrections(before) {
+		var found = History.numberCorrections(before);
+		if (found.length && confirm(correctionQuestion(found))) History.applyNumberCorrections(found);
+	}
+
 	function saveAsNewVersion() {
 		var name = (prompt('Name for the new version:', '') || '').trim();
 		if (!name) return;
 		var comment = (prompt('Comment (optional) – what changed?', '') || '').trim();
+		var before = History.storedCalculations();
 		var error = History.saveAsNew(name, comment);
 		if (error) {
 			alert(error);
 			return;
 		}
+		offerCorrections(before);
 		notice = null;
 		selectedVersion = History.getHead();
 		renderVersionPane();
@@ -337,8 +416,10 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			afterTreeChange(result.name);
 		},
 		update: function () {
-			if (!confirm('Overwrite "' + History.getHead() + '" with the tree on screen?')) return;
+			if (!confirm('Overwrite "' + History.getHead() + '" with the tree and numbers on screen?')) return;
+			var before = History.storedCalculations();
 			History.updateHead();
+			offerCorrections(before);
 			notice = null;
 			renderVersionPane();
 		},
@@ -375,11 +456,14 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	/* ---------- Opening, closing and switching ---------- */
 
 	function setActivePill(name) {
-		profileBtn.classList.toggle('is-open', name === 'profile');
-		versionBtn.classList.toggle('is-open', name === 'version');
-		profileBtn.setAttribute('aria-expanded', name === 'profile' ? 'true' : 'false');
-		versionBtn.setAttribute('aria-expanded', name === 'version' ? 'true' : 'false');
-		panelsStack.classList.toggle('flyout-open', name !== null);
+		var fromCalc = openedFrom === 'calc';
+		[[profileBtn, name === 'profile'], [versionBtn, name === 'version' && !fromCalc],
+			[calcVersionBtn, name === 'version' && fromCalc]].forEach(function (pill) {
+			pill[0].classList.toggle('is-open', pill[1]);
+			pill[0].setAttribute('aria-expanded', pill[1] ? 'true' : 'false');
+		});
+		panelsStack.classList.toggle('flyout-open', name !== null && !fromCalc);
+		calcWorkspace.classList.toggle('flyout-open', name !== null && fromCalc);
 	}
 
 	function closeFlyouts() {
@@ -389,11 +473,15 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		openFlyoutName = null;
 	}
 
-	function openFlyout(name) {
+	function openFlyout(name, from) {
 		openFlyoutName = name;
+		openedFrom = from || openedFrom;
 		if (name === 'version') {
 			selectedVersion = null;
 			notice = null;
+			(openedFrom === 'calc' ? calcLayer : treeLayer).appendChild(versionFlyout);
+			versionTabs.hidden = openedFrom === 'calc';
+			versionTitle.hidden = openedFrom !== 'calc';
 		}
 		renderFlyout();
 		profileFlyout.hidden = name !== 'profile';
@@ -401,21 +489,19 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		setActivePill(name);
 	}
 
-	function toggleFlyout(name) {
-		var wasOpen = openFlyoutName === name;
+	function toggleFlyout(name, from) {
+		var wasOpen = openFlyoutName === name && openedFrom === from;
 		closeFlyouts();
-		if (!wasOpen) openFlyout(name);
+		if (!wasOpen) openFlyout(name, from);
 	}
 
-	profileBtn.addEventListener('click', function (e) {
-		e.stopPropagation();
-		toggleFlyout('profile');
-	});
-
-	versionBtn.addEventListener('click', function (e) {
-		e.stopPropagation();
-		toggleFlyout('version');
-	});
+	[[profileBtn, 'profile', 'tree'], [versionBtn, 'version', 'tree'], [calcVersionBtn, 'version', 'calc']]
+		.forEach(function (p) {
+			p[0].addEventListener('click', function (e) {
+				e.stopPropagation();
+				toggleFlyout(p[1], p[2]);
+			});
+		});
 
 	document.querySelectorAll('[data-flyout-switch]').forEach(function (tab) {
 		tab.addEventListener('click', function (e) {

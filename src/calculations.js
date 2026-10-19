@@ -4,7 +4,8 @@ window.NovaDM = window.NovaDM || {};
  * Engine of the Calculations tab: the formula language of calculated
  * values (parse, references, evaluate one scenario), scenario counts,
  * uniform sampling, listing every scenario, the scenario picked by hand,
- * and statistics. No DOM.
+ * statistics, the starter data, moving numbers on a rename, and the data as
+ * a flat list of entries (what counts when comparing or saving it). No DOM.
  * Language and sampling: ../spec/action-tree-grammar.md
  */
 NovaDM.Calculations = (function (Util) {
@@ -16,6 +17,9 @@ NovaDM.Calculations = (function (Util) {
 	var CHILD_KEYS = ['cond', 'yes', 'no', 'left', 'right', 'operand'];
 	var ERROR = { error: true };
 	var TOO_LONG = 'The formula is too long, or has too many brackets inside each other, to calculate.';
+	var MAX_UNIT_LENGTH = 20;
+	var NAME_RULE = 'use letters, digits and _, start with a letter or _, and avoid ' +
+		KEYWORDS.slice(0, -1).join(', ') + ' and ' + KEYWORDS[KEYWORDS.length - 1];
 
 	var TOKEN_PATTERNS = [
 		{ type: 'space', re: /^\s+/ },
@@ -293,6 +297,166 @@ NovaDM.Calculations = (function (Util) {
 		return { items: items, byName: byName, order: order, labels: labels, attributes: attributes };
 	}
 
+	/* ---------- Data ---------- */
+
+	function starterData() {
+		return {
+			attributes: ['price', 'co2'],
+			units: { price: 'DKK', co2: 'kg CO₂e' },
+			values: {},
+			derived: [
+				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
+				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
+			]
+		};
+	}
+
+	function hasNumbers(stored) {
+		if (typeof stored === 'number') return true;
+		return !!stored && typeof stored === 'object' && Object.keys(stored).some(function (k) {
+			return hasNumbers(stored[k]);
+		});
+	}
+
+	function numbersIn(table) {
+		return Object.keys(table).filter(function (o) { return typeof table[o] === 'number'; });
+	}
+
+	function labelClash(source, target) {
+		var clash = null;
+		Object.keys(source).some(function (a) {
+			var s = source[a];
+			var t = own(target, a) ? target[a] : null;
+			if (!hasNumbers(s) || !hasNumbers(t)) return false;
+			if (typeof s === 'number' || typeof t === 'number') {
+				if (s !== t) clash = { attribute: a, option: '' };
+				return !!clash;
+			}
+			numbersIn(s).some(function (o) {
+				if (own(t, o) && typeof t[o] === 'number' && t[o] !== s[o]) clash = { attribute: a, option: o };
+				return !!clash;
+			});
+			return !!clash;
+		});
+		return clash;
+	}
+
+	function mergeLabel(source, target) {
+		Object.keys(source).forEach(function (a) {
+			var s = source[a];
+			if (!hasNumbers(s)) return;
+			if (!own(target, a) || !hasNumbers(target[a])) {
+				Util.setOwn(target, a, Util.clone(s));
+				return;
+			}
+			if (typeof s === 'number') return;
+			numbersIn(s).forEach(function (o) { Util.setOwn(target[a], o, s[o]); });
+		});
+	}
+
+	function renameLabel(data, from, to, keep) {
+		var out = Util.clone(data);
+		var values = out.values || {};
+		if (!from || !to || from === to || !own(values, from) || !hasNumbers(values[from])) {
+			return { data: out, blocked: [] };
+		}
+		var target = own(values, to) ? values[to] : {};
+		var clash = labelClash(values[from], target);
+		if (clash) {
+			return { data: out, blocked: [{ from: from, to: to, attribute: clash.attribute, option: clash.option }] };
+		}
+		mergeLabel(values[from], target);
+		Util.setOwn(values, to, target);
+		if (!keep) delete values[from];
+		return { data: out, blocked: [] };
+	}
+
+	function renameOptions(data, label, renames) {
+		var out = Util.clone(data);
+		var blocked = [];
+		var byAttribute = own(out.values, label) ? out.values[label] : null;
+		var attributes = Object.keys(byAttribute || {}).filter(function (a) {
+			return !!byAttribute[a] && typeof byAttribute[a] === 'object';
+		});
+
+		function number(a, option) {
+			var t = byAttribute[a];
+			return own(t, option) && typeof t[option] === 'number' ? t[option] : null;
+		}
+
+		renames.forEach(function (r) {
+			var moving = attributes.filter(function (a) { return number(a, r.from) !== null; });
+			var clash = moving.filter(function (a) {
+				return number(a, r.to) !== null && number(a, r.to) !== number(a, r.from);
+			})[0];
+			if (clash) {
+				blocked.push({ from: r.from, to: r.to, attribute: clash, option: '' });
+				return;
+			}
+			moving.forEach(function (a) {
+				Util.setOwn(byAttribute[a], r.to, byAttribute[a][r.from]);
+				if (!r.keep) delete byAttribute[a][r.from];
+			});
+		});
+		return { data: out, blocked: blocked };
+	}
+
+	/* ---------- Entries ---------- */
+
+	function entryKey(parts) { return JSON.stringify(parts); }
+
+	function entries(data) {
+		var found = Object.create(null);
+		var values = (data && data.values) || {};
+		Object.keys(values).forEach(function (label) {
+			var byAttribute = values[label] || {};
+			Object.keys(byAttribute).forEach(function (attribute) {
+				var stored = byAttribute[attribute];
+				if (typeof stored === 'number') found[entryKey(['v', label, attribute, ''])] = stored;
+				if (!stored || typeof stored !== 'object') return;
+				Object.keys(stored).forEach(function (option) {
+					if (typeof stored[option] !== 'number') return;
+					found[entryKey(['v', label, attribute, option])] = stored[option];
+				});
+			});
+		});
+		var units = (data && data.units) || {};
+		Object.keys(units).forEach(function (a) { if (units[a]) found[entryKey(['u', a])] = units[a]; });
+		((data && data.attributes) || []).forEach(function (a) { found[entryKey(['a', a])] = true; });
+		((data && data.derived) || []).forEach(function (d) { found[entryKey(['d', d.name])] = Util.sortedJson(d); });
+		return found;
+	}
+
+	function signature(data) {
+		var found = entries(data);
+		return JSON.stringify([
+			Object.keys(found).sort().map(function (k) { return [k, found[k]]; }),
+			(data && data.attributes) || [],
+			((data && data.derived) || []).map(function (d) { return d.name; })
+		]);
+	}
+
+	function putNumber(data, label, attribute, option, number) {
+		var byAttribute = own(data.values, label) ? data.values[label] : Util.setOwn(data.values, label, {});
+		if (option === '') {
+			Util.setOwn(byAttribute, attribute, number);
+			return;
+		}
+		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
+		if (!stored || typeof stored !== 'object') stored = Util.setOwn(byAttribute, attribute, {});
+		Util.setOwn(stored, option, number);
+	}
+
+	function numbersOnly(values) {
+		var data = { values: {} };
+		var found = entries({ values: values });
+		Object.keys(found).forEach(function (key) {
+			var p = JSON.parse(key);
+			putNumber(data, p[1], p[2], p[3], found[key]);
+		});
+		return data.values;
+	}
+
 	/* ---------- Evaluate ---------- */
 
 	function numberFor(values, label, attribute, option) {
@@ -561,8 +725,18 @@ NovaDM.Calculations = (function (Util) {
 	}
 
 	return {
+		MAX_UNIT_LENGTH: MAX_UNIT_LENGTH,
+		NAME_RULE: NAME_RULE,
 		isName: isName,
 		analyze: analyze,
+		starterData: starterData,
+		renameLabel: renameLabel,
+		renameOptions: renameOptions,
+		entryKey: entryKey,
+		entries: entries,
+		signature: signature,
+		putNumber: putNumber,
+		numbersOnly: numbersOnly,
 		numberFor: numberFor,
 		evaluateScenario: evaluateScenario,
 		isError: isError,

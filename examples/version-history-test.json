@@ -1,6 +1,6 @@
 {
 	"format": "novadm-action-tree",
-	"version": 5,
+	"version": 6,
 	"source": "",
 
 	"versionControl": {
@@ -35,32 +35,27 @@
 		]
 	},
 
-	"profile": {
-		"active": null,
-		"current": {},
-		"currentValues": {},
-		"saved": [
-			{
-				"name": "Low budget",
-				"constraints": { "n11": "never" },
-				"valueConstraints": {
-					"n20": { "replace_aluminium": "never" },
-					"n21": { "add_skylights": "never" }
-				}
-			},
-			{
-				"name": "Underfloor heating",
-				"constraints": {},
-				"valueConstraints": {
-					"n19": { "underfloor_heating": "always" }
-				}
-			}
-		]
-	},
-
 	"actionTree": [
 		{
 			"id": "Initial version",
+			"created": "2026-10-01",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": { "n11": "never" },
+						"valueConstraints": {}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -223,12 +218,39 @@
 					]
 				}
 			],
-			"created": "2026-10-01"
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Windows & doors",
 			"created": "2026-10-02",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": { "n11": "never" },
+						"valueConstraints": {
+							"n20": { "replace_aluminium": "never" }
+						}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -398,12 +420,41 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Roof",
 			"created": "2026-10-05",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": { "n11": "never" },
+						"valueConstraints": {
+							"n20": { "replace_aluminium": "never" },
+							"n21": { "add_skylights": "never" }
+						}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -581,12 +632,38 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Facade",
 			"created": "2026-10-03",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": {},
+						"valueConstraints": {}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -740,12 +817,41 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Merge Facade",
 			"created": "2026-10-06",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": {},
+						"valueConstraints": {
+							"n20": { "replace_aluminium": "never" },
+							"n21": { "add_skylights": "never" }
+						}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -915,12 +1021,40 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Ground floor",
 			"created": "2026-10-07",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": [
+					{
+						"name": "Low budget",
+						"constraints": { "n11": "never" },
+						"valueConstraints": {}
+					},
+					{
+						"name": "Underfloor heating",
+						"constraints": {},
+						"valueConstraints": {
+							"n19": { "underfloor_heating": "always" }
+						}
+					}
+				]
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -1090,7 +1224,16 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		}
 	]
 }

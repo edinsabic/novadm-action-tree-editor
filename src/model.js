@@ -2,8 +2,8 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM action-tree data model: the node shape, tree queries and mutations,
- * always/never constraints, profiles, the file's source line and the
- * scenario space size. No DOM references live here: render.js and the
+ * always/never constraints, profiles, the file's source line, the nodes per
+ * class and the scenario space size. No DOM references live here: render.js and the
  * interaction modules read and write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
  */
@@ -259,6 +259,10 @@ NovaDM.Model = (function (Util) {
 
 	function setSource(text) { source = text || ''; }
 
+	function emptyProfileState() {
+		return { active: null, current: {}, currentValues: {}, saved: [] };
+	}
+
 	function getProfileState(trees) {
 		var state = {
 			active: activeProfileName,
@@ -274,17 +278,19 @@ NovaDM.Model = (function (Util) {
 
 		function collect(specs) {
 			specs.forEach(function (s) {
-				valuesById[s.id] = (valuesById[s.id] || []).concat(parseValues(s.value));
+				Util.setOwn(valuesById, s.id, valuesOf(s.id).concat(parseValues(s.value)));
 				collect(s.children || []);
 			});
 		}
+
+		function valuesOf(id) { return Util.own(valuesById, id) ? valuesById[id] : []; }
 
 		function isAlwaysOrNever(c) { return c === 'always' || c === 'never'; }
 
 		function prune(constraints) {
 			var out = {};
 			Object.keys(constraints || {}).forEach(function (id) {
-				if (valuesById[id] && isAlwaysOrNever(constraints[id])) out[id] = constraints[id];
+				if (Util.own(valuesById, id) && isAlwaysOrNever(constraints[id])) Util.setOwn(out, id, constraints[id]);
 			});
 			return out;
 		}
@@ -292,12 +298,13 @@ NovaDM.Model = (function (Util) {
 		function pruneValues(byNode) {
 			var out = {};
 			Object.keys(byNode || {}).forEach(function (id) {
+				if (!Util.own(valuesById, id)) return;
 				var values = valuesById[id];
-				if (!values) return;
 				Object.keys(byNode[id]).forEach(function (v) {
 					var c = byNode[id][v];
 					if (values.indexOf(v) !== -1 && isAlwaysOrNever(c)) {
-						(out[id] = out[id] || {})[v] = c;
+						var kept = Util.own(out, id) ? out[id] : Util.setOwn(out, id, {});
+						Util.setOwn(kept, v, c);
 					}
 				});
 			});
@@ -305,26 +312,46 @@ NovaDM.Model = (function (Util) {
 		}
 
 		trees.forEach(collect);
+		var saved = (state.saved || []).map(function (p) {
+			return {
+				name: p.name,
+				constraints: prune(p.constraints),
+				valueConstraints: pruneValues(p.valueConstraints)
+			};
+		});
+		var hasActive = saved.some(function (p) { return p.name === state.active; });
 		return {
-			active: state.active === undefined ? null : state.active,
+			active: hasActive ? state.active : null,
 			current: prune(state.current),
 			currentValues: pruneValues(state.currentValues),
-			saved: (state.saved || []).map(function (p) {
-				return {
-					name: p.name,
-					constraints: prune(p.constraints),
-					valueConstraints: pruneValues(p.valueConstraints)
-				};
-			})
+			saved: saved
 		};
 	}
 
-	function applyProfileState(state, otherTrees) {
-		var pruned = prunedProfileState(state || {}, [treeSpecs()].concat(otherTrees || []));
-		nodeConstraints = pruned.current;
-		valueConstraints = pruned.currentValues;
-		profiles = pruned.saved;
-		activeProfileName = findProfile(pruned.active) ? pruned.active : null;
+	function applyProfileState(state, trees) {
+		var applied = trees ? prunedProfileState(state || {}, trees) : Util.clone(state || emptyProfileState());
+		nodeConstraints = applied.current || {};
+		valueConstraints = applied.currentValues || {};
+		profiles = applied.saved || [];
+		activeProfileName = findProfile(applied.active) ? applied.active : null;
+	}
+
+	/* ---------- Counts ---------- */
+
+	function classCounts() {
+		var counts = { subjects: 0, approaches: 0, features: 0, featureValues: 0 };
+		(function walk(nodes) {
+			nodes.forEach(function (n) {
+				if (n.nodeClass === 'Subject') counts.subjects++;
+				if (n.nodeClass === 'Approach') counts.approaches++;
+				if (n.nodeClass === 'Feature') {
+					counts.features++;
+					counts.featureValues += n.value.length;
+				}
+				walk(n.children);
+			});
+		})(root.children);
+		return counts;
 	}
 
 	/* ---------- Scenario space size ---------- */
@@ -409,8 +436,11 @@ NovaDM.Model = (function (Util) {
 		resetProfiles: resetProfiles,
 		getSource: getSource,
 		setSource: setSource,
+		emptyProfileState: emptyProfileState,
 		getProfileState: getProfileState,
+		prunedProfileState: prunedProfileState,
 		applyProfileState: applyProfileState,
+		classCounts: classCounts,
 		scenarioSpaceSize: scenarioSpaceSize
 	};
 })(NovaDM.Util);

@@ -25,6 +25,7 @@ window.NovaDM = window.NovaDM || {};
 		});
 		panels.forEach(function (panel) { panel.hidden = panel.id !== name; });
 		if (name === 'calculations') CalculationsTab.render();
+		else Render.treeShown();
 	}
 
 	tabs.forEach(function (tab) {

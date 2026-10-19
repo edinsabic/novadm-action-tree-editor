@@ -1,6 +1,6 @@
 {
 	"format": "novadm-action-tree",
-	"version": 5,
+	"version": 6,
 	"source": "This renovation design concept was developed by COWI as part of the Horizon 2020 research project PROBONO (No. 101037075) funded by the European Union.",
 
 	"versionControl": {
@@ -49,16 +49,15 @@
 		]
 	},
 
-	"profile": {
-		"active": null,
-		"current": {},
-		"currentValues": {},
-		"saved": []
-	},
-
 	"actionTree": [
 		{
 			"id": "k45a",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -304,11 +303,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45a2",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -614,11 +628,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45b",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -670,11 +699,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45c",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -795,11 +839,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45c2",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -877,11 +936,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45d",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -983,11 +1057,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45e",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -1106,11 +1195,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45f",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -1272,11 +1376,26 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "k45g",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n1",
@@ -1422,7 +1541,16 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		}
 	]
 }

@@ -31,11 +31,13 @@
 				</div>
 
 				<div class="control-right">
-					<button id="profile-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false">
-						<span class="pill-btn-label">Create or select profile</span>
+					<button id="profile-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false"
+						title="Create, select or delete profiles">
+						<span class="pill-btn-label">Profiles: none</span>
 					</button>
-					<button id="version-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false">
-						<span class="pill-btn-label">Version history</span>
+					<button id="version-btn" class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false"
+						title="Version history: open, save, merge or delete versions">
+						<span class="pill-btn-label">Version: Initial version</span>
 					</button>
 				</div>
 			</div>
@@ -60,8 +62,8 @@
 						<div class="toolbar-group" role="group" aria-label="Tree file">
 							<button id="load-example-btn" class="btn" type="button">Load example tree</button>
 							<button id="clear-tree-btn" class="btn" type="button">Clear tree</button>
-							<button id="import-tree-btn" class="btn" type="button">Import tree</button>
-							<button id="export-tree-btn" class="btn" type="button">Export tree</button>
+							<button class="btn" type="button" data-file-action="import">Import file</button>
+							<button class="btn" type="button" data-file-action="export">Export file</button>
 							<input id="import-file-input" type="file" hidden />
 						</div>
 						<div class="toolbar-group toolbar-end">
@@ -115,21 +117,42 @@
 			<div class="scenario-summary-bar">
 				<span class="scenario-summary-label">Calculations (live)</span>
 				<div class="scenario-metrics">
-					<span class="metric">
-						<span class="metric-label">Scenario space size</span>
-						<span class="metric-value" id="scenario-space-size-value">0</span>
-					</span>
-					<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
-						Warning: the applied constraints are contradictory.
+					<div class="metric-group">
+						<span class="metric">
+							<span class="metric-label">Scenario space size</span>
+							<span class="metric-value" id="scenario-space-size-value">0</span>
+						</span>
+						<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
+							Warning: the applied constraints are contradictory.
+						</div>
 					</div>
-					<div id="scenario-kpi-metrics" class="scenario-kpis"></div>
+					<div class="metric-group" role="group" aria-label="Nodes in the tree">
+						<span class="metric" title="The Subject nodes in the tree: the building elements to renovate">
+							<span class="metric-label">Subjects</span>
+							<span class="metric-value" id="subject-count-value">0</span>
+						</span>
+						<span class="metric" title="The Approach nodes in the tree: the ways a subject is renovated">
+							<span class="metric-label">Approaches</span>
+							<span class="metric-value" id="approach-count-value">0</span>
+						</span>
+						<span class="metric" title="The Feature nodes in the tree: the properties chosen for a subject">
+							<span class="metric-label">Features</span>
+							<span class="metric-value" id="feature-count-value">0</span>
+						</span>
+						<span class="metric" title="Feature values: the options of all Feature nodes added up">
+							<span class="metric-label">Feature values</span>
+							<span class="metric-value" id="feature-value-count-value">0</span>
+						</span>
+					</div>
+					<div id="scenario-kpi-metrics" class="metric-group"></div>
 				</div>
-				<button id="open-calculations-btn" class="scenario-summary-link" type="button">
-					Get your numbers in the Calculations tab &rarr;
+				<button id="open-calculations-btn" class="scenario-summary-link" type="button"
+					title="Get your numbers in the Calculations tab: prices, CO₂ and the other KPIs per scenario">
+					Go to Calculations &rarr;
 				</button>
 			</div>
 
-			<div class="viewport-popover-layer">
+			<div id="tree-popover-layer" class="viewport-popover-layer">
 				<div id="profile-flyout" class="flyout" role="dialog" aria-label="Profiles" hidden>
 					<div class="flyout-header">
 						<div class="flyout-tabs" role="tablist" aria-label="Profile or version">
@@ -154,6 +177,7 @@
 							<button class="flyout-tab active" type="button" role="tab" aria-selected="true"
 								data-flyout-switch="version">Version</button>
 						</div>
+						<strong class="flyout-title" hidden>Version history</strong>
 						<button class="flyout-close" type="button" data-flyout-close="version"
 							aria-label="Close">&times;</button>
 					</div>
@@ -167,7 +191,7 @@
 	</section>
 
 	<section id="calculations" class="tab-panel calc-panel" role="tabpanel" hidden>
-		<div class="calc-workspace">
+		<div id="calc-workspace" class="calc-workspace">
 
 			<div class="control-row">
 				<div class="control-left">
@@ -177,18 +201,23 @@
 						<span class="control-label">Scenario space size</span>
 						<span id="calc-space-size" class="control-value">&ndash;</span>
 					</span>
-					<span class="viewport-box-label">Changes here are not saved yet</span>
 				</div>
-				<div class="control-right" role="group" aria-labelledby="calc-sample-label">
-					<span id="calc-sample-label" class="control-label">Sample</span>
-					<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
-					<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
-					<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
-						<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
-							aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 3,000)" />
-						<button id="calc-sample-btn" class="pill-btn" type="button"
-							title="Sample this number of scenarios">scenarios</button>
+				<div class="control-right">
+					<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
+						<span id="calc-sample-label" class="control-label">Sample</span>
+						<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
+						<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
+						<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
+							<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
+								aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 3,000)" />
+							<button id="calc-sample-btn" class="pill-btn" type="button"
+								title="Sample this number of scenarios">scenarios</button>
+						</div>
 					</div>
+					<button id="calc-version-btn" class="pill-btn" type="button" aria-haspopup="true"
+						aria-expanded="false" title="Version history: open, save, merge or delete versions">
+						<span class="pill-btn-label">Version: Initial version</span>
+					</button>
 				</div>
 			</div>
 
@@ -213,10 +242,12 @@
 						<div class="toolbar-group" role="group" aria-label="Attributes">
 							<button id="calc-add-derived-btn" class="btn" type="button">+ Calculated value</button>
 						</div>
-						<div class="toolbar-group" role="group" aria-label="Example">
+						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="calc-load-example-btn" class="btn" type="button"
 								title="Load the example. It also replaces the tree in the Action tree tab.">
 								Load example</button>
+							<button class="btn" type="button" data-file-action="import">Import file</button>
+							<button class="btn" type="button" data-file-action="export">Export file</button>
 						</div>
 						<span id="calc-shown-scenario" class="calc-shown-scenario" role="status" hidden></span>
 					</div>
@@ -233,6 +264,8 @@
 			</div>
 
 			<div id="calc-report-head" class="calc-report-head"></div>
+
+			<div id="calc-popover-layer" class="viewport-popover-layer"></div>
 
 		</div>
 

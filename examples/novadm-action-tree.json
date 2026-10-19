@@ -1,6 +1,6 @@
 {
 	"format": "novadm-action-tree",
-	"version": 5,
+	"version": 6,
 	"source": "",
 
 	"versionControl": {
@@ -30,17 +30,16 @@
 		]
 	},
 
-	"profile": {
-		"active": null,
-		"current": {},
-		"currentValues": {},
-		"saved": []
-	},
-
 	"actionTree": [
 		{
 			"id": "Initial version",
 			"created": "2026-10-04",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n0",
@@ -202,12 +201,27 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Add scaffolding",
 			"created": "2026-10-04",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n0",
@@ -377,12 +391,27 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Insulate envelope",
 			"created": "2026-10-04",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n0",
@@ -552,12 +581,27 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Underfloor heating",
 			"created": "2026-10-04",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n0",
@@ -727,12 +771,27 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		},
 
 		{
 			"id": "Merge Underfloor heating",
 			"created": "2026-10-04",
+			"profile": {
+				"active": null,
+				"current": {},
+				"currentValues": {},
+				"saved": []
+			},
 			"tree": [
 				{
 					"id": "n0",
@@ -902,7 +961,16 @@
 						}
 					]
 				}
-			]
+			],
+			"calculations": {
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": {},
+				"derived": [
+					{ "name": "sum", "displayName": "Sum", "formula": "total(price)", "unit": "DKK", "kpi": true },
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
+				]
+			}
 		}
 	]
 }

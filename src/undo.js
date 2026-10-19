@@ -49,11 +49,12 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 	function record() {
 		if (restoring) return;
 		var state = serialize();
+		if (state === current) return;
+		Popovers.updatePillLabels();
 		if (current === null) {
 			current = state;
 			return;
 		}
-		if (state === current) return;
 		var key = typingKey();
 		if (!key || key !== lastKey) {
 			undoStack.push(current);
@@ -87,7 +88,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 				if (expanded[n.id] !== undefined) n.expanded = expanded[n.id];
 			});
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);
-			Model.applyProfileState(doc.profile, versionTrees);
+			Model.applyProfileState(doc.profile);
 			History.load(doc.history);
 			Model.setSource(doc.source);
 			CalculationsTab.setState(doc.calculations);

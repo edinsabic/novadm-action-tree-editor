@@ -4,9 +4,10 @@ window.NovaDM = window.NovaDM || {};
  * Editor panel: the form for the selected node (kind, class, label, value,
  * option constraints, add child, delete). A Subject node is picked from the
  * predefined subjects (subjects.js) in a cascading menu, or typed in as a
- * custom subject.
+ * custom subject. Renaming a label or an option moves its numbers in the
+ * Calculations tab along with it.
  */
-NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
+NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subjects) {
 	'use strict';
 
 	var MENU_GAP = 4;
@@ -17,6 +18,8 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 	var subjectMenu = document.getElementById('subject-menu');
 
 	var customSubjectId = null;
+	var rename = null;
+	var mouseIsDown = false;
 
 	function on(id, type, handler) {
 		document.getElementById(id).addEventListener(type, handler);
@@ -70,6 +73,7 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 				'<input id="f-value" type="text" placeholder="e.g. keep_current; replace"' +
 					' title="Separate several options with ; or ,"' +
 					' value="' + escapeHtml(node.value.join('; ')) + '" />' +
+				'<div class="note" id="f-rename-note" hidden></div>' +
 			'</div>';
 	}
 
@@ -133,6 +137,7 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 			var chip = e.target.closest('[data-value-toggle]');
 			if (!chip) return;
 			Model.cycleValueConstraint(node.id, chip.getAttribute('data-value'));
+			History.storeProfiles();
 			Render.renderTree();
 			renderValueChips(node);
 		});
@@ -148,19 +153,89 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 			});
 		}
 		if (document.getElementById('f-label')) {
+			on('f-label', 'focus', function () { startRename(node); });
 			on('f-label', 'input', function (e) {
 				node.label = e.target.value;
+				followLabel(node);
 				Render.renderTree();
 			});
+			on('f-label', 'blur', finishRename);
+			on('f-value', 'focus', function () { startRename(node); });
 			on('f-value', 'input', function (e) {
 				node.value = Model.parseValues(e.target.value);
+				followOptions(node);
 				Render.renderTree();
 				renderValueChips(node);
 			});
+			on('f-value', 'blur', finishRename);
 		}
 		on('add-and-child', 'click', function () { addChildTo(node, 'AND'); });
 		on('add-xor-child', 'click', function () { addChildTo(node, 'XOR'); });
 		on('delete-node', 'click', function () { deleteNode(node); });
+	}
+
+	/* ---------- Numbers follow a rename ---------- */
+
+	function startRename(node) {
+		var tab = NovaDM.CalculationsTab;
+		rename = !tab ? null : {
+			nodeId: node.id,
+			data: Util.clone(tab.getState()),
+			label: node.label,
+			values: node.value.slice()
+		};
+	}
+
+	function usedElsewhere(node, label, option) {
+		var found = false;
+		(function walk(nodes) {
+			nodes.forEach(function (n) {
+				var same = n.label === label && (option === undefined || n.value.indexOf(option) !== -1);
+				if (n.id !== node.id && same) found = true;
+				walk(n.children);
+			});
+		})(Model.root.children);
+		return found;
+	}
+
+	function applyRename(result) {
+		NovaDM.CalculationsTab.setState(result.data);
+		var note = document.getElementById('f-rename-note');
+		note.hidden = result.blocked.length === 0;
+		note.textContent = result.blocked.map(function (b) {
+			return b.to + ' already has a different ' + b.attribute + (b.option ? ' for ' + b.option : '') +
+				', so the numbers of ' + b.from + ' stay where they are.';
+		}).join(' ');
+	}
+
+	function followLabel(node) {
+		if (!rename || rename.nodeId !== node.id) return;
+		applyRename(Calculations.renameLabel(rename.data, rename.label, node.label,
+			usedElsewhere(node, rename.label)));
+	}
+
+	function followOptions(node) {
+		if (!rename || rename.nodeId !== node.id) return;
+		var before = rename.values;
+		var after = node.value;
+		var renames = before.length !== after.length ? [] : before.map(function (from, i) {
+			return { from: from, to: after[i] };
+		}).filter(function (r) {
+			return r.from !== r.to && after.indexOf(r.from) === -1 && before.indexOf(r.to) === -1;
+		});
+		renames.forEach(function (r) { r.keep = usedElsewhere(node, node.label, r.from); });
+		applyRename(Calculations.renameOptions(rename.data, node.label, renames));
+	}
+
+	function hideRenameNote() {
+		var note = document.getElementById('f-rename-note');
+		if (note) note.hidden = true;
+	}
+
+	function finishRename() {
+		rename = null;
+		if (mouseIsDown) document.addEventListener('mouseup', hideRenameNote, { once: true });
+		else hideRenameNote();
 	}
 
 	function renderValueChips(node) {
@@ -318,6 +393,9 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 
 	window.addEventListener('resize', closeSubjectMenu);
 
+	document.addEventListener('mousedown', function () { mouseIsDown = true; }, true);
+	document.addEventListener('mouseup', function () { mouseIsDown = false; }, true);
+
 	document.addEventListener('scroll', function (e) {
 		if (!subjectMenu.contains(e.target)) closeSubjectMenu();
 	}, true);
@@ -327,4 +405,4 @@ NovaDM.EditorForm = (function (Model, Render, Util, Subjects) {
 		addChildTo: addChildTo,
 		deleteNode: deleteNode
 	};
-})(NovaDM.Model, NovaDM.Render, NovaDM.Util, NovaDM.Subjects);
+})(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.Calculations, NovaDM.Util, NovaDM.Subjects);

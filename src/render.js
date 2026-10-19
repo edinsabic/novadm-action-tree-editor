@@ -2,8 +2,8 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Draws the live tree into #tree-viewport-content, in the directory or the
- * traditional layout, updates the live scenario space size, and owns the
- * tree's zoom. Also holds the node badge/chip helpers other modules reuse.
+ * traditional layout, updates the live scenario space size and node counts,
+ * and owns the tree's zoom. Also holds the node badge/chip helpers other modules reuse.
  */
 NovaDM.Render = (function (Model, Util) {
 	'use strict';
@@ -16,14 +16,21 @@ NovaDM.Render = (function (Model, Util) {
 	var escapeHtml = Util.escapeHtml;
 
 	var treeContent = document.getElementById('tree-viewport-content');
-	var exportBtn = document.getElementById('export-tree-btn');
+	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
 	var constraintWarningEl = document.getElementById('constraint-warning');
+	var countEls = {
+		subjects: document.getElementById('subject-count-value'),
+		approaches: document.getElementById('approach-count-value'),
+		features: document.getElementById('feature-count-value'),
+		featureValues: document.getElementById('feature-value-count-value')
+	};
 	var sourceEl = document.getElementById('tree-source');
 	var zoomLabel = document.getElementById('zoom-label');
 
 	var currentLayout = 'directory';
 	var zoomPercent = 100;
+	var fitWhenShown = false;
 
 	/* ---------- Node parts shared by both layouts ---------- */
 
@@ -131,7 +138,11 @@ NovaDM.Render = (function (Model, Util) {
 
 		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
 		constraintWarningEl.hidden = isEmpty || size !== 0;
-		exportBtn.disabled = isEmpty;
+		var counts = Model.classCounts();
+		Object.keys(countEls).forEach(function (key) {
+			countEls[key].textContent = counts[key].toLocaleString('en-GB');
+		});
+		exportBtns.forEach(function (btn) { btn.disabled = isEmpty; });
 		treeContent.classList.toggle('empty-hint', isEmpty);
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && !isEmpty);
 
@@ -170,6 +181,8 @@ NovaDM.Render = (function (Model, Util) {
 	function fitTraditionalView() {
 		var canvas = treeContent.querySelector('.tt-canvas');
 		if (currentLayout !== 'traditional' || !canvas) return;
+		fitWhenShown = treeContent.clientWidth === 0;
+		if (fitWhenShown) return;
 		treeContent.style.zoom = 1;
 		var style = getComputedStyle(treeContent);
 		var availW = treeContent.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -178,6 +191,10 @@ NovaDM.Render = (function (Model, Util) {
 		setZoom(Math.max(MIN_FIT_ZOOM, Math.floor(k * 20) * 5));
 		treeContent.scrollLeft = (treeContent.scrollWidth - treeContent.clientWidth) / 2;
 		treeContent.scrollTop = 0;
+	}
+
+	function treeShown() {
+		if (fitWhenShown) fitTraditionalView();
 	}
 
 	/* ---------- Directory layout ---------- */
@@ -322,6 +339,7 @@ NovaDM.Render = (function (Model, Util) {
 		setLayout: setLayout,
 		setZoom: setZoom,
 		getZoom: getZoom,
-		fitTraditionalView: fitTraditionalView
+		fitTraditionalView: fitTraditionalView,
+		treeShown: treeShown
 	};
 })(NovaDM.Model, NovaDM.Util);
