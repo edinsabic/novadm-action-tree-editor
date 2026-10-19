@@ -46,7 +46,9 @@ default) and `valueConstraints` (`nodeId -> { value -> 'always'|'never' }`)
 constraints, valueConstraints }`), and which one is loaded (`active`).
 
 **Profiles belong to a version.** Every profile change – a dot or a chip,
-and Save, Load, Delete or Reset in `popovers.js`'s profile pane – is
+and Save, Load, Delete or "Clear all marks" in `popovers.js`'s profile
+pane (it clears every mark on screen and unloads the profile; saved
+profiles stay as they are) – is
 stored straight into the version on screen (`History.storeProfiles()`),
 so it never makes the version "unsaved". Each version keeps its own list:
 "Save as new version" gives the new version a copy, and from then on the
@@ -59,7 +61,10 @@ version is stored – save, update, restore, merge, import and export – by
 `Model.prunedProfileState`. While editing nothing is pruned: a constraint
 on a deleted node is invisible and harmless, and undo/redo restore the
 working state exactly as recorded. A profile that loses all its
-constraints is kept; the user can delete it.
+constraints is kept, never deleted for the user: the profile pane marks
+it "(empty)", with the title "None of its nodes are in this version's
+tree, so it's safe to delete" (checked against the tree on screen), or
+"It marks no nodes as always or never, …" for one saved with no marks.
 
 Load example and Clear tree start with one version and no profiles
 (`Model.resetProfiles()`); an import loads the profiles of the file's
@@ -686,7 +691,7 @@ lines between the sections are valid JSON and are written on purpose):
   a snapshot with two incoming edges). Edges must not go round in a
   circle (a snapshot based on itself); such a file is rejected. On export
   what is on screen replaces the head snapshot (the editor asks first if
-  it has unsaved changes and other versions exist, and refuses if other
+  it has unsaved changes, even when it is the only version, and refuses if other
   versions are based on the head and its tree changed). A fresh document
   has one snapshot called "Initial version" and no edges.
 - **`profile`** (per snapshot) – `current` / `currentValues` are the

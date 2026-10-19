@@ -552,6 +552,8 @@ main {
 
 .profile-row .popover-item { flex: 1; }
 
+.profile-empty { color: var(--color-ink-muted); }
+
 .profile-delete-btn {
 	display: flex;
 	flex-shrink: 0;

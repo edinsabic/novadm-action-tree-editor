@@ -16,6 +16,11 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var GRAPH_ZOOM_STEP = 1.2;
 	var PROFILE_PILL_TITLE = 'Create, select or delete profiles';
 	var VERSION_PILL_TITLE = 'Version history: open, save, merge or delete versions';
+	var GONE_PROFILE_TITLE = 'None of its nodes are in this version\'s tree, so it\'s safe to delete';
+	var EMPTY_PROFILE_TITLE = 'It marks no nodes as always or never, so it\'s safe to delete';
+	var SAVE_PROFILE_TITLE = 'Save the always/never marks in the tree as a named profile in this version';
+	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile.' +
+		' Saved profiles stay as they are.';
 
 	var escapeHtml = Util.escapeHtml;
 	var plural = Util.plural;
@@ -61,12 +66,18 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		setPill(calcVersionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
 	}
 
+	function isEmptyProfile(p) {
+		return Object.keys(p.constraints || {}).length === 0 && Object.keys(p.valueConstraints || {}).length === 0;
+	}
+
 	function renderProfilePane() {
 		var activeName = Model.getActiveProfileName();
 		var profiles = Model.getProfiles();
 		var html = '<div class="editor-add-row">' +
-			'<button type="button" class="btn" id="save-profile-btn">Save profile</button>' +
-			'<button type="button" class="btn" id="reset-profile-btn">Reset</button>' +
+			'<button type="button" class="btn" id="save-profile-btn" title="' + SAVE_PROFILE_TITLE + '">' +
+				'Save profile</button>' +
+			'<button type="button" class="btn" id="reset-profile-btn" title="' + CLEAR_MARKS_TITLE + '">' +
+				'Clear all marks</button>' +
 			'</div>' +
 			'<div class="popover-divider"></div>';
 
@@ -74,11 +85,15 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
 				' (chip) in the tree to mark it as always/never, then Save profile.</div>';
 		} else {
-			html += '<ul class="popover-list">' + profiles.map(function (p) {
+			var onScreen = Model.getProfileState([Model.treeSpecs()]).saved;
+			html += '<ul class="popover-list">' + profiles.map(function (p, i) {
 				var name = escapeHtml(p.name);
+				var why = !isEmptyProfile(onScreen[i]) ? ''
+					: isEmptyProfile(p) ? EMPTY_PROFILE_TITLE : GONE_PROFILE_TITLE;
 				return '<li class="profile-row">' +
 					'<button type="button" class="popover-item' + (p.name === activeName ? ' active' : '') + '"' +
-					' data-load-profile="' + name + '">' + name + '</button>' +
+					' data-load-profile="' + name + '"' + (why ? ' title="' + escapeHtml(why) + '"' : '') + '>' + name +
+					(why ? ' <span class="profile-empty">(empty)</span>' : '') + '</button>' +
 					'<button type="button" class="profile-delete-btn" data-delete-profile="' + name + '"' +
 					' aria-label="Delete profile" title="Delete profile">' + Render.trashIconHtml() + '</button>' +
 					'</li>';
@@ -113,7 +128,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function resetProfile() {
-		if (Model.hasNodeConstraints() && !confirm('Reset every constraint back to default?')) return;
 		Model.resetNodeConstraints();
 		afterProfileChange(true);
 	}

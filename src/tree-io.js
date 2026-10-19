@@ -111,10 +111,9 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 				' cannot store them. Save them as a new version first (Version history → Save as new version…).');
 			return;
 		}
-		var hasOtherVersions = History.snapshotCount() > 1;
-		if (History.isDirty() && hasOtherVersions && !confirm('"' + History.getHead() + '" has unsaved changes.' +
-			' The file will store them as that version (the other versions are kept as they are).' +
-			'\n\nExport anyway?')) {
+		var others = History.snapshotCount() > 1 ? ' (the other versions are kept as they are)' : '';
+		if (History.isDirty() && !confirm('"' + History.getHead() + '" has unsaved changes. The file will store' +
+			' them as that version' + others + '.\n\nExport anyway?')) {
 			return;
 		}
 		var tree = Model.treeSpecs();
