@@ -16,6 +16,12 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 	var snapshots = [];
 
 	var clone = Util.clone;
+	var plural = Util.plural;
+	var sortedJson = Util.sortedJson;
+	var entryKey = Calculations.entryKey;
+	var calcEntries = Calculations.entries;
+	var calcSignature = Calculations.signature;
+	var setNumber = Calculations.putNumber;
 
 	/* ---------- Small helpers ---------- */
 
@@ -25,8 +31,6 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 		var d = new Date();
 		return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 	}
-
-	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
 	function indexOfVersion(id) {
 		for (var i = 0; i < snapshots.length; i++) {
@@ -59,15 +63,6 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 		}));
 	}
 
-	function sortedJson(value) {
-		return JSON.stringify(value, function (key, v) {
-			if (!v || typeof v !== 'object' || Array.isArray(v)) return v;
-			var sorted = {};
-			Object.keys(v).sort().forEach(function (k) { Util.setOwn(sorted, k, v[k]); });
-			return sorted;
-		});
-	}
-
 	function countsText(c, noun) {
 		return ['added', 'changed', 'removed'].filter(function (k) { return c[k] > 0; }).map(function (k) {
 			return (noun ? plural(c[k], noun) : c[k]) + ' ' + k;
@@ -81,40 +76,6 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 	function liveCalculations() {
 		var tab = NovaDM.CalculationsTab;
 		return tab ? tab.getState() : Calculations.starterData();
-	}
-
-	function entryKey(parts) { return JSON.stringify(parts); }
-
-	function calcEntries(data) {
-		var entries = Object.create(null);
-		var values = (data && data.values) || {};
-		Object.keys(values).forEach(function (label) {
-			var byAttribute = values[label] || {};
-			Object.keys(byAttribute).forEach(function (attribute) {
-				var stored = byAttribute[attribute];
-				if (typeof stored === 'number') entries[entryKey(['v', label, attribute, ''])] = stored;
-				if (!stored || typeof stored !== 'object') return;
-				Object.keys(stored).forEach(function (option) {
-					if (typeof stored[option] === 'number') {
-						entries[entryKey(['v', label, attribute, option])] = stored[option];
-					}
-				});
-			});
-		});
-		var units = (data && data.units) || {};
-		Object.keys(units).forEach(function (a) { if (units[a]) entries[entryKey(['u', a])] = units[a]; });
-		((data && data.attributes) || []).forEach(function (a) { entries[entryKey(['a', a])] = true; });
-		((data && data.derived) || []).forEach(function (d) { entries[entryKey(['d', d.name])] = sortedJson(d); });
-		return entries;
-	}
-
-	function calcSignature(data) {
-		var entries = calcEntries(data);
-		return JSON.stringify([
-			Object.keys(entries).sort().map(function (k) { return [k, entries[k]]; }),
-			(data && data.attributes) || [],
-			((data && data.derived) || []).map(function (d) { return d.name; })
-		]);
 	}
 
 	function calcChanges(before, after) {
@@ -154,17 +115,6 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 		var p = JSON.parse(key);
 		if (p[0] === 'v') return p[1] + ' · ' + p[2] + (p[3] ? ' · ' + p[3] : '');
 		return { u: 'unit of ', a: 'attribute ', d: 'calculated value ' }[p[0]] + p[1];
-	}
-
-	function setNumber(data, label, attribute, option, number) {
-		var byAttribute = Util.own(data.values, label) ? data.values[label] : Util.setOwn(data.values, label, {});
-		if (option === '') {
-			Util.setOwn(byAttribute, attribute, number);
-			return;
-		}
-		var stored = Util.own(byAttribute, attribute) ? byAttribute[attribute] : null;
-		if (!stored || typeof stored !== 'object') stored = Util.setOwn(byAttribute, attribute, {});
-		Util.setOwn(stored, option, number);
 	}
 
 	function calcFromEntries(entries, mine, theirs) {

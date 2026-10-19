@@ -206,6 +206,12 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   The attributes and calculated values keep mine's order, with theirs-only
   ones at the end. A label and attribute that would end up with both a
   plain number and numbers per option keeps mine and is a conflict.
+  The base is the common ancestor's numbers as they are now, not as they
+  were when the branches split: a version others are based on still takes
+  number changes (Update this version, number corrections), so after
+  such a change a merge can take theirs without a conflict, or report one
+  that isn't. Keeping each version's numbers from the split is on the
+  plan's "Later" list.
 
   Conflicts of all three parts are listed together ("profile "Budget" –
   changed differently on both sides", "windows_glazing · price ·
@@ -361,9 +367,15 @@ the move is part of the field's one undo step.
 
 - A label renamed from `old` to `new`: its numbers move to `new`, or are
   copied when another node still has `old`. If `new` already has
-  numbers, nothing moves, and on leaving the field an alert says so
-  ("roof already has numbers, so the numbers of roof_old were left where
-  they were.").
+  numbers, the two merge: `new` keeps its own and gains the ones it
+  lacks. Only a clash moves nothing: the same attribute and option (or
+  the same plain number) holding different numbers on both sides, or a
+  plain number on one side against numbers per option on the other.
+  While the field has focus, a note under the Value / options field
+  names the clash ("roof already has a different price for keep_current,
+  so the numbers of roof_old stay where they are."). It goes when the
+  field loses focus, after the mouse button is released, so the click
+  that left the field still lands; an alert there would swallow it.
 - Options renamed: when the list keeps its length and an entry changes
   at the same place to a name that wasn't in the list before, its numbers
   move within the label, by the same rules. Adding, removing or

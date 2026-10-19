@@ -13,7 +13,6 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 	var DEFAULT_SNAPSHOT_ID = 'Initial version';
 	var MAX_FLAT_OBJECT_WIDTH = 110;
 	var MAX_SHOWN_CHARS = 40;
-	var NAME_RULE = 'use letters, digits and _, start with a letter or _, and avoid if, then, else, total and selected';
 
 	/* ---------- Root node and empty history ---------- */
 
@@ -111,27 +110,6 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 		};
 	}
 
-	function fileValues(values) {
-		var out = {};
-		Object.keys(values || {}).forEach(function (label) {
-			var byAttribute = {};
-			var stored = values[label] || {};
-			Object.keys(stored).forEach(function (a) {
-				if (typeof stored[a] === 'number') {
-					Util.setOwn(byAttribute, a, stored[a]);
-					return;
-				}
-				var options = {};
-				Object.keys(stored[a] || {}).forEach(function (o) {
-					if (typeof stored[a][o] === 'number') Util.setOwn(options, o, stored[a][o]);
-				});
-				if (Object.keys(options).length) Util.setOwn(byAttribute, a, options);
-			});
-			if (Object.keys(byAttribute).length) Util.setOwn(out, label, byAttribute);
-		});
-		return out;
-	}
-
 	function fileCalculations(data) {
 		data = data || Calculations.starterData();
 		var units = {};
@@ -141,7 +119,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 		return {
 			attributes: (data.attributes || []).slice(),
 			units: units,
-			values: fileValues(data.values),
+			values: Calculations.numbersOnly(data.values),
 			derived: (data.derived || []).map(function (d) {
 				var copy = { name: d.name };
 				if (d.displayName) copy.displayName = d.displayName;
@@ -405,7 +383,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 
 	function nameProblem(name, here) {
 		if (typeof name === 'string' && Calculations.isName(name)) return null;
-		return here + ' ' + shown(name) + ' cannot be used in formulas (' + NAME_RULE + ').';
+		return here + ' ' + shown(name) + ' cannot be used in formulas (' + Calculations.NAME_RULE + ').';
 	}
 
 	function numberProblem(value, here) {

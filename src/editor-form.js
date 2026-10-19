@@ -19,6 +19,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	var customSubjectId = null;
 	var rename = null;
+	var mouseIsDown = false;
 
 	function on(id, type, handler) {
 		document.getElementById(id).addEventListener(type, handler);
@@ -72,6 +73,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 				'<input id="f-value" type="text" placeholder="e.g. keep_current; replace"' +
 					' title="Separate several options with ; or ,"' +
 					' value="' + escapeHtml(node.value.join('; ')) + '" />' +
+				'<div class="note" id="f-rename-note" hidden></div>' +
 			'</div>';
 	}
 
@@ -180,8 +182,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 			nodeId: node.id,
 			data: Util.clone(tab.getState()),
 			label: node.label,
-			values: node.value.slice(),
-			blocked: []
+			values: node.value.slice()
 		};
 	}
 
@@ -198,8 +199,13 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	}
 
 	function applyRename(result) {
-		rename.blocked = result.blocked;
 		NovaDM.CalculationsTab.setState(result.data);
+		var note = document.getElementById('f-rename-note');
+		note.hidden = result.blocked.length === 0;
+		note.textContent = result.blocked.map(function (b) {
+			return b.to + ' already has a different ' + b.attribute + (b.option ? ' for ' + b.option : '') +
+				', so the numbers of ' + b.from + ' stay where they are.';
+		}).join(' ');
 	}
 
 	function followLabel(node) {
@@ -221,13 +227,15 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 		applyRename(Calculations.renameOptions(rename.data, node.label, renames));
 	}
 
+	function hideRenameNote() {
+		var note = document.getElementById('f-rename-note');
+		if (note) note.hidden = true;
+	}
+
 	function finishRename() {
-		var blocked = rename ? rename.blocked : [];
 		rename = null;
-		if (!blocked.length) return;
-		alert(blocked.map(function (b) {
-			return b.to + ' already has numbers, so the numbers of ' + b.from + ' were left where they were.';
-		}).join('\n'));
+		if (mouseIsDown) document.addEventListener('mouseup', hideRenameNote, { once: true });
+		else hideRenameNote();
 	}
 
 	function renderValueChips(node) {
@@ -384,6 +392,9 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	});
 
 	window.addEventListener('resize', closeSubjectMenu);
+
+	document.addEventListener('mousedown', function () { mouseIsDown = true; }, true);
+	document.addEventListener('mouseup', function () { mouseIsDown = false; }, true);
 
 	document.addEventListener('scroll', function (e) {
 		if (!subjectMenu.contains(e.target)) closeSubjectMenu();

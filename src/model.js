@@ -278,17 +278,19 @@ NovaDM.Model = (function (Util) {
 
 		function collect(specs) {
 			specs.forEach(function (s) {
-				valuesById[s.id] = (valuesById[s.id] || []).concat(parseValues(s.value));
+				Util.setOwn(valuesById, s.id, valuesOf(s.id).concat(parseValues(s.value)));
 				collect(s.children || []);
 			});
 		}
+
+		function valuesOf(id) { return Util.own(valuesById, id) ? valuesById[id] : []; }
 
 		function isAlwaysOrNever(c) { return c === 'always' || c === 'never'; }
 
 		function prune(constraints) {
 			var out = {};
 			Object.keys(constraints || {}).forEach(function (id) {
-				if (valuesById[id] && isAlwaysOrNever(constraints[id])) out[id] = constraints[id];
+				if (Util.own(valuesById, id) && isAlwaysOrNever(constraints[id])) Util.setOwn(out, id, constraints[id]);
 			});
 			return out;
 		}
@@ -296,12 +298,13 @@ NovaDM.Model = (function (Util) {
 		function pruneValues(byNode) {
 			var out = {};
 			Object.keys(byNode || {}).forEach(function (id) {
+				if (!Util.own(valuesById, id)) return;
 				var values = valuesById[id];
-				if (!values) return;
 				Object.keys(byNode[id]).forEach(function (v) {
 					var c = byNode[id][v];
 					if (values.indexOf(v) !== -1 && isAlwaysOrNever(c)) {
-						(out[id] = out[id] || {})[v] = c;
+						var kept = Util.own(out, id) ? out[id] : Util.setOwn(out, id, {});
+						Util.setOwn(kept, v, c);
 					}
 				});
 			});

@@ -30,6 +30,7 @@ NovaDM.Render = (function (Model, Util) {
 
 	var currentLayout = 'directory';
 	var zoomPercent = 100;
+	var fitWhenShown = false;
 
 	/* ---------- Node parts shared by both layouts ---------- */
 
@@ -180,6 +181,8 @@ NovaDM.Render = (function (Model, Util) {
 	function fitTraditionalView() {
 		var canvas = treeContent.querySelector('.tt-canvas');
 		if (currentLayout !== 'traditional' || !canvas) return;
+		fitWhenShown = treeContent.clientWidth === 0;
+		if (fitWhenShown) return;
 		treeContent.style.zoom = 1;
 		var style = getComputedStyle(treeContent);
 		var availW = treeContent.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -188,6 +191,10 @@ NovaDM.Render = (function (Model, Util) {
 		setZoom(Math.max(MIN_FIT_ZOOM, Math.floor(k * 20) * 5));
 		treeContent.scrollLeft = (treeContent.scrollWidth - treeContent.clientWidth) / 2;
 		treeContent.scrollTop = 0;
+	}
+
+	function treeShown() {
+		if (fitWhenShown) fitTraditionalView();
 	}
 
 	/* ---------- Directory layout ---------- */
@@ -332,6 +339,7 @@ NovaDM.Render = (function (Model, Util) {
 		setLayout: setLayout,
 		setZoom: setZoom,
 		getZoom: getZoom,
-		fitTraditionalView: fitTraditionalView
+		fitTraditionalView: fitTraditionalView,
+		treeShown: treeShown
 	};
 })(NovaDM.Model, NovaDM.Util);

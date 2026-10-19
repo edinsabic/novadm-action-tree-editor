@@ -88,7 +88,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return data.units && own(data.units, name) ? data.units[name] : '';
 	}
 
-	function isUntouched() { return JSON.stringify(data) === JSON.stringify(starterData()); }
+	function isUntouched() { return Calculations.signature(data) === Calculations.signature(starterData()); }
 
 	function isVisible() { return !panel.hidden; }
 
@@ -910,8 +910,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function nameProblem(name, kind) {
 		if (!Calculations.isName(name)) {
-			return '"' + name + '" is not a valid name. Use letters, digits and _, start with a letter or _,' +
-				' and avoid if, then, else, total and selected.';
+			return '"' + name + '" is not a valid name: ' + Calculations.NAME_RULE + '.';
 		}
 		if (kind === 'attribute') {
 			return analysis.attributes.indexOf(name) === -1 ? null : 'There is already an attribute "' + name + '".';

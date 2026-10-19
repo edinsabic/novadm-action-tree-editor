@@ -23,7 +23,6 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	function refreshAll() {
 		Render.renderTree();
 		EditorForm.renderEditorForm();
-		Popovers.updatePillLabels();
 		Popovers.resetVersionView();
 		Popovers.renderFlyout();
 		Render.fitTraditionalView();

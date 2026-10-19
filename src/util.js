@@ -29,11 +29,24 @@ NovaDM.Util = (function () {
 		return value;
 	}
 
+	function sortedJson(value) {
+		return JSON.stringify(value, function (key, v) {
+			if (!v || typeof v !== 'object' || Array.isArray(v)) return v;
+			var sorted = {};
+			Object.keys(v).sort().forEach(function (k) { setOwn(sorted, k, v[k]); });
+			return sorted;
+		});
+	}
+
+	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
 	return {
 		escapeHtml: escapeHtml,
 		shorten: shorten,
 		clone: clone,
 		own: own,
-		setOwn: setOwn
+		setOwn: setOwn,
+		sortedJson: sortedJson,
+		plural: plural
 	};
 })();

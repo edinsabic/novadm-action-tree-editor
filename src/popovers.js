@@ -18,6 +18,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var VERSION_PILL_TITLE = 'Version history: open, save, merge or delete versions';
 
 	var escapeHtml = Util.escapeHtml;
+	var plural = Util.plural;
 
 	var profileBtn = document.getElementById('profile-btn');
 	var versionBtn = document.getElementById('version-btn');
@@ -93,7 +94,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			Render.renderTree();
 			EditorForm.renderEditorForm();
 		}
-		updatePillLabels();
 		renderProfilePane();
 	}
 
@@ -298,8 +298,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		selectedVersion = select;
 		renderVersionPane();
 	}
-
-	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
 	function formatNumber(n) { return n.toLocaleString('en-GB', { maximumFractionDigits: 10 }); }
 
