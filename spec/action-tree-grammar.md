@@ -720,10 +720,15 @@ lines between the sections are valid JSON and are written on purpose):
   starter data, and a `calculations` without `attributes` gets the
   attributes found in `values`, in order. Keys are read with `Util.own`
   and written with `Util.setOwn`, so a label such as `__proto__` stays an
-  ordinary key.
+  ordinary key. A snapshot may hold at most 500 calculated values
+  (`MAX_CALCULATED_VALUES`), so a chain of them that refer to each other
+  can't overflow the stack.
 - Each part is read by its own small function in `parser.js`, and
   `validateDocument()` checks all of them before the live editor is
-  touched.
+  touched. Import (`tree-io.js`) reads, validates and copies the whole
+  file once in one `try`, so a file nested too deeply (in a field the
+  format doesn't know, too) gives "the file is nested too deeply to
+  read." instead of a half-imported document.
 
 Each snapshot's `tree` is a list holding the single root node (AND or
 XOR).

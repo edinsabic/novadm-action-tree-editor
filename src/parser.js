@@ -13,6 +13,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 	var DEFAULT_SNAPSHOT_ID = 'Initial version';
 	var MAX_FLAT_OBJECT_WIDTH = 110;
 	var MAX_SHOWN_CHARS = 40;
+	var MAX_CALCULATED_VALUES = 500;
 
 	/* ---------- Root node and empty history ---------- */
 
@@ -448,6 +449,10 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 
 	function validateDerived(list, where) {
 		if (!Array.isArray(list)) return where + ' is not a list of calculated values.';
+		if (list.length > MAX_CALCULATED_VALUES) {
+			return where + ' has ' + list.length + ' calculated values; at most ' + MAX_CALCULATED_VALUES +
+				' can be imported.';
+		}
 		var seen = Object.create(null);
 		for (var i = 0; i < list.length; i++) {
 			var d = list[i];

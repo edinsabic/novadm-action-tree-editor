@@ -139,13 +139,16 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	function importDocument(fileName, text) {
 		var doc;
+		var problem;
 		try {
 			doc = FORMAT.parse(text);
+			problem = Parser.validateDocument(doc);
+			JSON.stringify(doc);
 		} catch (err) {
-			alert('Could not import "' + fileName + '":\n' + err.message);
+			alert('Could not import "' + fileName + '":\n' +
+				(err instanceof RangeError ? 'the file is nested too deeply to read.' : err.message));
 			return;
 		}
-		var problem = Parser.validateDocument(doc);
 		if (problem) {
 			alert('Could not import "' + fileName + '":\n' + problem);
 			return;
