@@ -4,7 +4,7 @@ window.NovaDM = window.NovaDM || {};
  * Engine of the Calculations tab: the formula language of calculated
  * values (parse, references, evaluate one scenario), scenario counts,
  * uniform sampling, listing every scenario, the scenario picked by hand,
- * and statistics. No DOM.
+ * statistics, and the starter data and moving numbers on a rename. No DOM.
  * Language and sampling: ../spec/action-tree-grammar.md
  */
 NovaDM.Calculations = (function (Util) {
@@ -308,6 +308,52 @@ NovaDM.Calculations = (function (Util) {
 		};
 	}
 
+	function hasNumbers(stored) {
+		if (typeof stored === 'number') return true;
+		return !!stored && typeof stored === 'object' && Object.keys(stored).some(function (k) {
+			return hasNumbers(stored[k]);
+		});
+	}
+
+	function renameLabel(data, from, to, keep) {
+		var out = Util.clone(data);
+		var values = out.values || {};
+		if (!from || !to || from === to || !own(values, from) || !hasNumbers(values[from])) {
+			return { data: out, blocked: [] };
+		}
+		if (own(values, to) && hasNumbers(values[to])) return { data: out, blocked: [{ from: from, to: to }] };
+		Util.setOwn(values, to, Util.clone(values[from]));
+		if (!keep) delete values[from];
+		return { data: out, blocked: [] };
+	}
+
+	function renameOptions(data, label, renames) {
+		var out = Util.clone(data);
+		var blocked = [];
+		var byAttribute = own(out.values, label) ? out.values[label] : null;
+		var tables = Object.keys(byAttribute || {}).map(function (a) { return byAttribute[a]; }).filter(function (t) {
+			return !!t && typeof t === 'object';
+		});
+
+		function holds(option) {
+			return tables.some(function (t) { return own(t, option) && typeof t[option] === 'number'; });
+		}
+
+		renames.forEach(function (r) {
+			if (!holds(r.from)) return;
+			if (holds(r.to)) {
+				blocked.push(r);
+				return;
+			}
+			tables.forEach(function (t) {
+				if (!own(t, r.from)) return;
+				Util.setOwn(t, r.to, t[r.from]);
+				if (!r.keep) delete t[r.from];
+			});
+		});
+		return { data: out, blocked: blocked };
+	}
+
 	/* ---------- Evaluate ---------- */
 
 	function numberFor(values, label, attribute, option) {
@@ -580,6 +626,8 @@ NovaDM.Calculations = (function (Util) {
 		isName: isName,
 		analyze: analyze,
 		starterData: starterData,
+		renameLabel: renameLabel,
+		renameOptions: renameOptions,
 		numberFor: numberFor,
 		evaluateScenario: evaluateScenario,
 		isError: isError,
