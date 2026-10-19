@@ -119,17 +119,38 @@
 			<div class="scenario-summary-bar">
 				<span class="scenario-summary-label">Calculations (live)</span>
 				<div class="scenario-metrics">
-					<span class="metric">
-						<span class="metric-label">Scenario space size</span>
-						<span class="metric-value" id="scenario-space-size-value">0</span>
-					</span>
-					<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
-						Warning: the applied constraints are contradictory.
+					<div class="metric-group">
+						<span class="metric">
+							<span class="metric-label">Scenario space size</span>
+							<span class="metric-value" id="scenario-space-size-value">0</span>
+						</span>
+						<div id="constraint-warning" class="constraint-warning" role="alert" hidden>
+							Warning: the applied constraints are contradictory.
+						</div>
 					</div>
-					<div id="scenario-kpi-metrics" class="scenario-kpis"></div>
+					<div class="metric-group" role="group" aria-label="Nodes in the tree">
+						<span class="metric" title="The Subject nodes in the tree: the building elements to renovate">
+							<span class="metric-label">Subjects</span>
+							<span class="metric-value" id="subject-count-value">0</span>
+						</span>
+						<span class="metric" title="The Approach nodes in the tree: the ways a subject is renovated">
+							<span class="metric-label">Approaches</span>
+							<span class="metric-value" id="approach-count-value">0</span>
+						</span>
+						<span class="metric" title="The Feature nodes in the tree: the properties chosen for a subject">
+							<span class="metric-label">Features</span>
+							<span class="metric-value" id="feature-count-value">0</span>
+						</span>
+						<span class="metric" title="Feature values: the options of all Feature nodes added up">
+							<span class="metric-label">Feature values</span>
+							<span class="metric-value" id="feature-value-count-value">0</span>
+						</span>
+					</div>
+					<div id="scenario-kpi-metrics" class="metric-group"></div>
 				</div>
-				<button id="open-calculations-btn" class="scenario-summary-link" type="button">
-					Get your numbers in the Calculations tab &rarr;
+				<button id="open-calculations-btn" class="scenario-summary-link" type="button"
+					title="Get your numbers in the Calculations tab: prices, CO₂ and the other KPIs per scenario">
+					Go to Calculations &rarr;
 				</button>
 			</div>
 

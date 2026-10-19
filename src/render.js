@@ -2,8 +2,8 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Draws the live tree into #tree-viewport-content, in the directory or the
- * traditional layout, updates the live scenario space size, and owns the
- * tree's zoom. Also holds the node badge/chip helpers other modules reuse.
+ * traditional layout, updates the live scenario space size and node counts,
+ * and owns the tree's zoom. Also holds the node badge/chip helpers other modules reuse.
  */
 NovaDM.Render = (function (Model, Util) {
 	'use strict';
@@ -19,6 +19,12 @@ NovaDM.Render = (function (Model, Util) {
 	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
 	var constraintWarningEl = document.getElementById('constraint-warning');
+	var countEls = {
+		subjects: document.getElementById('subject-count-value'),
+		approaches: document.getElementById('approach-count-value'),
+		features: document.getElementById('feature-count-value'),
+		featureValues: document.getElementById('feature-value-count-value')
+	};
 	var sourceEl = document.getElementById('tree-source');
 	var zoomLabel = document.getElementById('zoom-label');
 
@@ -131,6 +137,10 @@ NovaDM.Render = (function (Model, Util) {
 
 		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
 		constraintWarningEl.hidden = isEmpty || size !== 0;
+		var counts = Model.classCounts();
+		Object.keys(countEls).forEach(function (key) {
+			countEls[key].textContent = counts[key].toLocaleString('en-GB');
+		});
 		exportBtns.forEach(function (btn) { btn.disabled = isEmpty; });
 		treeContent.classList.toggle('empty-hint', isEmpty);
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && !isEmpty);

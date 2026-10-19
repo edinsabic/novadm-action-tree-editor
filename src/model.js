@@ -2,8 +2,8 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM action-tree data model: the node shape, tree queries and mutations,
- * always/never constraints, profiles, the file's source line and the
- * scenario space size. No DOM references live here: render.js and the
+ * always/never constraints, profiles, the file's source line, the nodes per
+ * class and the scenario space size. No DOM references live here: render.js and the
  * interaction modules read and write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
  */
@@ -333,6 +333,24 @@ NovaDM.Model = (function (Util) {
 		activeProfileName = findProfile(applied.active) ? applied.active : null;
 	}
 
+	/* ---------- Counts ---------- */
+
+	function classCounts() {
+		var counts = { subjects: 0, approaches: 0, features: 0, featureValues: 0 };
+		(function walk(nodes) {
+			nodes.forEach(function (n) {
+				if (n.nodeClass === 'Subject') counts.subjects++;
+				if (n.nodeClass === 'Approach') counts.approaches++;
+				if (n.nodeClass === 'Feature') {
+					counts.features++;
+					counts.featureValues += n.value.length;
+				}
+				walk(n.children);
+			});
+		})(root.children);
+		return counts;
+	}
+
 	/* ---------- Scenario space size ---------- */
 
 	function activeValueConstraints(node) {
@@ -419,6 +437,7 @@ NovaDM.Model = (function (Util) {
 		getProfileState: getProfileState,
 		prunedProfileState: prunedProfileState,
 		applyProfileState: applyProfileState,
+		classCounts: classCounts,
 		scenarioSpaceSize: scenarioSpaceSize
 	};
 })(NovaDM.Util);
