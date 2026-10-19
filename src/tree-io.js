@@ -3,8 +3,8 @@ window.NovaDM = window.NovaDM || {};
 /**
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export (via parser.js's TREE_FILE_FORMAT). A document is
- * the tree, the profiles and the version history (see parser.js and
- * history.js), plus the Calculations tab's data, which files don't hold yet.
+ * the tree, the profiles, the Calculations tab's data and the version history
+ * (see parser.js and history.js); files don't hold the Calculations data yet.
  */
 NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
@@ -38,22 +38,22 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return typeof NOVADM_SAMPLE_SOURCE === 'undefined' ? '' : NOVADM_SAMPLE_SOURCE;
 	}
 
-	function headProfile(history) {
-		var head = history.snapshots.filter(function (s) { return s.id === history.head; })[0];
-		return head ? head.profile : null;
+	function headSnapshot(history) {
+		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
 	function newDocument(specs, calculations, source, history) {
 		Model.replaceTree(specs);
+		Model.setSource(source);
 		if (history) {
-			Model.applyProfileState(headProfile(history), [specs]);
+			Model.applyProfileState(headSnapshot(history).profile, [specs]);
+			CalculationsTab.reset(headSnapshot(history).calculations);
 			History.load(history);
 		} else {
 			Model.resetProfiles();
+			CalculationsTab.reset(calculations);
 			History.reset();
 		}
-		Model.setSource(source);
-		CalculationsTab.reset(calculations);
 		refreshAll();
 	}
 

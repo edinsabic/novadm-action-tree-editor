@@ -1,11 +1,11 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Version history: the snapshots of the tree and its profiles, and how they
- * follow on from each other. popovers.js draws it, version-graph.js lays the
- * graph out.
+ * Version history: the snapshots of the tree, its profiles and the
+ * Calculations tab's data, and how they follow on from each other.
+ * popovers.js draws it, version-graph.js lays the graph out.
  */
-NovaDM.History = (function (Model, Parser, Util) {
+NovaDM.History = (function (Model, Parser, Calculations, Util) {
 	'use strict';
 
 	var DEFAULT_ID = Parser.DEFAULT_SNAPSHOT_ID;
@@ -68,22 +68,189 @@ NovaDM.History = (function (Model, Parser, Util) {
 		});
 	}
 
-	function countsText(c) {
+	function countsText(c, noun) {
 		return ['added', 'changed', 'removed'].filter(function (k) { return c[k] > 0; }).map(function (k) {
-			return c[k] + ' ' + k;
+			return (noun ? plural(c[k], noun) : c[k]) + ' ' + k;
 		}).join(' · ');
+	}
+
+	/* ---------- Calculations data ---------- */
+
+	var CALC_NOUNS = { v: '', d: 'calculated value', u: 'unit', a: 'attribute' };
+
+	function liveCalculations() {
+		var tab = NovaDM.CalculationsTab;
+		return tab ? tab.getState() : Calculations.starterData();
+	}
+
+	function entryKey(parts) { return JSON.stringify(parts); }
+
+	function calcEntries(data) {
+		var entries = Object.create(null);
+		var values = (data && data.values) || {};
+		Object.keys(values).forEach(function (label) {
+			var byAttribute = values[label] || {};
+			Object.keys(byAttribute).forEach(function (attribute) {
+				var stored = byAttribute[attribute];
+				if (typeof stored === 'number') entries[entryKey(['v', label, attribute, ''])] = stored;
+				if (!stored || typeof stored !== 'object') return;
+				Object.keys(stored).forEach(function (option) {
+					if (typeof stored[option] === 'number') {
+						entries[entryKey(['v', label, attribute, option])] = stored[option];
+					}
+				});
+			});
+		});
+		var units = (data && data.units) || {};
+		Object.keys(units).forEach(function (a) { if (units[a]) entries[entryKey(['u', a])] = units[a]; });
+		((data && data.attributes) || []).forEach(function (a) { entries[entryKey(['a', a])] = true; });
+		((data && data.derived) || []).forEach(function (d) { entries[entryKey(['d', d.name])] = sortedJson(d); });
+		return entries;
+	}
+
+	function calcSignature(data) {
+		var entries = calcEntries(data);
+		return JSON.stringify([
+			Object.keys(entries).sort().map(function (k) { return [k, entries[k]]; }),
+			(data && data.attributes) || [],
+			((data && data.derived) || []).map(function (d) { return d.name; })
+		]);
+	}
+
+	function calcChanges(before, after) {
+		var b = calcEntries(before);
+		var a = calcEntries(after);
+		var counts = {};
+
+		function count(key, kind) {
+			var kindOf = JSON.parse(key)[0];
+			var c = counts[kindOf] || (counts[kindOf] = { added: 0, changed: 0, removed: 0 });
+			c[kind]++;
+		}
+
+		Object.keys(a).forEach(function (k) {
+			if (!(k in b)) count(k, 'added');
+			else if (b[k] !== a[k]) count(k, 'changed');
+		});
+		Object.keys(b).forEach(function (k) {
+			if (!(k in a)) count(k, 'removed');
+		});
+		return counts;
+	}
+
+	function calcCountsText(counts) {
+		return Object.keys(CALC_NOUNS).filter(function (kind) { return counts[kind]; }).map(function (kind) {
+			return countsText(counts[kind], CALC_NOUNS[kind]);
+		}).join(' · ');
+	}
+
+	function calcCountTotal(counts) {
+		return Object.keys(counts).reduce(function (sum, kind) {
+			return sum + counts[kind].added + counts[kind].changed + counts[kind].removed;
+		}, 0);
+	}
+
+	function entryText(key) {
+		var p = JSON.parse(key);
+		if (p[0] === 'v') return p[1] + ' · ' + p[2] + (p[3] ? ' · ' + p[3] : '');
+		return { u: 'unit of ', a: 'attribute ', d: 'calculated value ' }[p[0]] + p[1];
+	}
+
+	function setNumber(data, label, attribute, option, number) {
+		var byAttribute = Util.own(data.values, label) ? data.values[label] : Util.setOwn(data.values, label, {});
+		if (option === '') {
+			Util.setOwn(byAttribute, attribute, number);
+			return;
+		}
+		var stored = Util.own(byAttribute, attribute) ? byAttribute[attribute] : null;
+		if (!stored || typeof stored !== 'object') stored = Util.setOwn(byAttribute, attribute, {});
+		Util.setOwn(stored, option, number);
+	}
+
+	function calcFromEntries(entries, mine, theirs) {
+		var data = { attributes: [], units: {}, values: {}, derived: [] };
+
+		function inOrder(kind, mineList, theirsList, nameOf) {
+			var names = mineList.map(nameOf);
+			theirsList.map(nameOf).forEach(function (n) { if (names.indexOf(n) === -1) names.push(n); });
+			return names.filter(function (n) { return entryKey([kind, n]) in entries; });
+		}
+
+		function nameOf(d) { return d.name; }
+
+		function same(x) { return x; }
+
+		data.attributes = inOrder('a', mine.attributes || [], theirs.attributes || [], same);
+		data.derived = inOrder('d', mine.derived || [], theirs.derived || [], nameOf).map(function (name) {
+			var json = entries[entryKey(['d', name])];
+			var pickFrom = (mine.derived || []).concat(theirs.derived || []);
+			return clone(pickFrom.filter(function (d) { return d.name === name && sortedJson(d) === json; })[0]);
+		});
+		Object.keys(entries).forEach(function (key) {
+			var p = JSON.parse(key);
+			if (p[0] === 'u') Util.setOwn(data.units, p[1], entries[key]);
+			if (p[0] === 'v') setNumber(data, p[1], p[2], p[3], entries[key]);
+		});
+		return data;
+	}
+
+	function mergeCalculations(base, mine, theirs, conflict) {
+		var B = calcEntries(base);
+		var M = calcEntries(mine);
+		var T = calcEntries(theirs);
+		var merged = Object.create(null);
+		var tookTheirs = false;
+		Object.keys(M).forEach(function (k) { merged[k] = M[k]; });
+		Object.keys(T).concat(Object.keys(B).filter(function (k) { return !(k in T); })).forEach(function (k) {
+			var choice = pick(B[k], M[k], T[k]);
+			if (choice === 'conflict') conflict('calc:' + k, entryText(k), conflictReason(B[k], M[k], T[k]));
+			if (choice !== 'theirs') return;
+			tookTheirs = true;
+			if (T[k] === undefined) delete merged[k];
+			else merged[k] = T[k];
+		});
+
+		var shapes = Object.create(null);
+		Object.keys(merged).forEach(function (k) {
+			var p = JSON.parse(k);
+			if (p[0] !== 'v') return;
+			var group = entryKey([p[1], p[2]]);
+			var shape = shapes[group] ||
+				(shapes[group] = { plain: false, options: false, label: p[1], attribute: p[2] });
+			shape[p[3] === '' ? 'plain' : 'options'] = true;
+		});
+		Object.keys(shapes).forEach(function (group) {
+			var s = shapes[group];
+			if (!s.plain || !s.options) return;
+			Object.keys(merged).concat(Object.keys(M)).forEach(function (k) {
+				var p = JSON.parse(k);
+				if (p[0] !== 'v' || p[1] !== s.label || p[2] !== s.attribute) return;
+				if (k in M) merged[k] = M[k];
+				else delete merged[k];
+			});
+			conflict('calc:' + group, s.label + ' · ' + s.attribute, 'changed differently on both sides');
+		});
+
+		var data = tookTheirs ? calcFromEntries(merged, mine, theirs) : clone(mine);
+		return { data: data, counts: calcChanges(mine, data) };
 	}
 
 	/* ---------- State in / out ---------- */
 
-	function newSnapshot(id, tree, profile) {
-		return { id: id, created: today(), tree: clone(tree), profile: Model.prunedProfileState(profile, [tree]) };
+	function newSnapshot(id, tree, profile, calculations) {
+		return {
+			id: id,
+			created: today(),
+			tree: clone(tree),
+			profile: Model.prunedProfileState(profile, [tree]),
+			calculations: clone(calculations)
+		};
 	}
 
 	function reset() {
 		head = DEFAULT_ID;
 		edges = [];
-		snapshots = [newSnapshot(DEFAULT_ID, Model.treeSpecs(), Model.getProfileState())];
+		snapshots = [newSnapshot(DEFAULT_ID, Model.treeSpecs(), Model.getProfileState(), liveCalculations())];
 	}
 
 	function load(fileHistory) {
@@ -91,8 +258,13 @@ NovaDM.History = (function (Model, Parser, Util) {
 		head = fileHistory.head || DEFAULT_ID;
 		edges = clone(fileHistory.edges || []);
 		snapshots = clone(fileHistory.snapshots || []);
-		snapshots.forEach(function (s) { s.profile = Model.prunedProfileState(s.profile || {}, [s.tree]); });
-		if (!find(head)) snapshots.unshift(newSnapshot(head, Model.treeSpecs(), Model.getProfileState()));
+		snapshots.forEach(function (s) {
+			s.profile = Model.prunedProfileState(s.profile || {}, [s.tree]);
+			s.calculations = s.calculations || Calculations.starterData();
+		});
+		if (!find(head)) {
+			snapshots.unshift(newSnapshot(head, Model.treeSpecs(), Model.getProfileState(), liveCalculations()));
+		}
 		Model.reserveIds(allTrees());
 	}
 
@@ -106,7 +278,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 
 	function isDirty() {
 		var h = find(head);
-		return !h || canon(Model.treeSpecs()) !== canon(h.tree);
+		return !h || canon(Model.treeSpecs()) !== canon(h.tree) ||
+			calcSignature(liveCalculations()) !== calcSignature(h.calculations);
 	}
 
 	function storeProfiles() {
@@ -247,14 +420,15 @@ NovaDM.History = (function (Model, Parser, Util) {
 			changeCounts: changes.counts || { added: 0, changed: 0, removed: 0 },
 			profileChanges: parent
 				? countsText(profileChanges(Model.prunedProfileState(parent.profile, [snap.tree]), snap.profile))
-				: ''
+				: '',
+			numberChanges: parent ? calcCountsText(calcChanges(parent.calculations, snap.calculations)) : ''
 		};
 	}
 
 	/* ---------- Changing the history ---------- */
 
-	function addVersion(name, tree, profile, parentIds, comment) {
-		snapshots.push(newSnapshot(name, tree, profile));
+	function addVersion(name, tree, profile, calculations, parentIds, comment) {
+		snapshots.push(newSnapshot(name, tree, profile, calculations));
 		parentIds.forEach(function (p) {
 			edges.push(comment ? { from: p, to: name, comment: comment } : { from: p, to: name });
 		});
@@ -265,7 +439,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		name = String(name || '').trim();
 		if (!name) return 'Please enter a name for the version.';
 		if (find(name)) return 'A version called "' + name + '" already exists.';
-		addVersion(name, Model.treeSpecs(), Model.getProfileState(), [head], String(comment || '').trim());
+		addVersion(name, Model.treeSpecs(), Model.getProfileState(), liveCalculations(), [head],
+			String(comment || '').trim());
 		return null;
 	}
 
@@ -279,11 +454,56 @@ NovaDM.History = (function (Model, Parser, Util) {
 		if (!h || !canUpdateHead()) return;
 		h.tree = Model.treeSpecs();
 		h.profile = Model.getProfileState([h.tree]);
+		h.calculations = clone(liveCalculations());
+	}
+
+	function storedCalculations() {
+		var h = find(head);
+		return h ? clone(h.calculations) : null;
+	}
+
+	/**
+	 * The numbers that changed from `before` to the open version's stored data, each with the other
+	 * versions that still hold its old value: [{ label, attribute, option, from, to, versions }].
+	 */
+	function numberCorrections(before) {
+		var h = find(head);
+		if (!h || !before) return [];
+		var old = calcEntries(before);
+		var now = calcEntries(h.calculations);
+		var others = snapshots.filter(function (s) { return s.id !== head; }).map(function (s) {
+			return { id: s.id, entries: calcEntries(s.calculations) };
+		});
+		return Object.keys(now).filter(function (k) {
+			return JSON.parse(k)[0] === 'v' && k in old && old[k] !== now[k];
+		}).map(function (k) {
+			var p = JSON.parse(k);
+			return {
+				label: p[1],
+				attribute: p[2],
+				option: p[3],
+				from: old[k],
+				to: now[k],
+				versions: others.filter(function (o) { return o.entries[k] === old[k]; }).map(function (o) {
+					return o.id;
+				})
+			};
+		}).filter(function (c) { return c.versions.length > 0; });
+	}
+
+	function applyNumberCorrections(corrections) {
+		corrections.forEach(function (c) {
+			c.versions.forEach(function (id) {
+				var snap = find(id);
+				if (snap) setNumber(snap.calculations, c.label, c.attribute, c.option, c.to);
+			});
+		});
 	}
 
 	function loadSnapshot(snap) {
 		Model.replaceTree(clone(snap.tree), allTrees());
 		Model.applyProfileState(snap.profile);
+		if (NovaDM.CalculationsTab) NovaDM.CalculationsTab.setState(snap.calculations);
 	}
 
 	function checkout(id) {
@@ -298,7 +518,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 		var snap = find(id);
 		if (!snap) return null;
 		var name = uniqueName('Restore ' + id);
-		addVersion(name, snap.tree, snap.profile, [head], 'Restored from "' + id + '"');
+		addVersion(name, snap.tree, snap.profile, snap.calculations, [head], 'Restored from "' + id + '"');
 		loadSnapshot(find(name));
 		return name;
 	}
@@ -435,8 +655,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 
 	/**
 	 * Three-way merge of version `sourceId` ("theirs") into the tree on screen ("mine"), against
-	 * their nearest common ancestor ("base"): decides per node (by id) and per profile (by name),
-	 * applies the result to a copy of the live tree and checks it with the import rules.
+	 * their nearest common ancestor ("base"): decides per node (by id), per profile (by name) and per
+	 * number, applies the result to a copy of the live tree and checks it with the import rules.
 	 */
 	function computeMerge(sourceId) {
 		var source = find(sourceId);
@@ -446,6 +666,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 
 		var live = Model.treeSpecs();
 		var mineProfile = Model.getProfileState([live]);
+		var mineCalculations = clone(liveCalculations());
 		var B = nodeTable(baseSnap ? baseSnap.tree : []);
 		var M = nodeTable(live);
 		var T = nodeTable(source.tree);
@@ -593,10 +814,13 @@ NovaDM.History = (function (Model, Parser, Util) {
 
 		var profiles = mergeProfiles(Model.prunedProfileState(baseSnap ? baseSnap.profile : {}, [live]),
 			Model.prunedProfileState(mineProfile, [live]), Model.prunedProfileState(source.profile, [live]), conflict);
-		var count = added + updated + removed + profiles.total;
+		var numbers = mergeCalculations(baseSnap ? baseSnap.calculations : Calculations.starterData(), mineCalculations,
+			source.calculations, conflict);
+		var count = added + updated + removed + profiles.total + calcCountTotal(numbers.counts);
 		return {
 			baseId: baseId,
 			tree: live,
+			calculations: numbers.data,
 			profile: Model.prunedProfileState({
 				active: mineProfile.active,
 				current: mineProfile.current,
@@ -607,6 +831,7 @@ NovaDM.History = (function (Model, Parser, Util) {
 			updated: updated,
 			removed: removed,
 			profileCounts: profiles.counts,
+			numberCounts: numbers.counts,
 			count: count,
 			conflicts: conflicts,
 			empty: count === 0,
@@ -618,6 +843,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		var parts = ['Added ' + r.added, 'Updated ' + r.updated, 'Removed ' + r.removed];
 		var profiles = countsText(r.profileCounts);
 		if (profiles) parts.push('Profiles: ' + profiles);
+		var numbers = calcCountsText(r.numberCounts);
+		if (numbers) parts.push('Numbers: ' + numbers);
 		if (r.conflicts.length) parts.push(plural(r.conflicts.length, 'conflict') + ', kept yours');
 		return parts.join(' · ');
 	}
@@ -653,7 +880,8 @@ NovaDM.History = (function (Model, Parser, Util) {
 		if (problem) return { error: problem };
 		var summary = mergeSummary(r);
 		var name = uniqueName('Merge ' + id);
-		addVersion(name, r.tree, r.profile, [head, id], 'Merged "' + id + '" into "' + head + '" (' + summary + ')');
+		addVersion(name, r.tree, r.profile, r.calculations, [head, id],
+			'Merged "' + id + '" into "' + head + '" (' + summary + ')');
 		loadSnapshot(find(name));
 		return { name: name, conflicts: r.conflicts, summary: summary };
 	}
@@ -668,6 +896,9 @@ NovaDM.History = (function (Model, Parser, Util) {
 		has: has,
 		snapshotCount: snapshotCount,
 		isDirty: isDirty,
+		storedCalculations: storedCalculations,
+		numberCorrections: numberCorrections,
+		applyNumberCorrections: applyNumberCorrections,
 		storeProfiles: storeProfiles,
 		graphNodes: graphNodes,
 		describe: describe,
@@ -681,4 +912,4 @@ NovaDM.History = (function (Model, Parser, Util) {
 		mergePreview: mergePreview,
 		merge: merge
 	};
-})(NovaDM.Model, NovaDM.Parser, NovaDM.Util);
+})(NovaDM.Model, NovaDM.Parser, NovaDM.Calculations, NovaDM.Util);

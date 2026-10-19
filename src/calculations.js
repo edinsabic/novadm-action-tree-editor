@@ -293,6 +293,20 @@ NovaDM.Calculations = (function (Util) {
 		return { items: items, byName: byName, order: order, labels: labels, attributes: attributes };
 	}
 
+	/* ---------- Data ---------- */
+
+	function starterData() {
+		return {
+			attributes: ['price', 'co2'],
+			units: { price: 'DKK', co2: 'kg CO₂e' },
+			values: {},
+			derived: [
+				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
+				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
+			]
+		};
+	}
+
 	/* ---------- Evaluate ---------- */
 
 	function numberFor(values, label, attribute, option) {
@@ -563,6 +577,7 @@ NovaDM.Calculations = (function (Util) {
 	return {
 		isName: isName,
 		analyze: analyze,
+		starterData: starterData,
 		numberFor: numberFor,
 		evaluateScenario: evaluateScenario,
 		isError: isError,

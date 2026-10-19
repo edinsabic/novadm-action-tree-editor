@@ -5,8 +5,8 @@ window.NovaDM = window.NovaDM || {};
  * to the calculated values and KPIs, with an option picker per node; an editor panel for the selected
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
  * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
- * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) lives
- * in memory: undo covers it, the file does not yet.
+ * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) is the
+ * open version's: history.js stores a copy per version and undo covers it, the file does not yet.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
 	'use strict';
@@ -61,6 +61,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var addDerivedBtn = document.getElementById('calc-add-derived-btn');
 	var shownLabel = document.getElementById('calc-shown-scenario');
 
+	var starterData = Calculations.starterData;
+
 	var data = starterData();
 	var analysis = Calculations.analyze(data, []);
 	var evaluatedTreeKey = null;
@@ -70,18 +72,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var selected = null;
 	var zoomPercent = 100;
 	var customUnitFor = null;
-
-	function starterData() {
-		return {
-			attributes: ['price', 'co2'],
-			units: { price: 'DKK', co2: 'kg CO₂e' },
-			values: {},
-			derived: [
-				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
-				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
-			]
-		};
-	}
 
 	function exampleData() {
 		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
