@@ -62,8 +62,10 @@
 						<div class="toolbar-group" role="group" aria-label="Tree file">
 							<button id="load-example-btn" class="btn" type="button">Load example tree</button>
 							<button id="clear-tree-btn" class="btn" type="button">Clear tree</button>
-							<button id="import-tree-btn" class="btn" type="button">Import tree</button>
-							<button id="export-tree-btn" class="btn" type="button">Export tree</button>
+							<button id="import-tree-btn" class="btn" type="button" data-file-action="import">
+								Import file</button>
+							<button id="export-tree-btn" class="btn" type="button" data-file-action="export">
+								Export file</button>
 							<input id="import-file-input" type="file" hidden />
 						</div>
 						<div class="toolbar-group toolbar-end">
@@ -180,7 +182,6 @@
 						<span class="control-label">Scenario space size</span>
 						<span id="calc-space-size" class="control-value">&ndash;</span>
 					</span>
-					<span class="viewport-box-label">Changes here are not saved yet</span>
 				</div>
 				<div class="control-right">
 					<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
@@ -222,10 +223,12 @@
 						<div class="toolbar-group" role="group" aria-label="Attributes">
 							<button id="calc-add-derived-btn" class="btn" type="button">+ Calculated value</button>
 						</div>
-						<div class="toolbar-group" role="group" aria-label="Example">
+						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="calc-load-example-btn" class="btn" type="button"
 								title="Load the example. It also replaces the tree in the Action tree tab.">
 								Load example</button>
+							<button class="btn" type="button" data-file-action="import">Import file</button>
+							<button class="btn" type="button" data-file-action="export">Export file</button>
 						</div>
 						<span id="calc-shown-scenario" class="calc-shown-scenario" role="status" hidden></span>
 					</div>

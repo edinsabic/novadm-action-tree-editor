@@ -2,17 +2,17 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Getting a document in and out of the live model: the example/clear buttons,
- * and file import/export (via parser.js's TREE_FILE_FORMAT). A document is
- * the tree, the profiles, the Calculations tab's data and the version history
- * (see parser.js and history.js); files don't hold the Calculations data yet.
+ * and file import/export on both tabs (via parser.js's TREE_FILE_FORMAT). A
+ * document is the tree, the profiles, the Calculations tab's data and the
+ * version history (see parser.js and history.js).
  */
 NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
 
 	var FORMAT = Parser.TREE_FILE_FORMAT;
 
-	var exportBtn = document.getElementById('export-tree-btn');
-	var importBtn = document.getElementById('import-tree-btn');
+	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
+	var importBtns = document.querySelectorAll('[data-file-action="import"]');
 	var importInput = document.getElementById('import-file-input');
 
 	function nothingToLose() {
@@ -94,7 +94,6 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	/* ---------- Export ---------- */
 
-	exportBtn.title = 'Save the current tree as a ' + FORMAT.extension + ' file';
 
 	function download(text, fileName, mimeType) {
 		var url = URL.createObjectURL(new Blob([text], { type: mimeType }));
@@ -107,7 +106,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 	}
 
-	exportBtn.addEventListener('click', function () {
+	function exportFile() {
 		if (History.isDirty() && !History.canUpdateHead()) {
 			alert('"' + History.getHead() + '" has unsaved changes, but other versions are based on it, so it' +
 				' cannot store them. Save them as a new version first (Version history → Save as new version…).');
@@ -123,16 +122,21 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		var text = FORMAT.serialize({
 			tree: tree,
 			profile: Model.getProfileState([tree]),
+			calculations: CalculationsTab.getState(),
 			history: History.getState(),
 			source: Model.getSource()
 		});
 		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
+	}
+
+	exportBtns.forEach(function (btn) {
+		btn.title = 'Save the tree, its versions, profiles and numbers as a ' + FORMAT.extension + ' file';
+		btn.addEventListener('click', exportFile);
 	});
 
 	/* ---------- Import ---------- */
 
 	importInput.accept = FORMAT.extension;
-	importBtn.title = 'Load a tree from a ' + FORMAT.extension + ' file on your computer';
 
 	function importDocument(fileName, text) {
 		var doc;
@@ -147,8 +151,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			alert('Could not import "' + fileName + '":\n' + problem);
 			return;
 		}
-		if (!nothingToLose() && !confirm('Replace the current tree with "' + fileName + '"?\n\nThe Calculations tab' +
-			' starts over too, with no numbers, only Sum and GWP, because files don\'t hold its data yet.')) {
+		if (!nothingToLose() && !confirm('Replace the current tree with "' + fileName + '"?\n\nIts versions, profiles' +
+			' and the numbers in the Calculations tab replace the ones on screen too.')) {
 			return;
 		}
 
@@ -161,7 +165,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		}
 	}
 
-	importBtn.addEventListener('click', function () { importInput.click(); });
+	importBtns.forEach(function (btn) {
+		btn.title = 'Open a tree, with its versions, profiles and numbers, from a ' + FORMAT.extension + ' file';
+		btn.addEventListener('click', function () { importInput.click(); });
+	});
 
 	importInput.addEventListener('change', function () {
 		var file = importInput.files && importInput.files[0];

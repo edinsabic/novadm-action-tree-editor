@@ -6,7 +6,7 @@ window.NovaDM = window.NovaDM || {};
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
  * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
  * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) is the
- * open version's: history.js stores a copy per version and undo covers it, the file does not yet.
+ * open version's: history.js stores a copy per version, the file holds it per version, and undo covers it.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
 	'use strict';
@@ -35,7 +35,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		{ name: 'Other', units: ['m²', 'kWh', 'years'] }
 	];
 	var CUSTOM_UNIT = '*custom*';
-	var MAX_UNIT_LENGTH = 20;
+	var MAX_UNIT_LENGTH = Calculations.MAX_UNIT_LENGTH;
 
 	var escapeHtml = Util.escapeHtml;
 	var formatNumber = CalculationsReport.formatNumber;

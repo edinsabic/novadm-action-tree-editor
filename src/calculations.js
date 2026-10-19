@@ -16,6 +16,7 @@ NovaDM.Calculations = (function (Util) {
 	var CHILD_KEYS = ['cond', 'yes', 'no', 'left', 'right', 'operand'];
 	var ERROR = { error: true };
 	var TOO_LONG = 'The formula is too long, or has too many brackets inside each other, to calculate.';
+	var MAX_UNIT_LENGTH = 20;
 
 	var TOKEN_PATTERNS = [
 		{ type: 'space', re: /^\s+/ },
@@ -575,6 +576,7 @@ NovaDM.Calculations = (function (Util) {
 	}
 
 	return {
+		MAX_UNIT_LENGTH: MAX_UNIT_LENGTH,
 		isName: isName,
 		analyze: analyze,
 		starterData: starterData,

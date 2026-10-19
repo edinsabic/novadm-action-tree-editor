@@ -16,7 +16,7 @@ NovaDM.Render = (function (Model, Util) {
 	var escapeHtml = Util.escapeHtml;
 
 	var treeContent = document.getElementById('tree-viewport-content');
-	var exportBtn = document.getElementById('export-tree-btn');
+	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
 	var constraintWarningEl = document.getElementById('constraint-warning');
 	var sourceEl = document.getElementById('tree-source');
@@ -131,7 +131,7 @@ NovaDM.Render = (function (Model, Util) {
 
 		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
 		constraintWarningEl.hidden = isEmpty || size !== 0;
-		exportBtn.disabled = isEmpty;
+		exportBtns.forEach(function (btn) { btn.disabled = isEmpty; });
 		treeContent.classList.toggle('empty-hint', isEmpty);
 		treeContent.classList.toggle('tt-mode', currentLayout === 'traditional' && !isEmpty);
 
