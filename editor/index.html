@@ -177,7 +177,6 @@
 							<button class="flyout-tab active" type="button" role="tab" aria-selected="true"
 								data-flyout-switch="version">Version</button>
 						</div>
-						<strong class="flyout-title" hidden>Version history</strong>
 						<button class="flyout-close" type="button" data-flyout-close="version"
 							aria-label="Close">&times;</button>
 					</div>
@@ -197,10 +196,13 @@
 				<div class="control-left">
 					<span class="viewport-box-label">Workspace panel</span>
 					<span class="metric"
-						title="Every scenario of the tree. Profiles are not applied here, as in the sample.">
+						title="The scenarios of the tree, with the always/never marks of the Action tree tab applied">
 						<span class="control-label">Scenario space size</span>
 						<span id="calc-space-size" class="control-value">&ndash;</span>
 					</span>
+					<div id="calc-constraint-warning" class="constraint-warning" role="alert" hidden>
+						Warning: the applied constraints are contradictory.
+					</div>
 				</div>
 				<div class="control-right">
 					<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
@@ -214,6 +216,10 @@
 								title="Sample this number of scenarios">scenarios</button>
 						</div>
 					</div>
+					<button id="calc-profile-btn" class="pill-btn" type="button" aria-haspopup="true"
+						aria-expanded="false" title="Create, select or delete profiles">
+						<span class="pill-btn-label">Profiles: none</span>
+					</button>
 					<button id="calc-version-btn" class="pill-btn" type="button" aria-haspopup="true"
 						aria-expanded="false" title="Version history: open, save, merge or delete versions">
 						<span class="pill-btn-label">Version: Initial version</span>

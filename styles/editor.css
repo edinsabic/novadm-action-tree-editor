@@ -140,6 +140,7 @@ main {
 .control-row {
 	display: flex;
 	flex-shrink: 0;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
@@ -156,6 +157,7 @@ main {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	margin-left: auto;
 }
 
 .control-label {
@@ -210,6 +212,7 @@ main {
 	color: var(--color-ink-muted);
 	font-size: 0.85rem;
 	font-weight: 500;
+	white-space: nowrap;
 }
 
 .pill-btn:hover:not(:disabled) { color: var(--color-ink); }
@@ -236,7 +239,10 @@ main {
 
 .panels-stack.flyout-open .control-right { visibility: hidden; }
 
-.calc-workspace.flyout-open #calc-version-btn { visibility: hidden; }
+.calc-workspace.flyout-open #calc-profile-btn,
+.calc-workspace.flyout-open #calc-version-btn {
+	visibility: hidden;
+}
 
 .viewport-row {
 	position: relative;
@@ -447,11 +453,6 @@ main {
 	padding: 8px 8px 8px 10px;
 	border-bottom: 1px solid var(--color-border-soft);
 	background-color: var(--color-bg);
-}
-
-.flyout-title {
-	padding-left: 4px;
-	font-size: 0.9rem;
 }
 
 .flyout-tabs {
@@ -1511,6 +1512,17 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 }
 
 .calc-equals { flex-shrink: 0; }
+
+.calc-mark {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.calc-mark.always { background-color: var(--color-always); }
+
+.calc-mark.never { background-color: var(--color-never); }
 
 .calc-choice {
 	flex-shrink: 0;

@@ -2,7 +2,7 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Profile and version-history flyouts, opened from the pill buttons in the
- * control rows (the version flyout from both tabs). Each is its own dialog
+ * control rows of both tabs. Each is its own dialog
  * (not a shared flyout with hidden panes); clicking the other tab in either
  * header switches straight to the other one.
  */
@@ -27,6 +27,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	var profileBtn = document.getElementById('profile-btn');
 	var versionBtn = document.getElementById('version-btn');
+	var calcProfileBtn = document.getElementById('calc-profile-btn');
 	var calcVersionBtn = document.getElementById('calc-version-btn');
 	var profileFlyout = document.getElementById('profile-flyout');
 	var versionFlyout = document.getElementById('version-flyout');
@@ -36,8 +37,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var calcWorkspace = document.getElementById('calc-workspace');
 	var treeLayer = document.getElementById('tree-popover-layer');
 	var calcLayer = document.getElementById('calc-popover-layer');
-	var versionTabs = versionFlyout.querySelector('.flyout-tabs');
-	var versionTitle = versionFlyout.querySelector('.flyout-title');
 
 	var openFlyoutName = null;
 	var openedFrom = 'tree';
@@ -60,7 +59,9 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function updatePillLabels() {
-		setPill(profileBtn, 'Profiles: ' + (Model.getActiveProfileName() || 'none'), '', PROFILE_PILL_TITLE);
+		var profiles = 'Profiles: ' + (Model.getActiveProfileName() || 'none');
+		setPill(profileBtn, profiles, '', PROFILE_PILL_TITLE);
+		setPill(calcProfileBtn, profiles, '', PROFILE_PILL_TITLE);
 		var unsaved = History.isDirty() ? ' · unsaved' : '';
 		setPill(versionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
 		setPill(calcVersionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
@@ -83,7 +84,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 		if (profiles.length === 0) {
 			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
-				' (chip) in the tree to mark it as always/never, then Save profile.</div>';
+				' (chip) in the Action tree tab to mark it as always/never, then Save profile.</div>';
 		} else {
 			var onScreen = Model.getProfileState([Model.treeSpecs()]).saved;
 			html += '<ul class="popover-list">' + profiles.map(function (p, i) {
@@ -114,7 +115,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	function saveProfile() {
 		if (!Model.hasNodeConstraints()) {
-			alert('Mark at least one leaf (click its dot) or option (click its chip) in the tree' +
+			alert('Mark at least one leaf (click its dot) or option (click its chip) in the Action tree tab' +
 				' before saving a profile.');
 			return;
 		}
@@ -457,7 +458,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	function setActivePill(name) {
 		var fromCalc = openedFrom === 'calc';
-		[[profileBtn, name === 'profile'], [versionBtn, name === 'version' && !fromCalc],
+		[[profileBtn, name === 'profile' && !fromCalc], [versionBtn, name === 'version' && !fromCalc],
+			[calcProfileBtn, name === 'profile' && fromCalc],
 			[calcVersionBtn, name === 'version' && fromCalc]].forEach(function (pill) {
 			pill[0].classList.toggle('is-open', pill[1]);
 			pill[0].setAttribute('aria-expanded', pill[1] ? 'true' : 'false');
@@ -479,10 +481,10 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		if (name === 'version') {
 			selectedVersion = null;
 			notice = null;
-			(openedFrom === 'calc' ? calcLayer : treeLayer).appendChild(versionFlyout);
-			versionTabs.hidden = openedFrom === 'calc';
-			versionTitle.hidden = openedFrom !== 'calc';
 		}
+		var layer = openedFrom === 'calc' ? calcLayer : treeLayer;
+		layer.appendChild(profileFlyout);
+		layer.appendChild(versionFlyout);
 		renderFlyout();
 		profileFlyout.hidden = name !== 'profile';
 		versionFlyout.hidden = name !== 'version';
@@ -495,13 +497,13 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		if (!wasOpen) openFlyout(name, from);
 	}
 
-	[[profileBtn, 'profile', 'tree'], [versionBtn, 'version', 'tree'], [calcVersionBtn, 'version', 'calc']]
-		.forEach(function (p) {
-			p[0].addEventListener('click', function (e) {
-				e.stopPropagation();
-				toggleFlyout(p[1], p[2]);
-			});
+	[[profileBtn, 'profile', 'tree'], [versionBtn, 'version', 'tree'], [calcProfileBtn, 'profile', 'calc'],
+		[calcVersionBtn, 'version', 'calc']].forEach(function (p) {
+		p[0].addEventListener('click', function (e) {
+			e.stopPropagation();
+			toggleFlyout(p[1], p[2]);
 		});
+	});
 
 	document.querySelectorAll('[data-flyout-switch]').forEach(function (tab) {
 		tab.addEventListener('click', function (e) {

@@ -278,16 +278,17 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var count = formatCount(sample.size);
 		var meta;
 		if (!sample.scenarios.length) {
-			meta = 'The tree is empty, so there is nothing to ' + (sample.full ? 'list' : 'sample') + '.';
+			meta = (sample.contradictory ? 'The always/never marks are contradictory' : 'The tree is empty') +
+				', so there is nothing to ' + (sample.full ? 'list' : 'sample') + '.';
 		} else if (sample.full) {
-			meta = 'All ' + formatCount(sample.total) + ' scenarios of the space &middot; profiles are not applied';
+			meta = 'All ' + formatCount(sample.total) + ' scenarios of the space';
 		} else {
 			meta = (sample.tooMany
 				? 'The tree now has too many scenarios to list, so these are ' + count + ' random ones'
 				: count + ' random scenarios') + ' out of ' + Render.scenarioSizeHtml(sample.total) +
 				' &middot; ' + formatCount(sample.distinct) + ' different ones (' +
 				formatShare(sample.distinct, sample.total) + ' of the space) &middot; every scenario is equally' +
-				' likely; profiles are not applied';
+				' likely';
 		}
 		var title = sample.full ? 'Full scenario space' : 'Sample report';
 		return '<div class="calc-report-text">' +
