@@ -39,16 +39,32 @@ clicking it (white/default -> green/always -> red/never -> default):
 - **never (red)** – no valid configuration may include this node
 - **default (white)** – unconstrained, could go either way
 
-`model.js` holds one **working** constraint state – `nodeConstraints`
-(`nodeId -> 'always'|'never'`, no entry = default) and `valueConstraints`
-(`nodeId -> { value -> 'always'|'never' }`) – plus a list of named, saved
-snapshots of it (`profiles`, `{ name, constraints, valueConstraints }`).
+`model.js` holds the **working** constraint state of the version on
+screen – `nodeConstraints` (`nodeId -> 'always'|'never'`, no entry =
+default) and `valueConstraints` (`nodeId -> { value -> 'always'|'never' }`)
+– plus its list of named, saved snapshots of it (`profiles`, `{ name,
+constraints, valueConstraints }`), and which one is loaded (`active`).
 
-Saving, loading and deleting profiles (`saveProfile`/`loadProfile`/
-`deleteProfile` in `model.js`, wired up in `popovers.js`'s profile pane)
-changes this list; it is exported and imported with the file (see
-`profile` below). Load example and Clear tree reset all profiles
-(`Model.resetProfiles()`); an import takes the file's profiles.
+**Profiles belong to a version.** Every profile change – a dot or a chip,
+and Save, Load, Delete or Reset in `popovers.js`'s profile pane – is
+stored straight into the version on screen (`History.storeProfiles()`),
+so it never makes the version "unsaved". Each version keeps its own list:
+"Save as new version" gives the new version a copy, and from then on the
+two copies are separate (changing "Budget" in one version leaves the
+other's "Budget" alone). A merge combines them (see "Version history").
+
+**Pruning:** a version's stored profiles hold only constraints on nodes
+its tree has (and values those nodes have). Others are dropped whenever a
+version is stored – save, update, restore, merge, import and export – by
+`Model.prunedProfileState`. While editing nothing is pruned: a constraint
+on a deleted node is invisible and harmless, and undo/redo restore the
+working state exactly as recorded. A profile that loses all its
+constraints is kept; the user can delete it.
+
+Load example and Clear tree start with one version and no profiles
+(`Model.resetProfiles()`); an import loads the profiles of the file's
+current version (see `profile` below). The pill reads "Profiles: Budget",
+or "Profiles: none" when no profile is loaded.
 
 **Scenario space size** (`Model.scenarioSpaceSize()`, the live metric of
 that name in the bottom bar) counts valid scenarios: AND = product of its
@@ -82,23 +98,63 @@ JavaScript number, so it is exact up to 2^53 and overflows above about
 
 ## Version history
 
-`history.js` holds the versions (snapshots of the tree and the edges
-between them), `version-graph.js` draws them as a small SVG graph, and
-the Version flyout in `popovers.js` shows the graph and a details card
-for the selected version. No libraries; a library such as Cytoscape.js
-could replace `VersionGraph.create()` later.
+`history.js` holds the versions and the edges between them,
+`version-graph.js` draws them as a small SVG graph, and the Version
+flyout in `popovers.js` shows the graph and a details card for the
+selected version. No libraries; a library such as Cytoscape.js could
+replace `VersionGraph.create()` later.
 
-- **Save as new version** snapshots the tree on screen on top of the
+A version is a snapshot of the whole document on screen, like a Git
+commit: `{ id, created, tree, profile, calculations }`, with the tree,
+its profiles (pruned to it, see "Profiles") and the Calculations tab's
+data (not pruned: numbers of a label that isn't in the tree are kept, so
+a label that comes back finds them). The file's `source` line stays one
+per document. `history.js` stores copies, and reads and loads the
+Calculations data through `NovaDM.CalculationsTab`, referenced lazily
+(it loads later) and guarded, so `history.js` still runs in Node.
+
+| Action | Tree | Profiles | Calculations data |
+|---|---|---|---|
+| Save as new version | copied | copied, pruned to the tree | copied |
+| Update this version | overwritten (see below) | stored at every change anyway | overwritten |
+| Open | loaded | loaded | loaded |
+| Restore | a new version with the old one's | the same | the same |
+| Merge | three-way by node | three-way by profile name | three-way by number |
+| Delete | as below | as below | as below |
+
+- **Unsaved changes** are changes to the tree or to the Calculations
+  data; profiles store themselves. The pills on both tabs read "Version:
+  Roof", or "Version: Roof · unsaved"; a label longer than 34 characters
+  is shortened with "…", and the tooltip then starts with the full name.
+  The tree is compared canonically; the Calculations data as a flat list,
+  one entry per number (`label / attribute / option`, a plain number with
+  option `''`), unit, attribute and calculated value, plus the order of
+  the attributes and calculated values. Empty objects don't count, so
+  typing a number and deleting it again leaves nothing to save.
+- **Save as new version** snapshots everything on screen on top of the
   current version (name and optional comment are asked for). **Update
-  this version** (only offered for the current version with unsaved
-  changes) overwrites its snapshot. It is disabled once another version
-  is based on it, because changing it would change what that version and
-  every later merge build on; save the changes as a new version instead.
-  For the same reason, Export refuses in this case until the changes are
-  saved as a new version.
-- **Open** switches the editor to a version. **Restore** makes a new
-  version with the contents of an older one, on top of the current one.
-  Both ask first if there are unsaved changes.
+  this version** (offered for the current version with unsaved changes)
+  overwrites its tree and numbers. Once another version is based on it,
+  its **tree** stays fixed, because that version and every later merge
+  build on it: Update is then disabled if the tree changed (save as a new
+  version instead), but still works when only numbers changed, so prices
+  can be typed into every version of a chain such as K45's. Export
+  follows the same rule. The accepted side effect: a later merge compares
+  numbers against the updated base.
+- **A corrected number reaches the other versions.** After Save as new
+  version or Update this version, the numbers that changed from what the
+  version had stored are looked up in every other version
+  (`History.numberCorrections`). Versions that still hold the old value
+  for the same label, attribute and option are offered the new one in a
+  single `confirm` ("52,000 is also the price of windows_glazing ·
+  replace_triple in 1 other version ("Initial version"). Change it to
+  61,000 there too?"). Versions with another value (on purpose, like
+  K45's roof area) are left alone. One undo reverts it with the save.
+- **Open** switches the editor to a version, and **Restore** makes a new
+  version with the contents of an older one, on top of the current one;
+  both load its tree, profiles and numbers (the Calculations tab keeps
+  its sample's size and seed and draws it again). Both ask first if there
+  are unsaved changes.
 - **Delete** removes a version other than the current one. Each version
   based on it is linked to the versions it was based on instead (keeping
   its comment and the order of its parents), so the remaining versions
@@ -111,9 +167,10 @@ could replace `VersionGraph.create()` later.
   cannot be renamed.
 - Every node in every version has an id (an import fills in missing
   ones, see `actionTree` below), and a node keeps its id across versions.
-- Profiles are one global set shared by all versions. A constraint on a
-  node that the version on screen doesn't have is kept, and applies again
-  when a version with that node is opened.
+- The Calculations tab has its own "Version: …" pill, at the same place
+  as the Action tree tab's. It opens the same flyout, moved into that
+  tab's layer, with the heading "Version history" instead of the
+  Profile/Version switch, as profiles aren't applied there.
 - In the graph, an edge that spans several columns stays in the row of
   one end (whichever row is free in between) and changes rows within a
   single column, so it never runs through other versions.
@@ -135,13 +192,35 @@ could replace `VersionGraph.create()` later.
 
   Content (kind, class, label, value) and place (parent) are compared
   separately, so an edit on one side and a move on the other do not
-  clash. Sibling order is not tracked: added and moved nodes go last. The
-  flyout shows a dry run first (`History.mergePreview`: "Added 2 ·
-  Updated 1 · Removed 1 · 1 conflict, kept yours"); the button is
-  disabled when there is nothing to merge. The result is checked with the
-  same structure rules as an import (`Parser.validateSpecs`); if it fails,
-  the whole merge is rejected and nothing changes. The merge is saved as a
-  new version with both parents.
+  clash. Sibling order is not tracked: added and moved nodes go last.
+
+  **Profiles** are merged by name, each compared as a whole, with the
+  same rule (only theirs changed: take theirs; both changed differently:
+  a conflict, keep mine). All three sides are first pruned to the merged
+  tree, so a constraint that only went missing because its node is gone
+  doesn't count as a change. A profile only theirs added is added; one
+  theirs deleted and mine didn't touch is removed. The loaded profile and
+  the dots on screen stay mine.
+
+  **The Calculations data** is merged per entry of the flat list above.
+  The attributes and calculated values keep mine's order, with theirs-only
+  ones at the end. A label and attribute that would end up with both a
+  plain number and numbers per option keeps mine and is a conflict.
+
+  Conflicts of all three parts are listed together ("profile "Budget" –
+  changed differently on both sides", "windows_glazing · price ·
+  replace_triple – changed differently on both sides"). The flyout shows
+  a dry run first (`History.mergePreview`: "Added 2 · Updated 1 · Removed
+  1 · Profiles: 1 added · Numbers: 4 changed · 1 conflict, kept yours");
+  the button is disabled when no part has anything to apply. The result
+  is checked with the same structure rules as an import
+  (`Parser.validateSpecs`); if it fails, the whole merge is rejected and
+  nothing changes. The merge is saved as a new version with both parents.
+- The **details card** shows the node changes against the first parent
+  ("+2 added · 1 changed · 0 removed"), and below it, only when there are
+  any, "Profiles: 1 added · 1 changed" (the parent pruned to this
+  version's tree first) and "Numbers: 4 changed · 1 calculated value
+  added" (numbers, calculated values, units and attributes).
 
 ## Editor: undo/redo and quick actions
 
@@ -210,13 +289,9 @@ The Calculations tab turns the action tree into numbers: a number per
 option and attribute (such as a price or its CO₂), calculated values
 with formulas, and KPIs over a sample of scenarios. It began as a mockup
 on made-up numbers, which the supervisor approved, and now works on
-whatever tree the Action tree tab holds. Two things are still missing:
-
-- its data is **not saved**: it lives in memory and in undo/redo, but not
-  in the file (still format version 5) or the version history, and the
-  pill "Changes here are not saved yet" says so. Saving it in the JSON
-  file, with import and export, comes later;
-- the example's numbers are made up.
+whatever tree the Action tree tab holds. Its data belongs to the version
+on screen (see "Version history") and is saved per version in the file
+(format version 6). The example's numbers are still made up.
 
 "Calculated value" is the UI's name for NovaDM's **derived attribute**;
 identifiers, data keys and CSS classes keep `derived`. The engine is
@@ -236,8 +311,8 @@ The tab works on `{ attributes, units, values, derived }`:
   number, while `structural_element = windows` and `= roof` keep
   separate numbers. Numbers of a label that is not in the tree are kept
   but not drawn, so undo or adding the node again brings them back.
-  Renaming a label or an option detaches its numbers; they come back if
-  it is renamed back. A plain number counts for every option, so once a
+  Renaming a label or an option takes its numbers along (see "Numbers
+  follow a rename" below). A plain number counts for every option, so once a
   node with a plain number gets options, every row shows it. Typing in
   one of those rows turns it into one number per option, and the other
   options keep the plain number. A node without options that shares its
@@ -258,15 +333,44 @@ Where the data comes from:
   and `gwp` ("GWP", global warming potential, `total(co2) +
   brick_replacement_co2`, in kg CO₂e). The editor opens with it, and
   "Load example" and "Load example tree" load it again.
-- **Starter data**, for every other new document (Clear tree, Import):
-  the attributes `price` (DKK) and `co2` (kg CO₂e), no numbers, and the
-  KPIs `sum = total(price)` and `gwp = total(co2)`. Typing prices for a
-  few options is then enough to get a Sum.
+- **Starter data** (`Calculations.starterData()`), for Clear tree and for
+  every version of a file older than version 6: the attributes `price`
+  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `sum =
+  total(price)` and `gwp = total(co2)`. Typing prices for a few options
+  is then enough to get a Sum.
+- **A file** (Import file, on either tab): each version's own data; the
+  tab shows the current version's.
 - A new document starts the tab over: no sample, no option picks and
-  nothing selected. Loading the example, clearing the tree and importing
-  a file replace the Calculations data in the same undo step as the
-  tree. They ask first, unless the tree is empty and the Calculations
-  data is still the starter data, so there is nothing to lose.
+  nothing selected. The document's parts (tree, profiles, Calculations
+  data) are set before the version history snapshots them, so "Initial
+  version" never starts "unsaved". Loading the example, clearing the tree
+  and importing a file replace the Calculations data in the same undo
+  step as the tree. They ask first, unless there is nothing to lose: an
+  empty tree, the starter data, no saved profile and a single version.
+
+#### Numbers follow a rename
+
+Renaming a node in the Action tree tab's editor panel (the Label and
+Value / options fields, also of a custom subject) takes its numbers
+along, in the version on screen only. When the field gets focus,
+`editor-form.js` keeps a copy of the Calculations data; every keystroke
+rebuilds the data from that copy with the move applied
+(`Calculations.renameLabel` / `renameOptions`), so a name typed on the
+way ("roof" on the way to "roof_new") never moves anything for good, and
+the move is part of the field's one undo step.
+
+- A label renamed from `old` to `new`: its numbers move to `new`, or are
+  copied when another node still has `old`. If `new` already has
+  numbers, nothing moves, and on leaving the field an alert says so
+  ("roof already has numbers, so the numbers of roof_old were left where
+  they were.").
+- Options renamed: when the list keeps its length and an entry changes
+  at the same place to a name that wasn't in the list before, its numbers
+  move within the label, by the same rules. Adding, removing or
+  reordering options moves nothing.
+- Picking another subject in the Subject menu moves nothing: it is a
+  different subject. Formulas are not rewritten; one that names the old
+  label shows the "Not in the tree" note.
 
 ### Formula language
 
@@ -479,9 +583,15 @@ and "+ Calculated value" is disabled.
 ### The Action tree tab's bottom bar
 
 "Calculations (live)" shows the scenario space size (with the active
-profile), then each KPI under its `displayName` (or its name), and the
-link "Get your numbers in the Calculations tab →". With no KPI it shows
-"KPIs none yet". The bar wraps onto two lines when it doesn't fit.
+profile) and its contradiction warning, then the nodes in the tree
+(`Model.classCounts()`): **Subjects**, **Approaches** and **Features**
+count the nodes of that class, and **Feature values** adds up the options
+of every Feature node (a Feature with `(keep_current; replace)` counts
+2). Profiles don't change these counts. Then each KPI under its
+`displayName` (or its name), and the link "Go to Calculations →". With no
+KPI it shows "KPIs none yet". The metrics wrap as three groups, each kept
+on one line while it fits: the size with its warning, the four counts,
+and the KPIs; a group breaks inside only when it is wider than the bar.
 
 For now the KPIs stay greyed out with "–", and their tooltip reads "Not
 shown yet. Later this bar shows the scenario chosen in the Calculations
@@ -489,7 +599,7 @@ tab." A sample's mean on the Action tree tab was unclear. The code that
 showed it (`≈` and the sample's mean, or the exact mean of a full
 listing) is still in `calculations-tab.js`, switched off by
 `BAR_SHOWS_MEANS = false`. Later the bar should show the scenario chosen
-in the Calculations tab, once its data is saved with the document.
+in the Calculations tab.
 
 ### Numbers
 
@@ -504,29 +614,37 @@ are rounded ("27,868"). Counts have no decimals, and shares one
 `parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a
 document looks on disk. The rest of the editor works with "specs" (a
 plain array of `{ id, kind, nodeClass, label, value, children }` objects,
-`id` optional) and a small document wrapper: `{ tree, profile, history, source }`.
-The Calculations tab's data is not in the file yet (see "Calculations
-tab").
+`id` optional) and a small document wrapper: `{ tree, profile,
+calculations, history, source }`, where `tree`, `profile` and
+`calculations` are the current version's as on screen.
 
-The current file (version 5) has three sections, always in this order (blank lines
-between them are valid JSON and are written on purpose):
+The current file (version 6) has these keys, always in this order (blank
+lines between the sections are valid JSON and are written on purpose):
 
 ```
 {
 	"format": "novadm-action-tree",
-	"version": 5,
+	"version": 6,
 	"source": "",
 
 	"versionControl": { "head": "Add scaffolding", "edges": [
 		{ "from": "Initial version", "to": "Add scaffolding", "comment": "..." } ] },
 
-	"profile": { "active": null, "current": { "<nodeId>": "always" },
-		"currentValues": { "<nodeId>": { "<value>": "never" } },
-		"saved": [ { "name": "Budget", "constraints": { "<nodeId>": "never" },
-			"valueConstraints": {} } ] },
+	"actionTree": [
+		{ "id": "Initial version", "created": "2026-10-19",
+			"profile": { "active": null, "current": { "<nodeId>": "always" },
+				"currentValues": { "<nodeId>": { "<value>": "never" } },
+				"saved": [ { "name": "Budget", "constraints": { "<nodeId>": "never" },
+					"valueConstraints": {} } ] },
+			"tree": [ ... ],
+			"calculations": { "attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"values": { "windows_glazing": { "price": { "keep_double": 0, "replace_triple": 52000 } },
+					"replace_brick_facade": { "price": 210000 } },
+				"derived": [ { "name": "sum", "displayName": "Sum", "formula": "total(price)",
+					"unit": "DKK", "kpi": true } ] } },
 
-	"actionTree": [ { "id": "Initial version", "tree": [ ... ] },
-	                { "id": "Add scaffolding", "tree": [ ... ] } ]
+		{ "id": "Add scaffolding", ... } ]
 }
 ```
 
@@ -539,34 +657,61 @@ between them are valid JSON and are written on purpose):
   `sample-tree.js`, and Clear tree empties it. It needs no new version:
   a version 5 file without it still imports (as `""`), and an editor
   that doesn't know the field ignores it.
-- **`actionTree`** – the snapshots: a list of `{ id, created, tree }`. A
+- **`actionTree`** – the snapshots: a list of `{ id, created, profile,
+  tree, calculations }`, the numbers last, after the tree whose labels
+  they use. `profile` and `calculations` are always written, even when
+  empty, so someone editing the file by hand sees where things go. A
   snapshot id is free text (git-style, e.g. "Add scaffolding"); `created`
   is an optional `YYYY-MM-DD` date (older files have none). The editor
   loads the snapshot named by `versionControl.head` (default: the last
   one). On import, every node without an `id` gets a new one that is
   used nowhere else in the file (`n<number>`, also avoiding ids named in
-  `profile`); root nodes without an id all get the same new id, so the
+  any snapshot's `profile`); root nodes without an id all get the same new id, so the
   root never shows up as a change. A node whose id was removed by hand
   therefore counts as a new node.
 - **`versionControl`** – `head` and `edges` (`from` -> `to`, optional
   `comment`; branches are two edges leaving the same snapshot, a merge is
   a snapshot with two incoming edges). Edges must not go round in a
   circle (a snapshot based on itself); such a file is rejected. On export
-  the tree on screen replaces the head snapshot (the editor asks first if
+  what is on screen replaces the head snapshot (the editor asks first if
   it has unsaved changes and other versions exist, and refuses if other
-  versions are based on the head). A fresh document has one snapshot
-  called "Initial version" and no edges.
-- **`profile`** – `current` / `currentValues` are the node and value
-  constraints on screen now, `saved` the named profiles, `active` the
-  loaded one (or `null`).
-  Constraints are keyed by node `id`, which is why saved nodes now carry
-  an `id` (unique within a snapshot; kept on load, so profiles keep
-  pointing at the same nodes). Constraints naming ids that are in none
-  of the snapshots (or values no snapshot gives that node) are dropped
-  silently: on import, on undo/redo, and when exporting (so exporting,
-  importing and exporting again gives the same file).
-- Each section is read by its own small function in `parser.js`, and
-  `validateDocument()` checks all of them before the live editor is touched.
+  versions are based on the head and its tree changed). A fresh document
+  has one snapshot called "Initial version" and no edges.
+- **`profile`** (per snapshot) – `current` / `currentValues` are the
+  node and value constraints on screen in that version, `saved` its
+  named profiles, `active` the loaded one (or `null`). Constraints are
+  keyed by node `id`, which is why saved nodes carry an `id` (unique
+  within a snapshot; kept on load, so profiles keep pointing at the same
+  nodes). Constraints naming ids that aren't in the snapshot's tree (or
+  values its node doesn't have) are dropped silently on import and
+  export, so exporting, importing and exporting again gives the same
+  file. A snapshot without `profile` has no profiles.
+- **`calculations`** (per snapshot) – the Calculations tab's data in the
+  tab's own shape, keyed by label, not inside the nodes: nodes that share
+  a label and option share their numbers, and numbers of labels that
+  aren't in the tree are kept. Empty objects in `values` and empty units
+  are left out; a calculated value is written `{ name, displayName?,
+  formula, unit?, kpi? }`, without empty optional fields (`kpi` only
+  when true). It is checked before anything changes, with a message that
+  names the place ("Snapshot "Roof" > calculations > values >
+  windows_glazing > price > replace_triple: "abc" is not a number."):
+  - `attributes`: a list of names that work in formulas, no duplicates;
+  - `units`: attribute → text of up to 20 characters;
+  - `values`: label → attribute → a finite number, or option → finite
+    number; the attribute names must work in formulas;
+  - `derived`: a list of `{ name, formula, displayName?, unit?, kpi? }`
+    with unique names that work in formulas, text fields and a true/false
+    `kpi`.
+
+  A formula with an error is not an import error: the tab shows the
+  error, as after typing it. A snapshot without `calculations` gets the
+  starter data, and a `calculations` without `attributes` gets the
+  attributes found in `values`, in order. Keys are read with `Util.own`
+  and written with `Util.setOwn`, so a label such as `__proto__` stays an
+  ordinary key.
+- Each part is read by its own small function in `parser.js`, and
+  `validateDocument()` checks all of them before the live editor is
+  touched.
 
 Each snapshot's `tree` is a list holding the single root node (AND or
 XOR).
@@ -597,7 +742,10 @@ handlers need to change too.)
 
 ## Example trees
 
-All `.json` examples are format version 5.
+All `.json` examples are format version 6, made with the editor's own
+import and export (never by hand). `sample-tree.json` holds the example
+data (`sample-attributes.js`) in its version; the others have the starter
+data in every version.
 
 - `examples/sample-tree.js` and `examples/sample-tree.json` mirror the
   same "windows / outer_doors / facade / roof / ground_floor" example:
@@ -614,8 +762,10 @@ All `.json` examples are format version 5.
   line (Initial version, Windows & doors, Roof, and Merge Facade, the
   current version), a merged branch (Facade) and an unmerged branch
   (Ground floor). Merging Ground floor gives one conflict
-  (`windows_glazing` changed on both sides). Its two profiles constrain
-  nodes and values that only some versions have. Use it to try Open,
+  (`windows_glazing` changed on both sides). Its two profiles ("Low
+  budget", "Underfloor heating") were one global list in version 5; each
+  version now holds its own copy, pruned to its tree, so "Low budget"
+  never forbids `n11` in Facade, which deleted that node. Use it to try Open,
   Restore, Merge, Delete (e.g. deleting Facade or Roof), and the rules
   for Update this version and Export.
 - `examples/k45-case.json` is the K45 case: nine Subjects (roof,
