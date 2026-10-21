@@ -363,8 +363,9 @@ NovaDM.Model = (function (Util) {
 	function isAllowed(result) { return !result.red; }
 
 	/**
-	 * Applies the always/never marks on screen to the tree: per node id, whether a scenario holding its
-	 * parent may hold the node (`possible`) and the options it may take (`values`), and the `size`.
+	 * Applies the always/never marks on screen: per node id, whether a scenario holding its parent may hold
+	 * the node (`possible`), the options it may take (`values`) and its scenarios below (`count`); the `size`,
+	 * and `contradictory` when the marks leave a non-empty tree no scenario.
 	 */
 	function applyMarks() {
 		var allowed = Object.create(null);
@@ -393,14 +394,20 @@ NovaDM.Model = (function (Util) {
 				sub = pool.reduce(function (p, c) { return p * c.count; }, 1);
 			}
 			if (alwaysValues.length > 1 || (green && red)) contradiction = true;
+			var count = red ? 0 : own * sub;
 			node.children.forEach(function (c, i) { allowed[c.id].possible = pool.indexOf(children[i]) !== -1; });
-			allowed[node.id] = { possible: !red, values: alwaysValues.length > 0 ? alwaysValues : allowedValues };
-			return { count: red ? 0 : own * sub, green: green, red: red };
+			allowed[node.id] = {
+				possible: !red,
+				values: alwaysValues.length > 0 ? alwaysValues : allowedValues,
+				count: count
+			};
+			return { count: count, green: green, red: red };
 		}
 
 		var top = root.children.map(evaluate);
-		var size = top.reduce(function (p, c) { return p * c.count; }, 1);
-		return { size: contradiction || top.length === 0 ? 0 : size, allowed: allowed };
+		var product = top.reduce(function (p, c) { return p * c.count; }, 1);
+		var size = contradiction || top.length === 0 ? 0 : product;
+		return { size: size, contradictory: top.length > 0 && size === 0, allowed: allowed };
 	}
 
 	/**

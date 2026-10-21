@@ -58,7 +58,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var reportHead = document.getElementById('calc-report-head');
 	var kpiBar = document.getElementById('scenario-kpi-metrics');
 	var sizeValue = document.getElementById('calc-space-size');
-	var warningEl = document.getElementById('calc-constraint-warning');
 	var zoomLabel = document.getElementById('calc-zoom-label');
 	var sampleSizeInput = document.getElementById('calc-sample-size');
 	var quickSampleBtn = document.querySelector('[data-calc-sample]');
@@ -145,7 +144,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return boxes;
 	}
 
-	function spaceKey() { return JSON.stringify([Model.treeSpecs(), Model.applyMarks().allowed]); }
+	function spaceKey() {
+		var marks = Model.getProfileState();
+		return JSON.stringify([Model.treeSpecs(), marks.current, marks.currentValues]);
+	}
 
 	function optionsOf(node) { return node.value.length ? node.value : ['']; }
 
@@ -241,7 +243,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			seed: seed,
 			spaceKey: key,
 			total: applied.size,
-			contradictory: !!rootNode() && applied.size === 0,
+			contradictory: applied.contradictory,
 			distinct: Object.keys(distinct).length,
 			scenarios: scenarios
 		};
@@ -263,7 +265,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			seed: seed,
 			spaceKey: key,
 			total: total,
-			contradictory: !!rootNode() && total === 0,
+			contradictory: applied.contradictory,
 			distinct: total,
 			scenarios: total > 0 ? Calculations.enumerate(rootNode(), applied.allowed) : []
 		};
@@ -285,7 +287,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		evaluatedSpaceKey = key;
 	}
 
-	function currentScenario() { return Calculations.scenarioFor(rootNode(), choices, allowedChoices()); }
+	function currentScenario(allowed) {
+		var marks = allowed === undefined ? allowedChoices() : allowed;
+		return Calculations.scenarioFor(rootNode(), choices, marks);
+	}
 
 	function currentResults() { return Calculations.evaluateScenario(analysis, data, currentScenario()); }
 
@@ -296,14 +301,14 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function renderSize() {
-		var total = Model.scenarioSpaceSize();
+		var applied = Model.applyMarks();
+		var total = applied.size;
 		sizeValue.innerHTML = Render.scenarioSizeHtml(total);
-		warningEl.hidden = !rootNode() || total !== 0;
 		[quickSampleBtn, sampleAllBtn, sampleSizeInput, sampleBtn].forEach(function (control) {
 			control.disabled = total === 0;
 		});
 		addDerivedBtn.disabled = !rootNode();
-		sampleAllBtn.title = fullSpaceTitle(total);
+		sampleAllBtn.title = fullSpaceTitle(total, applied.contradictory);
 	}
 
 	function dataChanged() {
@@ -641,7 +646,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 		var layout = layoutGraph();
 		var allowed = allowedChoices();
-		var scenario = Calculations.scenarioFor(rootNode(), choices, allowed);
+		var scenario = currentScenario(allowed);
 		var entries = entriesById(scenario);
 		var values = Calculations.evaluateScenario(analysis, data, scenario);
 		var highlight = highlightFor(layout);
@@ -723,9 +728,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function helpHtml() {
 		return '<div class="calc-help">' +
 			'<span class="palette-label">How the graph works</span>' +
-			'<p><span class="calc-help-label">Labels</span> (indigo) hold a number per option, such as a price.' +
+			'<p><span class="calc-help-label">Labels</span> hold a number per option, such as a price.' +
 			' Pick an option in a label&rsquo;s drop-down to change the scenario on screen.</p>' +
-			'<p><span class="calc-help-derived">Calculated values</span> (green) come from the nodes' +
+			'<p><span class="calc-help-derived">Calculated values</span> come from the nodes' +
 			' whose arrows point into them.</p>' +
 			'<p>Mark a calculated value as a <strong>KPI</strong> to see it in the sample report and in the' +
 			' Action tree tab&rsquo;s bottom bar. Click a node to edit it.</p>' +
@@ -1144,9 +1149,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	/* ---------- Buttons ---------- */
 
-	function fullSpaceTitle(total) {
+	function fullSpaceTitle(total, contradictory) {
 		if (total === 0) {
-			return (rootNode() ? 'The always/never marks are contradictory' : 'The tree is empty') +
+			return (contradictory ? 'The always/never marks are contradictory' : 'The tree is empty') +
 				', so there is nothing to list';
 		}
 		if (total > MAX_SAMPLE_SIZE) {

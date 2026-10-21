@@ -556,7 +556,7 @@ NovaDM.Calculations = (function (Util) {
 
 	function isError(value) { return value === ERROR; }
 
-	/* ---------- Count and sample ---------- */
+	/* ---------- Sample ---------- */
 
 	function possibleOptions(node, allowed) {
 		return allowed ? allowed[node.id].values : node.value;
@@ -564,23 +564,6 @@ NovaDM.Calculations = (function (Util) {
 
 	function possibleChildren(node, allowed) {
 		return allowed ? node.children.filter(function (c) { return allowed[c.id].possible; }) : node.children;
-	}
-
-	function optionCount(node, allowed) {
-		return node.value.length ? possibleOptions(node, allowed).length : 1;
-	}
-
-	function countInto(node, counts, allowed) {
-		var childCounts = possibleChildren(node, allowed).map(function (c) { return countInto(c, counts, allowed); });
-		var sub = node.kind === 'XOR' && node.children.length > 0
-			? childCounts.reduce(function (s, c) { return s + c; }, 0)
-			: childCounts.reduce(function (p, c) { return p * c; }, 1);
-		counts[node.id] = sub * optionCount(node, allowed);
-		return counts[node.id];
-	}
-
-	function count(node, allowed) {
-		return node ? countInto(node, {}, allowed) : 0;
 	}
 
 	function seededRandom(seed) {
@@ -593,40 +576,38 @@ NovaDM.Calculations = (function (Util) {
 		};
 	}
 
-	function drawInto(node, counts, random, scenario, allowed) {
+	function drawInto(node, random, scenario, allowed) {
 		var options = possibleOptions(node, allowed);
 		var value = options.length ? options[Math.floor(random() * options.length)] : '';
 		scenario.push({ id: node.id, label: node.label, value: value });
 		var children = possibleChildren(node, allowed);
 		if (node.kind !== 'XOR' || children.length === 0) {
-			children.forEach(function (c) { drawInto(c, counts, random, scenario, allowed); });
+			children.forEach(function (c) { drawInto(c, random, scenario, allowed); });
 			return;
 		}
-		var r = random() * counts[node.id] / optionCount(node, allowed);
+		var r = random() * children.reduce(function (s, c) { return s + allowed[c.id].count; }, 0);
 		var chosen = children[children.length - 1];
 		for (var i = 0; i < children.length; i++) {
-			r -= counts[children[i].id];
+			r -= allowed[children[i].id].count;
 			if (r < 0) {
 				chosen = children[i];
 				break;
 			}
 		}
-		drawInto(chosen, counts, random, scenario, allowed);
+		drawInto(chosen, random, scenario, allowed);
 	}
 
 	/**
-	 * Draws `size` scenarios below `node`, each uniformly from the scenarios that `allowed` (from
-	 * Model.applyMarks, or none for the whole space) leaves. A scenario is a list of { id, label, value };
-	 * `random` returns a number in [0, 1).
+	 * Draws `size` scenarios below `node`, each uniformly from the scenarios that `allowed` leaves (from
+	 * Model.applyMarks, which also counts them, so the rules live in one place). A scenario is a list of
+	 * { id, label, value }; `random` returns a number in [0, 1).
 	 */
 	function sample(node, size, random, allowed) {
 		if (!node) return [];
-		var counts = {};
-		countInto(node, counts, allowed);
 		var scenarios = [];
 		for (var i = 0; i < size; i++) {
 			var scenario = [];
-			drawInto(node, counts, random, scenario, allowed);
+			drawInto(node, random, scenario, allowed);
 			scenarios.push(scenario);
 		}
 		return scenarios;
@@ -758,7 +739,6 @@ NovaDM.Calculations = (function (Util) {
 		isError: isError,
 		possibleOptions: possibleOptions,
 		possibleChildren: possibleChildren,
-		count: count,
 		seededRandom: seededRandom,
 		sample: sample,
 		enumerate: enumerate,

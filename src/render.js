@@ -18,7 +18,7 @@ NovaDM.Render = (function (Model, Util) {
 	var treeContent = document.getElementById('tree-viewport-content');
 	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var scenarioSizeEl = document.getElementById('scenario-space-size-value');
-	var constraintWarningEl = document.getElementById('constraint-warning');
+	var constraintWarningEls = document.querySelectorAll('.constraint-warning');
 	var countEls = {
 		subjects: document.getElementById('subject-count-value'),
 		approaches: document.getElementById('approach-count-value'),
@@ -134,10 +134,10 @@ NovaDM.Render = (function (Model, Util) {
 	function renderTree() {
 		var nodes = Model.root.children;
 		var isEmpty = nodes.length === 0;
-		var size = Model.scenarioSpaceSize();
+		var marks = Model.applyMarks();
 
-		scenarioSizeEl.innerHTML = scenarioSizeHtml(size);
-		constraintWarningEl.hidden = isEmpty || size !== 0;
+		scenarioSizeEl.innerHTML = scenarioSizeHtml(marks.size);
+		constraintWarningEls.forEach(function (el) { el.hidden = !marks.contradictory; });
 		var counts = Model.classCounts();
 		Object.keys(countEls).forEach(function (key) {
 			countEls[key].textContent = counts[key].toLocaleString('en-GB');

@@ -101,10 +101,12 @@ contradictory."
 
 `Model.applyMarks()` does this count in one walk and also returns, per
 node id, whether a scenario that holds the node's parent may hold the
-node (`possible`) and which options the node may take (`values`).
-`scenarioSpaceSize()` returns its `size`; the Calculations tab samples,
-lists and picks scenarios with the rest, so both tabs follow the same
-rules.
+node (`possible`), which options the node may take (`values`) and how
+many scenarios its subtree has (`count`), plus `contradictory` when the
+marks leave a non-empty tree no scenario (it switches the warning on both
+tabs). `scenarioSpaceSize()` returns its `size`; the Calculations tab
+samples, lists and picks scenarios with the rest, so the rules live in
+one place and both tabs follow them.
 
 Sizes below 10^6 are shown in full, with a comma between thousands as
 in British English (e.g. 2,560). Sizes from 10^6 up are shown rounded to
@@ -569,13 +571,15 @@ never breaks.
   count. Asking for more scenarios than the space has, with 30 or your
   own number, shows an alert and lists the full space instead; your own
   number's box then shows the size of the space.
-- **Counting**: `count(node, allowed)` is the sum of the children's
-  counts for an XOR with children and their product otherwise, times the
-  node's number of options (or 1). `allowed` comes from
-  `Model.applyMarks()`: only the children a scenario may hold and the
-  options a node may take count, so it equals
-  `Model.scenarioSpaceSize()`. Without `allowed` (as in `sample`,
-  `enumerate` and `scenarioFor`) the whole space counts.
+- **Counting**: the size shown is `Model.scenarioSpaceSize()`, and the
+  sampler weighs each XOR's children by the counts in `allowed` (from
+  `Model.applyMarks()`): the sum of the children's counts for an XOR with
+  children and their product otherwise, times the node's number of
+  options (or 1), counting only the children a scenario may hold and the
+  options a node may take. `sample` needs `allowed`; `enumerate` and
+  `scenarioFor` without it cover the whole space. The redraw key
+  (`spaceKey`) holds the tree and the marks themselves, so any mark
+  change redraws the graph, even one that changes no count.
 - **A random sample** (`Calculations.sample`) draws each scenario on its
   own, from the root node down: every node takes a uniformly random
   allowed option, an AND takes every possible child and an XOR one
