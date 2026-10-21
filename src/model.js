@@ -179,13 +179,13 @@ NovaDM.Model = (function (Util) {
 	}
 
 	function cycleConstraint(map, key) {
-		if (map[key] === undefined) map[key] = 'always';
+		if (!Util.own(map, key)) Util.setOwn(map, key, 'always');
 		else if (map[key] === 'always') map[key] = 'never';
 		else delete map[key];
 	}
 
 	function getNodeConstraint(nodeId) {
-		return nodeConstraints[nodeId] || 'default';
+		return Util.own(nodeConstraints, nodeId) ? nodeConstraints[nodeId] : 'default';
 	}
 
 	function cycleNodeConstraint(nodeId) {
@@ -193,11 +193,14 @@ NovaDM.Model = (function (Util) {
 	}
 
 	function getValueConstraint(nodeId, value) {
-		return (valueConstraints[nodeId] && valueConstraints[nodeId][value]) || 'default';
+		var byValue = Util.own(valueConstraints, nodeId) ? valueConstraints[nodeId] : null;
+		return Util.own(byValue, value) ? byValue[value] : 'default';
 	}
 
 	function cycleValueConstraint(nodeId, value) {
-		var byValue = valueConstraints[nodeId] || (valueConstraints[nodeId] = {});
+		var byValue = Util.own(valueConstraints, nodeId)
+			? valueConstraints[nodeId]
+			: Util.setOwn(valueConstraints, nodeId, {});
 		cycleConstraint(byValue, value);
 		if (Object.keys(byValue).length === 0) delete valueConstraints[nodeId];
 	}
