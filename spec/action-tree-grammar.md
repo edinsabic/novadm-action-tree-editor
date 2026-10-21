@@ -313,7 +313,9 @@ with formulas, and KPIs over a sample of scenarios. It began as a mockup
 on made-up numbers, which the supervisor approved, and now works on
 whatever tree the Action tree tab holds. Its data belongs to the version
 on screen (see "Version history") and is saved per version in the file
-(format version 6). The example's numbers are still made up.
+(format version 6). It applies the always/never marks on screen, as the
+Action tree tab does (see "Profiles", "The graph" and "Sampling"). The
+example's numbers are still made up.
 
 "Calculated value" is the UI's name for NovaDM's **derived attribute**;
 identifiers, data keys and CSS classes keep `derived`. The engine is
@@ -634,8 +636,9 @@ never breaks.
 
 ### The Action tree tab's bottom bar
 
-"Calculations (live)" shows the scenario space size (with the active
-profile) and its contradiction warning, then the nodes in the tree
+"Calculations (live)" shows the scenario space size (with the always/never
+marks on screen, the same size as the Calculations tab's) and its
+contradiction warning, then the nodes in the tree
 (`Model.classCounts()`): **Subjects**, **Approaches** and **Features**
 count the nodes of that class, and **Feature values** adds up the options
 of every Feature node (a Feature with `(keep_current; replace)` counts
@@ -650,8 +653,9 @@ shown yet. Later this bar shows the scenario chosen in the Calculations
 tab." A sample's mean on the Action tree tab was unclear. The code that
 showed it (`≈` and the sample's mean, or the exact mean of a full
 listing) is still in `calculations-tab.js`, switched off by
-`BAR_SHOWS_MEANS = false`. Later the bar should show the scenario chosen
-in the Calculations tab.
+`BAR_SHOWS_MEANS = false`. How the Action tree tab should show a chosen
+scenario (the tree and these KPIs) is still open: a first version was
+built and taken out again, to be settled with the supervisor first.
 
 ### Numbers
 

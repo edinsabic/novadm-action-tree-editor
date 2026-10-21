@@ -723,7 +723,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function helpHtml() {
 		return '<div class="calc-help">' +
 			'<span class="palette-label">How the graph works</span>' +
-			'<p><span class="calc-help-label">Labels</span> (blue) hold a number per option, such as a price.' +
+			'<p><span class="calc-help-label">Labels</span> (indigo) hold a number per option, such as a price.' +
 			' Pick an option in a label&rsquo;s drop-down to change the scenario on screen.</p>' +
 			'<p><span class="calc-help-derived">Calculated values</span> (green) come from the nodes' +
 			' whose arrows point into them.</p>' +
