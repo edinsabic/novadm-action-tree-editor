@@ -623,8 +623,8 @@ never breaks.
   101–200 of 2,560 · page 2 of 26"). It sorts by `#` (the default; click
   it again for the last first) or by a KPI; sorting and a new sample go
   back to page 1. When the sorted KPI leaves the table (no longer a KPI,
-  or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) to red
-  (highest), per column.
+  or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) through
+  yellow to peach (highest), per column; not red, which is kept for errors.
 - **Opening a scenario**: clicking a `#`, or a card's lowest or highest
   button (which first turns to the right page), sets every drop-down in
   the graph to that scenario's options (`Calculations.choicesFor`),
