@@ -179,13 +179,13 @@ NovaDM.Model = (function (Util) {
 	}
 
 	function cycleConstraint(map, key) {
-		if (map[key] === undefined) map[key] = 'always';
+		if (!Util.own(map, key)) Util.setOwn(map, key, 'always');
 		else if (map[key] === 'always') map[key] = 'never';
 		else delete map[key];
 	}
 
 	function getNodeConstraint(nodeId) {
-		return nodeConstraints[nodeId] || 'default';
+		return Util.own(nodeConstraints, nodeId) ? nodeConstraints[nodeId] : 'default';
 	}
 
 	function cycleNodeConstraint(nodeId) {
@@ -193,11 +193,14 @@ NovaDM.Model = (function (Util) {
 	}
 
 	function getValueConstraint(nodeId, value) {
-		return (valueConstraints[nodeId] && valueConstraints[nodeId][value]) || 'default';
+		var byValue = Util.own(valueConstraints, nodeId) ? valueConstraints[nodeId] : null;
+		return Util.own(byValue, value) ? byValue[value] : 'default';
 	}
 
 	function cycleValueConstraint(nodeId, value) {
-		var byValue = valueConstraints[nodeId] || (valueConstraints[nodeId] = {});
+		var byValue = Util.own(valueConstraints, nodeId)
+			? valueConstraints[nodeId]
+			: Util.setOwn(valueConstraints, nodeId, {});
 		cycleConstraint(byValue, value);
 		if (Object.keys(byValue).length === 0) delete valueConstraints[nodeId];
 	}
@@ -363,12 +366,12 @@ NovaDM.Model = (function (Util) {
 	function isAllowed(result) { return !result.red; }
 
 	/**
-	 * Counts the valid scenarios: AND = product of its children, XOR = sum, times the node's own
-	 * value choices. Always/never are applied without the And propagation rule, so a forbidden
-	 * child of an AND is left out. Returns 0 for an empty tree or contradictory constraints.
+	 * Applies the always/never marks on screen: per node id, whether a scenario holding its parent may hold
+	 * the node (`possible`), the options it may take (`values`) and its scenarios below (`count`); the `size`,
+	 * and `contradictory` when the marks leave a non-empty tree no scenario.
 	 */
-	function scenarioSpaceSize() {
-		if (root.children.length === 0) return 0;
+	function applyMarks() {
+		var allowed = Object.create(null);
 		var contradiction = false;
 
 		function evaluate(node) {
@@ -383,22 +386,40 @@ NovaDM.Model = (function (Util) {
 			var green = constraint === 'always' || alwaysValues.length > 0 || greenChildren.length > 0;
 			var red = constraint === 'never' || own === 0;
 
+			var pool = children.filter(isAllowed);
 			var sub;
 			if (node.kind === 'XOR' && children.length > 0) {
-				var pool = (greenChildren.length > 0 ? greenChildren : children).filter(isAllowed);
+				if (greenChildren.length > 0) pool = greenChildren.filter(isAllowed);
 				if (pool.length === 0) red = true;
 				if (greenChildren.length > 1) contradiction = true;
 				sub = pool.reduce(function (s, c) { return s + c.count; }, 0);
 			} else {
-				sub = children.filter(isAllowed).reduce(function (p, c) { return p * c.count; }, 1);
+				sub = pool.reduce(function (p, c) { return p * c.count; }, 1);
 			}
 			if (alwaysValues.length > 1 || (green && red)) contradiction = true;
-			return { count: red ? 0 : own * sub, green: green, red: red };
+			var count = red ? 0 : own * sub;
+			node.children.forEach(function (c, i) { allowed[c.id].possible = pool.indexOf(children[i]) !== -1; });
+			allowed[node.id] = {
+				possible: !red,
+				values: alwaysValues.length > 0 ? alwaysValues : allowedValues,
+				count: count
+			};
+			return { count: count, green: green, red: red };
 		}
 
 		var top = root.children.map(evaluate);
-		if (contradiction) return 0;
-		return top.reduce(function (p, c) { return p * c.count; }, 1);
+		var product = top.reduce(function (p, c) { return p * c.count; }, 1);
+		var size = contradiction || top.length === 0 ? 0 : product;
+		return { size: size, contradictory: top.length > 0 && size === 0, allowed: allowed };
+	}
+
+	/**
+	 * Counts the valid scenarios: AND = product of its children, XOR = sum, times the node's own
+	 * value choices. Always/never are applied without the And propagation rule, so a forbidden
+	 * child of an AND is left out. Returns 0 for an empty tree or contradictory constraints.
+	 */
+	function scenarioSpaceSize() {
+		return applyMarks().size;
 	}
 
 	return {
@@ -441,6 +462,7 @@ NovaDM.Model = (function (Util) {
 		prunedProfileState: prunedProfileState,
 		applyProfileState: applyProfileState,
 		classCounts: classCounts,
+		applyMarks: applyMarks,
 		scenarioSpaceSize: scenarioSpaceSize
 	};
 })(NovaDM.Util);

@@ -7,28 +7,31 @@
 	--color-ink-muted: #6E6E73;
 	--color-border: #D2D2D7;
 	--color-border-soft: #E8E8ED;
-	--color-accent: #6B2737;
-	--color-accent-light: #F5ECED;
+	--color-accent: #0066CC;
+	--color-accent-light: #EDF4FC;
 
-	--color-danger: #B3261E;
-	--color-danger-border: #E7C4C1;
-	--color-danger-light: #FBEDEC;
+	--color-danger: #D70015;
+	--color-danger-border: #F2C2C6;
+	--color-danger-light: #FDEDEE;
+
+	--color-warning: #8A4B00;
+	--color-warning-light: #FFF3E0;
 
 	--color-always: #2E7D32;
-	--color-always-light: #E8F3E9;
-	--color-never: #B3261E;
+	--color-always-light: #EBF5EC;
+	--color-never: #D70015;
 
-	--subject-color: #C1440E;
-	--feature-color: #1F6FEB;
-	--approach-color: #1E8E5A;
+	--subject-color: #B25000;
+	--feature-color: #5856D6;
+	--approach-color: #1E7B4E;
 	--attribute-color: #15803D;
 	--neutral-color: var(--color-ink);
 
-	--color-scale-low: #8DCF9E;
-	--color-scale-mid: #FFE993;
-	--color-scale-high: #F59A9A;
+	--color-scale-low: #A6E3B8;
+	--color-scale-mid: #FFE69A;
+	--color-scale-high: #FDBF8E;
 
-	--font-display: Georgia, 'Times New Roman', serif;
+	--font-display: system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-mono: 'SF Mono', Consolas, monospace;
 
@@ -87,6 +90,7 @@ select {
 	font-family: var(--font-display);
 	font-size: 1.4rem;
 	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 
 /* ---------- Top-level tabs ---------- */
@@ -140,6 +144,7 @@ main {
 .control-row {
 	display: flex;
 	flex-shrink: 0;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
@@ -156,6 +161,7 @@ main {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	margin-left: auto;
 }
 
 .control-label {
@@ -210,6 +216,7 @@ main {
 	color: var(--color-ink-muted);
 	font-size: 0.85rem;
 	font-weight: 500;
+	white-space: nowrap;
 }
 
 .pill-btn:hover:not(:disabled) { color: var(--color-ink); }
@@ -236,7 +243,10 @@ main {
 
 .panels-stack.flyout-open .control-right { visibility: hidden; }
 
-.calc-workspace.flyout-open #calc-version-btn { visibility: hidden; }
+.calc-workspace.flyout-open #calc-profile-btn,
+.calc-workspace.flyout-open #calc-version-btn {
+	visibility: hidden;
+}
 
 .viewport-row {
 	position: relative;
@@ -284,8 +294,8 @@ main {
 	align-self: flex-start;
 	padding: 5px 12px;
 	border-radius: var(--radius-sm);
-	background-color: var(--color-accent-light);
-	color: var(--color-accent);
+	background-color: var(--color-border-soft);
+	color: var(--color-ink);
 	font-size: 0.82rem;
 	font-weight: 600;
 }
@@ -449,11 +459,6 @@ main {
 	background-color: var(--color-bg);
 }
 
-.flyout-title {
-	padding-left: 4px;
-	font-size: 0.9rem;
-}
-
 .flyout-tabs {
 	display: flex;
 	gap: 4px;
@@ -602,8 +607,8 @@ main {
 .vg-tag {
 	padding: 1px 7px;
 	border-radius: var(--radius-sm);
-	background-color: var(--color-accent-light);
-	color: var(--color-accent);
+	background-color: var(--color-border-soft);
+	color: var(--color-ink);
 	font-size: 0.72rem;
 	font-weight: 600;
 }
@@ -656,7 +661,7 @@ main {
 
 .vg-edge.merged,
 .vg-arrowhead.merged {
-	color: var(--color-accent);
+	color: var(--color-ink);
 }
 
 .vg-label {
@@ -691,11 +696,19 @@ main {
 	flex-shrink: 0;
 	padding: 5px 12px;
 	border-radius: var(--radius-sm);
-	background-color: var(--color-accent-light);
-	color: var(--color-accent);
 	font-size: 0.85rem;
 	font-weight: 600;
 	white-space: nowrap;
+}
+
+.scenario-summary-label {
+	background-color: var(--color-border-soft);
+	color: var(--color-ink);
+}
+
+.constraint-warning {
+	background-color: var(--color-warning-light);
+	color: var(--color-warning);
 }
 
 .scenario-metrics {
@@ -1511,6 +1524,17 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 }
 
 .calc-equals { flex-shrink: 0; }
+
+.calc-mark {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.calc-mark.always { background-color: var(--color-always); }
+
+.calc-mark.never { background-color: var(--color-never); }
 
 .calc-choice {
 	flex-shrink: 0;

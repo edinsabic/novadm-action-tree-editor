@@ -556,21 +556,14 @@ NovaDM.Calculations = (function (Util) {
 
 	function isError(value) { return value === ERROR; }
 
-	/* ---------- Count and sample ---------- */
+	/* ---------- Sample ---------- */
 
-	function optionCount(node) { return Math.max(node.value.length, 1); }
-
-	function countInto(node, counts) {
-		var childCounts = node.children.map(function (c) { return countInto(c, counts); });
-		var sub = node.kind === 'XOR' && childCounts.length > 0
-			? childCounts.reduce(function (s, c) { return s + c; }, 0)
-			: childCounts.reduce(function (p, c) { return p * c; }, 1);
-		counts[node.id] = sub * optionCount(node);
-		return counts[node.id];
+	function possibleOptions(node, allowed) {
+		return allowed ? allowed[node.id].values : node.value;
 	}
 
-	function count(node) {
-		return node ? countInto(node, {}) : 0;
+	function possibleChildren(node, allowed) {
+		return allowed ? node.children.filter(function (c) { return allowed[c.id].possible; }) : node.children;
 	}
 
 	function seededRandom(seed) {
@@ -583,50 +576,52 @@ NovaDM.Calculations = (function (Util) {
 		};
 	}
 
-	function drawInto(node, counts, random, scenario) {
-		var value = node.value.length ? node.value[Math.floor(random() * node.value.length)] : '';
+	function drawInto(node, random, scenario, allowed) {
+		var options = possibleOptions(node, allowed);
+		var value = options.length ? options[Math.floor(random() * options.length)] : '';
 		scenario.push({ id: node.id, label: node.label, value: value });
-		if (node.kind !== 'XOR' || node.children.length === 0) {
-			node.children.forEach(function (c) { drawInto(c, counts, random, scenario); });
+		var children = possibleChildren(node, allowed);
+		if (node.kind !== 'XOR' || children.length === 0) {
+			children.forEach(function (c) { drawInto(c, random, scenario, allowed); });
 			return;
 		}
-		var r = random() * counts[node.id] / optionCount(node);
-		var chosen = node.children[node.children.length - 1];
-		for (var i = 0; i < node.children.length; i++) {
-			r -= counts[node.children[i].id];
+		var r = random() * children.reduce(function (s, c) { return s + allowed[c.id].count; }, 0);
+		var chosen = children[children.length - 1];
+		for (var i = 0; i < children.length; i++) {
+			r -= allowed[children[i].id].count;
 			if (r < 0) {
-				chosen = node.children[i];
+				chosen = children[i];
 				break;
 			}
 		}
-		drawInto(chosen, counts, random, scenario);
+		drawInto(chosen, random, scenario, allowed);
 	}
 
 	/**
-	 * Draws `size` scenarios below `node`, each uniformly from the whole scenario space (profiles
-	 * are ignored). A scenario is a list of { id, label, value }; `random` returns a number in [0, 1).
+	 * Draws `size` scenarios below `node`, each uniformly from the scenarios that `allowed` leaves (from
+	 * Model.applyMarks, which also counts them, so the rules live in one place). A scenario is a list of
+	 * { id, label, value }; `random` returns a number in [0, 1).
 	 */
-	function sample(node, size, random) {
+	function sample(node, size, random, allowed) {
 		if (!node) return [];
-		var counts = {};
-		countInto(node, counts);
 		var scenarios = [];
 		for (var i = 0; i < size; i++) {
 			var scenario = [];
-			drawInto(node, counts, random, scenario);
+			drawInto(node, random, scenario, allowed);
 			scenarios.push(scenario);
 		}
 		return scenarios;
 	}
 
-	function enumerateFrom(node) {
+	function enumerateFrom(node, allowed) {
+		var children = possibleChildren(node, allowed);
 		var below = [[]];
 		if (node.kind === 'XOR' && node.children.length > 0) {
 			below = [];
-			node.children.forEach(function (c) { below = below.concat(enumerateFrom(c)); });
+			children.forEach(function (c) { below = below.concat(enumerateFrom(c, allowed)); });
 		} else {
-			node.children.forEach(function (c) {
-				var options = enumerateFrom(c);
+			children.forEach(function (c) {
+				var options = enumerateFrom(c, allowed);
 				var combined = [];
 				below.forEach(function (start) {
 					options.forEach(function (rest) { combined.push(start.concat(rest)); });
@@ -635,34 +630,36 @@ NovaDM.Calculations = (function (Util) {
 			});
 		}
 		var scenarios = [];
-		(node.value.length ? node.value : ['']).forEach(function (value) {
+		(node.value.length ? possibleOptions(node, allowed) : ['']).forEach(function (value) {
 			var entry = { id: node.id, label: node.label, value: value };
 			below.forEach(function (rest) { scenarios.push([entry].concat(rest)); });
 		});
 		return scenarios;
 	}
 
-	function enumerate(node) {
-		return node ? enumerateFrom(node) : [];
+	function enumerate(node, allowed) {
+		return node ? enumerateFrom(node, allowed) : [];
 	}
 
 	/* ---------- Chosen scenario ---------- */
 
-	function chooseInto(node, choices, scenario) {
+	function chooseInto(node, choices, scenario, allowed) {
+		var options = possibleOptions(node, allowed);
 		var picked = choices.options[node.id];
-		var value = node.value.indexOf(picked) !== -1 ? picked : (node.value[0] || '');
+		var value = options.indexOf(picked) !== -1 ? picked : (options[0] || '');
 		scenario.push({ id: node.id, label: node.label, value: value });
-		if (node.kind !== 'XOR' || node.children.length === 0) {
-			node.children.forEach(function (c) { chooseInto(c, choices, scenario); });
+		var children = possibleChildren(node, allowed);
+		if (node.kind !== 'XOR' || children.length === 0) {
+			children.forEach(function (c) { chooseInto(c, choices, scenario, allowed); });
 			return;
 		}
-		var branch = node.children.filter(function (c) { return c.id === choices.branches[node.id]; })[0];
-		chooseInto(branch || node.children[0], choices, scenario);
+		var branch = children.filter(function (c) { return c.id === choices.branches[node.id]; })[0];
+		chooseInto(branch || children[0], choices, scenario, allowed);
 	}
 
-	function scenarioFor(node, choices) {
+	function scenarioFor(node, choices, allowed) {
 		var scenario = [];
-		if (node) chooseInto(node, choices || { options: {}, branches: {} }, scenario);
+		if (node) chooseInto(node, choices || { options: {}, branches: {} }, scenario, allowed);
 		return scenario;
 	}
 
@@ -740,7 +737,8 @@ NovaDM.Calculations = (function (Util) {
 		numberFor: numberFor,
 		evaluateScenario: evaluateScenario,
 		isError: isError,
-		count: count,
+		possibleOptions: possibleOptions,
+		possibleChildren: possibleChildren,
 		seededRandom: seededRandom,
 		sample: sample,
 		enumerate: enumerate,

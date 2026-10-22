@@ -68,8 +68,11 @@ tree, so it's safe to delete" (checked against the tree on screen), or
 
 Load example and Clear tree start with one version and no profiles
 (`Model.resetProfiles()`); an import loads the profiles of the file's
-current version (see `profile` below). The pill reads "Profiles: Budget",
-or "Profiles: none" when no profile is loaded.
+current version (see `profile` below). The pill, on both tabs, reads
+"Profiles: Budget", or "Profiles: none" when no profile is loaded. Marks
+are set on the Action tree tab only; the Calculations tab applies the
+marks on screen (loaded profile or not) and shows them read-only (see
+"The graph" and "Sampling").
 
 **Scenario space size** (`Model.scenarioSpaceSize()`, the live metric of
 that name in the bottom bar) counts valid scenarios: AND = product of its
@@ -93,7 +96,17 @@ empty tree (without a warning).
 A contradiction is a node that is both green and red: two `always`
 children of one XOR, two `always` values of one node, or a `never` node
 with an `always` node or value below it. Any contradiction gives 0, and
-a warning is shown.
+a warning is shown on both tabs: "Warning: the applied constraints are
+contradictory."
+
+`Model.applyMarks()` does this count in one walk and also returns, per
+node id, whether a scenario that holds the node's parent may hold the
+node (`possible`), which options the node may take (`values`) and how
+many scenarios its subtree has (`count`), plus `contradictory` when the
+marks leave a non-empty tree no scenario (it switches the warning on both
+tabs). `scenarioSpaceSize()` returns its `size`; the Calculations tab
+samples, lists and picks scenarios with the rest, so the rules live in
+one place and both tabs follow them.
 
 Sizes below 10^6 are shown in full, with a comma between thousands as
 in British English (e.g. 2,560). Sizes from 10^6 up are shown rounded to
@@ -172,10 +185,10 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   cannot be renamed.
 - Every node in every version has an id (an import fills in missing
   ones, see `actionTree` below), and a node keeps its id across versions.
-- The Calculations tab has its own "Version: …" pill, at the same place
-  as the Action tree tab's. It opens the same flyout, moved into that
-  tab's layer, with the heading "Version history" instead of the
-  Profile/Version switch, as profiles aren't applied there.
+- The Calculations tab has its own "Profiles: …" and "Version: …"
+  pills, at the same place as the Action tree tab's. They open the same
+  flyouts, with the same Profile/Version switch, moved into the layer of
+  the tab that opens them.
 - In the graph, an edge that spans several columns stays in the row of
   one end (whichever row is free in between) and changes rows within a
   single column, so it never runs through other versions.
@@ -302,7 +315,9 @@ with formulas, and KPIs over a sample of scenarios. It began as a mockup
 on made-up numbers, which the supervisor approved, and now works on
 whatever tree the Action tree tab holds. Its data belongs to the version
 on screen (see "Version history") and is saved per version in the file
-(format version 6). The example's numbers are still made up.
+(format version 6). It applies the always/never marks on screen, as the
+Action tree tab does (see "Profiles", "The graph" and "Sampling"). The
+example's numbers are still made up.
 
 "Calculated value" is the UI's name for NovaDM's **derived attribute**;
 identifiers, data keys and CSS classes keep `derived`. The engine is
@@ -451,10 +466,19 @@ the Action tree tab (`Render.renderTree()` calls
   node without a label, such as the root node, gets no box.
 - **A box** shows `label =` and a drop-down of the node's options
   ("chosen" for a node without options), plus "not chosen" when an XOR
-  above can leave the node out; a single option that is always taken
-  shows as text. Below that, one row per attribute that has a number for
-  at least one of the node's options, with the number of the option on
-  screen. A box that is not in the scenario on screen is greyed out.
+  above or the always/never marks can leave the node out; a single
+  option that is always taken shows as text. Below that, one row per
+  attribute that has a number for at least one of the node's options,
+  with the number of the option on screen. A box that is not in the
+  scenario on screen is greyed out.
+- **The always/never marks** show read-only (they are set on the Action
+  tree tab): a green or red dot before the label of a node with a mark,
+  and "(always)" or "(never)" after a marked option. An option the marks
+  rule out stays in the drop-down, greyed out (disabled); "not chosen"
+  is greyed out when the marks put the node in every scenario. A box no
+  scenario can hold is greyed out, with the title "The always/never
+  marks leave this node out of every scenario". While the marks are
+  contradictory the graph ignores them, so options can still be picked.
 - **Every other calculated value** goes one column to the right of its
   furthest-right input, and in column 1 at least once its formula refers
   to anything, even before it has an arrow. A column is stacked from the
@@ -466,10 +490,11 @@ the Action tree tab (`Render.renderTree()` calls
   `total(attribute)` from the attribute's row in every box that has
   one, which is why `sum` has an arrow from every priced box.
 - **Picking an option** also picks the branch of every XOR above the
-  node; "not chosen" switches the nearest XOR with more than one child
-  to another branch. The picks are kept by node id
-  (`Calculations.scenarioFor`). By default every node takes its first
-  option and every XOR its first child. Profiles are ignored.
+  node; "not chosen" switches the nearest XOR with another possible
+  child to that child. The picks are kept by node id
+  (`Calculations.scenarioFor(node, choices, allowed)`). By default every
+  node takes its first allowed option and every XOR its first allowed
+  child; a pick the marks no longer allow falls back the same way.
 - Clicking a node selects it and highlights everything it uses and
   everything that uses it. The graph scrolls and zooms (30% to 200%, CSS
   `zoom` on the canvas). On an empty tree it shows only a hint.
@@ -529,10 +554,16 @@ space**, and your own number of scenarios: a box that shows a comma
 between thousands ("1,000"), then its "scenarios" button or Enter. The
 number is a count, so the box ignores commas, points and spaces
 ("1.000" is also a thousand). The
-**scenario space size** next to the title is counted without profiles,
-as the sample is (`Calculations.count`), so with a profile active it can
-differ from the Action tree tab's. On an empty tree every sample control
-and "+ Calculated value" is disabled.
+**scenario space size** next to the title is the Action tree tab's
+(`Model.scenarioSpaceSize()`): the always/never marks on screen apply,
+as they do to the sample. When it is 0 every sample control is disabled;
+on a non-empty tree the same warning as on the Action tree tab shows
+next to it, "Full scenario space" says why in its tooltip, and a sample
+on screen becomes empty ("The always/never marks are contradictory, so
+there is nothing to sample."). "+ Calculated value" is disabled only on
+an empty tree. When the control row has no room left (a long profile or
+version name, the warning), it wraps onto a second line; a pill's text
+never breaks.
 
 - **Limits**: at most 3,000 scenarios (`MAX_SAMPLE_SIZE`). Your own
   number must be a whole number from 1 to 3,000. "Full scenario space"
@@ -540,24 +571,34 @@ and "+ Calculated value" is disabled.
   count. Asking for more scenarios than the space has, with 30 or your
   own number, shows an alert and lists the full space instead; your own
   number's box then shows the size of the space.
-- **Counting**: `count(node)` is the sum of the children's counts for an
-  XOR with children and their product otherwise, times the node's number
-  of options (or 1). Without a profile it equals
-  `Model.scenarioSpaceSize()`.
+- **Counting**: the size shown is `Model.scenarioSpaceSize()`, and the
+  sampler weighs each XOR's children by the counts in `allowed` (from
+  `Model.applyMarks()`): the sum of the children's counts for an XOR with
+  children and their product otherwise, times the node's number of
+  options (or 1), counting only the children a scenario may hold and the
+  options a node may take. `sample` needs `allowed`; `enumerate` and
+  `scenarioFor` without it cover the whole space. The redraw key
+  (`spaceKey`) holds the tree and the marks themselves, so any mark
+  change redraws the graph, even one that changes no count.
 - **A random sample** (`Calculations.sample`) draws each scenario on its
   own, from the root node down: every node takes a uniformly random
-  option, an AND takes every child and an XOR one child with probability
-  `count / sum`, so every scenario is equally likely (a sample can hold
-  the same scenario twice). A scenario is a list of
-  `{ id, label, value }`, where `value` is the chosen option, or `''`
-  for a node without options.
+  allowed option, an AND takes every possible child and an XOR one
+  possible child with probability `count / sum`, so every scenario the
+  marks allow is equally likely (a sample can hold the same scenario
+  twice). A scenario is a list of `{ id, label, value }`, where `value`
+  is the chosen option, or `''` for a node without options.
 - **The full space** (`Calculations.enumerate`) lists every scenario
-  once, in tree order: each node's options in turn, an AND combining its
-  children and an XOR taking each child in turn.
-- **Profiles are ignored**, and the report says so.
+  the marks allow once, in tree order: each node's allowed options in
+  turn, an AND combining its possible children and an XOR taking each
+  possible child in turn.
+- **The marks** follow the rules of the size: a `never` node under an
+  AND is left out of the scenario, so its numbers don't count and
+  `selected()` is false for its label. With no marks, a seed draws the
+  same scenarios as on the whole space.
 - **Following the tree**: each sample has a random seed
   (`Calculations.seededRandom`, a mulberry32 generator). When the tree
-  changes, the sample is drawn again with the same size and seed, so the
+  or its marks change, the sample is drawn again with the same size and
+  seed, so the
   numbers only move because of the change, and undoing it gives them
   back. A full listing is listed again; if the tree now has more than
   3,000 scenarios, it becomes a random sample of the same size, and the
@@ -575,7 +616,7 @@ and "+ Calculated value" is disabled.
   sample; that is not an undo step.
 - **The head** says what was drawn, e.g. "1,000 random scenarios out of
   2,560 · 815 different ones (31.8% of the space) · every scenario is
-  equally likely; profiles are not applied". A full listing is titled
+  equally likely". A full listing is titled
   "Full scenario space" and reads "All 2,560 scenarios of the space".
 - **One card per KPI** (or, if no calculated value is a KPI, per
   calculated value that no other formula uses): the heading and the
@@ -588,8 +629,8 @@ and "+ Calculated value" is disabled.
   101–200 of 2,560 · page 2 of 26"). It sorts by `#` (the default; click
   it again for the last first) or by a KPI; sorting and a new sample go
   back to page 1. When the sorted KPI leaves the table (no longer a KPI,
-  or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) to red
-  (highest), per column.
+  or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) through
+  yellow to peach (highest), per column; not red, which is kept for errors.
 - **Opening a scenario**: clicking a `#`, or a card's lowest or highest
   button (which first turns to the right page), sets every drop-down in
   the graph to that scenario's options (`Calculations.choicesFor`),
@@ -599,8 +640,9 @@ and "+ Calculated value" is disabled.
 
 ### The Action tree tab's bottom bar
 
-"Calculations (live)" shows the scenario space size (with the active
-profile) and its contradiction warning, then the nodes in the tree
+"Calculations (live)" shows the scenario space size (with the always/never
+marks on screen, the same size as the Calculations tab's) and its
+contradiction warning, then the nodes in the tree
 (`Model.classCounts()`): **Subjects**, **Approaches** and **Features**
 count the nodes of that class, and **Feature values** adds up the options
 of every Feature node (a Feature with `(keep_current; replace)` counts
@@ -615,8 +657,9 @@ shown yet. Later this bar shows the scenario chosen in the Calculations
 tab." A sample's mean on the Action tree tab was unclear. The code that
 showed it (`≈` and the sample's mean, or the exact mean of a full
 listing) is still in `calculations-tab.js`, switched off by
-`BAR_SHOWS_MEANS = false`. Later the bar should show the scenario chosen
-in the Calculations tab.
+`BAR_SHOWS_MEANS = false`. How the Action tree tab should show a chosen
+scenario (the tree and these KPIs) is still open: a first version was
+built and taken out again, to be settled with the supervisor first.
 
 ### Numbers
 
