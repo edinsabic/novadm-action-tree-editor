@@ -6,7 +6,7 @@ NovaDM is a formal domain model for building renovation design space exploration
 
 ## Status
 
-Version 1.0.0. The editor in `editor/` has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
+Version 1.1.0. The editor in `editor/` has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
 
 ## Quick start
 
