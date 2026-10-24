@@ -259,22 +259,28 @@
 			</div>
 
 			<div id="calc-report-head" class="calc-report-head">
+				<div id="calc-print-info" class="calc-print-info"></div>
 				<div class="calc-report-title-row">
 					<div id="calc-report-text" class="calc-report-text"></div>
 					<button id="calc-report-close-btn" class="flyout-close calc-report-close" type="button"
 						data-calc-report="close" aria-label="Close the report"
 						title="Close the report and clear the sample" hidden>&times;</button>
 				</div>
-				<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
-					<span id="calc-sample-label" class="control-label">Sample</span>
-					<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
-					<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
-					<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
-						<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
-							aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 3,000)" />
-						<button id="calc-sample-btn" class="pill-btn" type="button"
-							title="Sample this number of scenarios">scenarios</button>
+				<div class="calc-report-tools">
+					<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
+						<span id="calc-sample-label" class="control-label">Sample</span>
+						<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
+						<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
+						<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
+							<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
+								aria-label="Number of scenarios to sample" title="Number of scenarios (1 to 3,000)" />
+							<button id="calc-sample-btn" class="pill-btn" type="button"
+								title="Sample this number of scenarios">scenarios</button>
+						</div>
 					</div>
+					<button id="calc-pdf-btn" class="pill-btn calc-pdf-btn" type="button" hidden
+						title="Open the print dialog, where you can save the report as a PDF file">
+						Save report as PDF</button>
 				</div>
 			</div>
 

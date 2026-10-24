@@ -43,9 +43,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
-	function newDocument(specs, calculations, source, history) {
+	function newDocument(specs, calculations, source, history, name) {
 		Model.replaceTree(specs);
 		Model.setSource(source);
+		Model.setDocumentName(name);
 		if (history) {
 			Model.applyProfileState(headSnapshot(history).profile, [specs]);
 			CalculationsTab.reset(headSnapshot(history).calculations);
@@ -138,6 +139,12 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	importInput.accept = FORMAT.extension;
 
+	function nameOf(fileName) {
+		var extension = FORMAT.extension;
+		var hasExtension = fileName.toLowerCase().slice(-extension.length) === extension;
+		return hasExtension ? fileName.slice(0, -extension.length) : fileName;
+	}
+
 	function importDocument(fileName, text) {
 		var doc;
 		var problem;
@@ -159,7 +166,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			return;
 		}
 
-		newDocument(doc.tree, null, doc.source, doc.history);
+		newDocument(doc.tree, null, doc.source, doc.history, nameOf(fileName));
 		if (doc.addedRoot) {
 			setTimeout(function () {
 				alert('"' + fileName + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node' +

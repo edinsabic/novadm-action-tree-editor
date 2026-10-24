@@ -1794,6 +1794,20 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 
 .calc-report-close:hover { background-color: var(--color-bg); }
 
+.calc-report-tools {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 24px;
+}
+
+.calc-pdf-btn { margin-left: auto; }
+
+.calc-print-info,
+.calc-print-note {
+	display: none;
+}
+
 .calc-report {
 	display: flex;
 	flex-direction: column;
@@ -1975,3 +1989,84 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 }
 
 .calc-sort-btn:hover { color: var(--color-ink); }
+
+/* ---------- Print ---------- */
+
+@page {
+	size: A4 landscape;
+	margin: 10mm;
+}
+
+@media print {
+	.calc-printing,
+	.calc-printing body,
+	.calc-printing main,
+	.calc-printing #calculations,
+	.calc-printing #calc-workspace {
+		display: block;
+		height: auto;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	.calc-printing body {
+		padding: 0;
+		background-color: var(--color-surface);
+		print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
+	}
+
+	.calc-printing main { padding-top: 0; }
+
+	.calc-printing body > :not(main),
+	.calc-printing main > :not(#calculations),
+	.calc-printing #calc-workspace > :not(#calc-report-head),
+	.calc-printing .calc-report-tools,
+	.calc-printing .calc-report-close,
+	.calc-printing .calc-pager,
+	.calc-printing .calc-hint,
+	.calc-printing .calc-kpi-card-head .btn,
+	.calc-printing [data-calc-report="csv"],
+	.calc-printing .calc-print-off {
+		display: none;
+	}
+
+	.calc-printing .calc-print-info,
+	.calc-printing .calc-print-note {
+		display: block;
+	}
+
+	.calc-printing .calc-print-info {
+		margin-bottom: 10px;
+		color: var(--color-ink-muted);
+		font-size: 0.8rem;
+	}
+
+	.calc-printing .calc-print-info p { margin: 0; }
+
+	.calc-printing .calc-report-head {
+		margin-top: 0;
+		padding: 0 0 12px;
+		border: none;
+		box-shadow: none;
+	}
+
+	.calc-printing .calc-report {
+		padding: 0;
+		border: none;
+		box-shadow: none;
+	}
+
+	.calc-printing .calc-scenarios-wrap {
+		max-height: none;
+		overflow: visible;
+		border: none;
+	}
+
+	.calc-printing .calc-table thead th { position: static; }
+
+	.calc-printing .calc-kpi-card,
+	.calc-printing .calc-scenarios tr {
+		break-inside: avoid;
+	}
+}

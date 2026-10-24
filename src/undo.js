@@ -29,7 +29,8 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 			profile: Model.getProfileState(),
 			history: History.getState(),
 			calculations: CalculationsTab.getState(),
-			source: Model.getSource()
+			source: Model.getSource(),
+			name: Model.getDocumentName()
 		});
 	}
 
@@ -91,6 +92,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 			Model.applyProfileState(doc.profile);
 			History.load(doc.history);
 			Model.setSource(doc.source);
+			Model.setDocumentName(doc.name);
 			CalculationsTab.setState(doc.calculations);
 			Render.renderTree();
 			EditorForm.renderEditorForm();

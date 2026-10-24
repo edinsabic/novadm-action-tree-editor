@@ -726,6 +726,50 @@ saved through `TreeIO.download`:
 - A browser that refuses to draw the image shows an alert: "This browser
   could not make the image. Try Chrome, Edge, Firefox or Safari."
 
+### PDF of the report
+
+- **"Save report as PDF"** sits at the right of the report head's Sample
+  row, centred on it like the Sample buttons, while a report with
+  scenarios is open. It calls `window.print()`; the browser's print
+  dialog saves the PDF. Its tooltip: "Open the print dialog, where you
+  can save the report as a PDF file".
+- **What the PDF holds**, on A4 landscape pages (`@page`, 10 mm
+  margins): a header line "k45-case · Version: Initial version ·
+  Profile: Budget · 24 October 2026" (the document's name, then the full
+  names, `· unsaved` when it applies), the
+  file's source line under it when there is one (K45 credits COWI and
+  PROBONO), the report head ("Report" and its summary line), the KPI
+  cards, and the table's page on screen (at most 100 rows). The graph,
+  the tabs, the control rows, the editor panel, every button, the pagers
+  and the hint above the table are left out. Table cells keep their
+  colours (`print-color-adjust: exact`); a card or a table row never
+  breaks across two pages, and the table's heading repeats on each page.
+- **A wide table**: # and the KPI columns always print; option columns
+  follow from the left as long as they fit the page width (1,040 px of
+  the 1,047 within the margins, measured on screen, where the table has
+  the same font). The others are left out for the print only.
+- **The print note** under the table says what is left out, e.g. "The
+  table shows scenarios 1–100 of 2,560, the page on screen. The options
+  of 6 more boxes don't fit the page. Export table as CSV has every
+  scenario and column." Nothing is left out, no note.
+- **The document's name** is the imported file's name without `.json`
+  (`Model.getDocumentName()`, set by `TreeIO.newDocument`); the example,
+  Clear tree and a new document have none, and the header then starts at
+  "Version: …". It isn't saved in the file; undo and redo keep it, so
+  undoing an import also brings the earlier name back.
+- **The PDF's file name**: browsers suggest the page's title, so while
+  printing the title is `novadm-report-<name>` (`novadm-report` without
+  a name), and `afterprint` restores "NovaDM action tree editor".
+- **How**: the button fills the header and the note, marks the columns
+  that don't fit and puts the class `calc-printing` on `<html>`; the
+  print stylesheet applies only under that class, so printing the page
+  any other way (Ctrl+P) is as before, apart from the A4 landscape page.
+  `afterprint` undoes it all.
+- **Size**: the example's full listing prints on 5 pages, a sample of 30
+  on 2, and `full-tree.json` with 3,000 scenarios on 5 (6 of its 139
+  columns fit). The histograms stay vector graphics, so they stay sharp
+  in the PDF and in Overleaf.
+
 ## File format (`.json`, format id `novadm-action-tree`)
 
 `parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a
