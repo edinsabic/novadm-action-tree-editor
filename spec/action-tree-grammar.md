@@ -706,8 +706,16 @@ saved through `TreeIO.download`:
 - **The formula guard**: a text cell that starts with `=`, `+`, `-`, `@`,
   a tab or a carriage return gets an apostrophe in front (`'=SUM(A1)`,
   `'-10%`), so a spreadsheet never runs a label from someone else's file
-  as a formula. Numbers are never guarded, so a negative number stays a
-  number.
+  as a formula; so does one that starts with spaces or a line break
+  before `=`, `+`, `-` or `@` (`' =1+1`), as some programs trim them
+  first. Inside a text cell, a `;` or tab followed by a formula start
+  gets an apostrophe after it (`roof;'=x`): a spreadsheet set to a
+  decimal comma (Danish, Slovenian Excel) splits the file on `;`, and
+  the part after it would otherwise be a cell of its own that starts
+  with a formula. Quotes don't help there, since such a spreadsheet only
+  honours a quote at the start of its field. Numbers are never guarded,
+  so a negative number stays a number, and normal labels (`a; b`,
+  `keep_current`) are unchanged.
 - **The rows**: every scenario of the sample, not only the page on
   screen, in the table's sort order. Its columns are the table's: `#`,
   each KPI as `name (unit)`, and the option headings; an option cell
