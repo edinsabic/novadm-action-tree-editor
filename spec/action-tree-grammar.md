@@ -316,8 +316,10 @@ on made-up numbers, which the supervisor approved, and now works on
 whatever tree the Action tree tab holds. Its data belongs to the version
 on screen (see "Version history") and is saved per version in the file
 (format version 6). It applies the always/never marks on screen, as the
-Action tree tab does (see "Profiles", "The graph" and "Sampling"). The
-example's numbers are still made up.
+Action tree tab does (see "Profiles", "The graph" and "Sampling"). Its
+report can be saved as a CSV table, a PNG per KPI card and a PDF (see
+"CSV files", "PNG images" and "PDF of the report"). The example's
+numbers are still made up.
 
 "Calculated value" is the UI's name for NovaDM's **derived attribute**;
 identifiers, data keys and CSS classes keep `derived`. The engine is
@@ -768,7 +770,7 @@ saved through `TreeIO.download`:
 - **Size**: the example's full listing prints on 5 pages, a sample of 30
   on 2, and `full-tree.json` with 3,000 scenarios on 5 (6 of its 139
   columns fit). The histograms stay vector graphics, so they stay sharp
-  in the PDF and in Overleaf.
+  in the PDF and in a LaTeX document (`\includegraphics`).
 
 ## File format (`.json`, format id `novadm-action-tree`)
 
