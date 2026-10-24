@@ -22,6 +22,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	var escapeHtml = Util.escapeHtml;
 
 	var reportHead = document.getElementById('calc-report-head');
+	var reportText = document.getElementById('calc-report-text');
+	var reportClose = document.getElementById('calc-report-close-btn');
 	var reportHost = document.getElementById('calc-report');
 
 	var sample = null;
@@ -266,12 +268,9 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	/* ---------- Report ---------- */
 
 	function bannerHtml() {
-		return '<div class="calc-report-text">' +
-			'<strong class="calc-report-title">Explore the scenario space</strong>' +
-			'<span>Sample it with the buttons above: <b>30 scenarios</b>, the <b>full scenario space</b>, or your own' +
-			' number of scenarios. A report then opens here: each KPI&rsquo;s mean, spread and distribution, its' +
-			' lowest and highest scenario, and the scenarios themselves, which you can open in the graph.</span>' +
-			'</div>';
+		return '<strong class="calc-report-title">Explore the scenario space</strong>' +
+			'<span>Sample the scenario space to see each KPI&rsquo;s mean, spread and distribution, its lowest and' +
+			' highest scenario, and the scenarios themselves, which you can open in the graph.</span>';
 	}
 
 	function reportHeadHtml() {
@@ -291,12 +290,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 				' likely';
 		}
 		var title = sample.full ? 'Full scenario space' : 'Sample report';
-		return '<div class="calc-report-text">' +
-			'<strong class="calc-report-title">' + title + '</strong>' +
-			'<span>' + meta + '</span>' +
-			'</div>' +
-			'<button class="flyout-close calc-report-close" type="button" data-calc-report="close"' +
-			' aria-label="Close the report" title="Close the report and clear the sample">&times;</button>';
+		return '<strong class="calc-report-title">' + title + '</strong>' +
+			'<span>' + meta + '</span>';
 	}
 
 	function reportBodyHtml() {
@@ -326,7 +321,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var hasBody = !!sample && sample.scenarios.length > 0;
 		reportHead.classList.toggle('open', hasBody);
 		reportHost.hidden = !hasBody;
-		reportHead.innerHTML = sample ? reportHeadHtml() : bannerHtml();
+		reportText.innerHTML = sample ? reportHeadHtml() : bannerHtml();
+		reportClose.hidden = !sample;
 		reportHost.innerHTML = hasBody ? reportBodyHtml() : '';
 	}
 

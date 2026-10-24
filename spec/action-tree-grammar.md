@@ -549,21 +549,24 @@ the Action tree tab (`Render.renderTree()` calls
 
 ### Sampling
 
-The control row reads "Sample", then **30 scenarios**, **Full scenario
-space**, and your own number of scenarios: a box that shows a comma
-between thousands ("1,000"), then its "scenarios" button or Enter. The
-number is a count, so the box ignores commas, points and spaces
-("1.000" is also a thousand). The
-**scenario space size** next to the title is the Action tree tab's
-(`Model.scenarioSpaceSize()`): the always/never marks on screen apply,
-as they do to the sample. When it is 0 every sample control is disabled;
-on a non-empty tree the same warning as on the Action tree tab shows
-next to it, "Full scenario space" says why in its tooltip, and a sample
-on screen becomes empty ("The always/never marks are contradictory, so
-there is nothing to sample."). "+ Calculated value" is disabled only on
-an empty tree. When the control row has no room left (a long profile or
-version name, the warning), it wraps onto a second line; a pill's text
-never breaks.
+The sample controls sit in the "Explore the scenario space" panel below
+the graph (see "Report"), in a row under its text: "Sample", then **30
+scenarios**, **Full scenario space**, and your own number of scenarios:
+a box that shows a comma between thousands ("1,000"), then its
+"scenarios" button or Enter. The number is a count, so the box ignores
+commas, points and spaces ("1.000" is also a thousand). On a narrow
+screen the row wraps; a button's text never breaks.
+
+The control row holds the **scenario space size**, the Action tree
+tab's (`Model.scenarioSpaceSize()`): the always/never marks on screen
+apply, as they do to the sample. When it is 0 every sample control is
+disabled; on a non-empty tree the same warning as on the Action tree tab
+shows next to it, "Full scenario space" says why in its tooltip, and a
+sample on screen becomes empty ("The always/never marks are
+contradictory, so there is nothing to sample."). "+ Calculated value" is
+disabled only on an empty tree. When the control row has no room left
+(a long profile or version name), it wraps onto a second line; a pill's
+text never breaks.
 
 - **Limits**: at most 3,000 scenarios (`MAX_SAMPLE_SIZE`). Your own
   number must be a whole number from 1 to 3,000. "Full scenario space"
@@ -611,9 +614,16 @@ never breaks.
 ### Report
 
 - Until the first sample a **banner** sits below the graph, in a dashed
-  frame. A sample opens the **report** in its place, in a solid frame,
-  and scrolls to it. The × in its top right closes it and drops the
-  sample; that is not an undo step.
+  frame: its title and text, then a row with the sample controls. A
+  sample opens the **report** in its place, in a solid frame, and
+  scrolls to it. The report's head keeps the same two rows, so the
+  sample controls stay where they were, and a new sample replaces the
+  report. The × in the head's top right closes it and drops the sample;
+  that is not an undo step.
+- Only the text (`calc-report-text`) is redrawn with each render; the
+  sample controls and the × stay in place (the × is shown with
+  `hidden`), so their ids and listeners in `calculations-tab.js`
+  never change.
 - **The head** says what was drawn, e.g. "1,000 random scenarios out of
   2,560 · 815 different ones (31.8% of the space) · every scenario is
   equally likely". A full listing is titled

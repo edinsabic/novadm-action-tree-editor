@@ -1402,6 +1402,7 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 
 .calc-sample-controls {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 8px;
 }
@@ -1750,10 +1751,10 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 .calc-report-head {
 	display: flex;
 	flex-shrink: 0;
-	align-items: center;
-	gap: 16px;
-	margin-top: 18px;
-	padding: 14px 20px;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 14px;
+	padding: 10px 20px 12px;
 	border: 1px dashed var(--color-border);
 	border-radius: var(--radius-md);
 	background-color: var(--color-surface);
@@ -1766,29 +1767,31 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	box-shadow: var(--shadow-card);
 }
 
+.calc-report-title-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+}
+
 .calc-report-text {
 	display: flex;
+	flex: 1;
 	flex-direction: column;
-	gap: 4px;
+	gap: 2px;
 	color: var(--color-ink-muted);
 	font-size: 0.85rem;
 	line-height: 1.45;
 }
-
-.calc-report-text b { color: var(--color-ink); }
 
 .calc-report-title {
 	color: var(--color-ink);
 	font-family: var(--font-display);
 	font-size: 1.1rem;
 	font-weight: 600;
+	line-height: 1.25;
 }
 
-.calc-report-close {
-	flex-shrink: 0;
-	align-self: flex-start;
-	margin-left: auto;
-}
+.calc-report-close { flex-shrink: 0; }
 
 .calc-report-close:hover { background-color: var(--color-bg); }
 
