@@ -1841,9 +1841,12 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 .calc-kpi-card-head {
 	display: flex;
 	align-items: baseline;
-	justify-content: space-between;
 	gap: 10px;
 }
+
+.calc-kpi-card-head .note { margin-left: auto; }
+
+.calc-kpi-card-head .btn { padding: 2px 8px; }
 
 .calc-kpi-name {
 	color: var(--attribute-color);

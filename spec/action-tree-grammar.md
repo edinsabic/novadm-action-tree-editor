@@ -711,6 +711,20 @@ saved through `TreeIO.download`:
   current order, as a CSV file.": no file name, no format details, and
   no spreadsheet program or country.
 
+### PNG images
+
+- **"PNG"** on each KPI card saves that card as it looks on screen (name
+  and unit, mean, min/median/max/std dev, histogram, lowest and highest)
+  as `novadm-<kpi>.png`, named after the calculated value
+  (`novadm-sum.png`), without its PNG button. The graph has no PNG
+  button.
+- **How** (`TreeIO.savePng`, no library): the card is cloned with each
+  part's computed style written into it (the stylesheet doesn't apply
+  inside an image), put in an SVG `foreignObject`, drawn on a canvas at
+  twice its size on the surface colour, and downloaded.
+- A browser that refuses to draw the image shows an alert: "This browser
+  could not make the image. Try Chrome, Edge, Firefox or Safari."
+
 ## File format (`.json`, format id `novadm-action-tree`)
 
 `parser.js`'s `TREE_FILE_FORMAT` is the only place that knows how a

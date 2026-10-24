@@ -4,12 +4,14 @@ window.NovaDM = window.NovaDM || {};
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export on both tabs (via parser.js's TREE_FILE_FORMAT). A
  * document is the tree, the profiles, the Calculations tab's data and the
- * version history (see parser.js and history.js). Its download also saves the CSV file.
+ * version history (see parser.js and history.js). Its download also saves the CSV file, and `savePng`
+ * the PNG images.
  */
 NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
 
 	var FORMAT = Parser.TREE_FILE_FORMAT;
+	var PNG_SCALE = 2;
 
 	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var importBtns = document.querySelectorAll('[data-file-action="import"]');
@@ -186,11 +188,66 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		reader.readAsText(file);
 	});
 
+	/* ---------- Images ---------- */
+
+	function copyStyles(source, copy) {
+		var computed = getComputedStyle(source);
+		var text = '';
+		for (var i = 0; i < computed.length; i++) {
+			text += computed[i] + ':' + computed.getPropertyValue(computed[i]) + ';';
+		}
+		copy.setAttribute('style', text);
+		for (var c = 0; c < source.children.length; c++) copyStyles(source.children[c], copy.children[c]);
+	}
+
+	function imageFailed() {
+		alert('This browser could not make the image. Try Chrome, Edge, Firefox or Safari.');
+	}
+
+	function savePng(element, fileName, leaveOut) {
+		var box = element.getBoundingClientRect();
+		var width = box.width;
+		var height = box.height;
+		var copy = element.cloneNode(true);
+		copyStyles(element, copy);
+		copy.style.margin = '0';
+		if (leaveOut) {
+			Array.prototype.forEach.call(copy.querySelectorAll(leaveOut), function (el) {
+				el.parentNode.removeChild(el);
+			});
+		}
+		var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+			'<foreignObject width="100%" height="100%">' + new XMLSerializer().serializeToString(copy) +
+			'</foreignObject></svg>';
+		var image = new Image();
+		image.onerror = imageFailed;
+		image.onload = function () {
+			var canvas = document.createElement('canvas');
+			canvas.width = Math.round(width * PNG_SCALE);
+			canvas.height = Math.round(height * PNG_SCALE);
+			var context = canvas.getContext('2d');
+			context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface');
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.scale(PNG_SCALE, PNG_SCALE);
+			context.drawImage(image, 0, 0);
+			try {
+				canvas.toBlob(function (blob) {
+					if (blob) download(blob, fileName, 'image/png');
+					else imageFailed();
+				}, 'image/png');
+			} catch (e) {
+				imageFailed();
+			}
+		};
+		image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+	}
+
 	return {
 		sampleSpecs: sampleSpecs,
 		sampleSource: sampleSource,
 		newDocument: newDocument,
-		download: download
+		download: download,
+		savePng: savePng
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,
 	NovaDM.Parser);

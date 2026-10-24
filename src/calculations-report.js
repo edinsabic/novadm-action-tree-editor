@@ -166,11 +166,11 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			return '<article class="calc-kpi-card">' + head + '</div>' +
 				'<p class="note">No numbers: every scenario gives n/a or an error.</p></article>';
 		}
-		var missing = sample.scenarios.length - column.numbers.length;
 		var stats = column.stats;
 		return '<article class="calc-kpi-card">' + head +
-			'<span class="note">mean of ' + formatCount(column.numbers.length) + ' scenarios' +
-			(missing ? ' (' + formatCount(missing) + ' without a number)' : '') + '</span></div>' +
+			'<span class="note">mean of ' + formatCount(column.numbers.length) + ' scenarios</span>' +
+			'<button class="btn" type="button" data-calc-png="' + escapeHtml(column.name) + '"' +
+			' title="Save this card as a PNG image">PNG</button></div>' +
 			'<div class="calc-kpi-mean">' + escapeHtml(withUnit(formatNumber(stats.mean), unit)) + '</div>' +
 			'<dl class="calc-kpi-stats">' + [['Min', stats.min], ['Median', stats.median], ['Max', stats.max],
 				['Std dev', stats.stdDev]].map(function (pair) {
@@ -421,7 +421,12 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var show = e.target.closest('[data-calc-show]');
 		var sort = e.target.closest('[data-calc-sort]');
 		var turn = e.target.closest('[data-calc-page]');
+		var png = e.target.closest('[data-calc-png]');
 		if (e.target.closest('[data-calc-report="csv"]')) exportTable();
+		if (png && NovaDM.TreeIO) {
+			NovaDM.TreeIO.savePng(png.closest('.calc-kpi-card'), 'novadm-' + png.getAttribute('data-calc-png') + '.png',
+				'[data-calc-png]');
+		}
 		if (show) {
 			var index = Number(show.getAttribute('data-calc-show'));
 			var onPage = Math.floor(sortedRows().indexOf(index) / PAGE_SIZE);
