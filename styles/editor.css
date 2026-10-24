@@ -1752,9 +1752,9 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	display: flex;
 	flex-shrink: 0;
 	flex-direction: column;
-	gap: 10px;
-	margin-top: 14px;
-	padding: 10px 20px 12px;
+	gap: 14px;
+	margin-top: 18px;
+	padding: 14px 20px;
 	border: 1px dashed var(--color-border);
 	border-radius: var(--radius-md);
 	background-color: var(--color-surface);
@@ -1777,7 +1777,7 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	display: flex;
 	flex: 1;
 	flex-direction: column;
-	gap: 2px;
+	gap: 4px;
 	color: var(--color-ink-muted);
 	font-size: 0.85rem;
 	line-height: 1.45;
@@ -1788,7 +1788,6 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	font-family: var(--font-display);
 	font-size: 1.1rem;
 	font-weight: 600;
-	line-height: 1.25;
 }
 
 .calc-report-close { flex-shrink: 0; }

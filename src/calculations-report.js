@@ -351,8 +351,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 				formatShare(sample.distinct, sample.total) + ' of the space) &middot; every scenario is equally' +
 				' likely';
 		}
-		var title = sample.full ? 'Full scenario space' : 'Sample report';
-		return '<strong class="calc-report-title">' + title + '</strong>' +
+		return '<strong class="calc-report-title">Report</strong>' +
 			'<span>' + meta + '</span>';
 	}
 

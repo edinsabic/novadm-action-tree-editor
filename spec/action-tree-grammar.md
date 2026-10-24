@@ -623,10 +623,11 @@ text never breaks.
   sample controls and the × stay in place (the × is shown with
   `hidden`), so their ids and listeners in `calculations-tab.js`
   never change.
-- **The head** says what was drawn, e.g. "1,000 random scenarios out of
-  2,560 · 815 different ones (31.8% of the space) · every scenario is
-  equally likely". A full listing is titled
-  "Full scenario space" and reads "All 2,560 scenarios of the space".
+- **The head** is titled "Report" and says under it what was drawn,
+  e.g. "1,000 random scenarios out of 2,560 · 815 different ones (31.8%
+  of the space) · every scenario is equally likely", or for a full
+  listing "All 2,560 scenarios of the space". The title is the same for
+  both, so it never reads as an example ("sample") report.
 - **One card per KPI** (or, if no calculated value is a KPI, per
   calculated value that no other formula uses): the heading and the
   mean with the unit, then min, median, max, the sample standard
