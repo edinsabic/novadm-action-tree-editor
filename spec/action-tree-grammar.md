@@ -698,8 +698,11 @@ saved through `TreeIO.download`:
   thousands separator; RFC 4180 quoting (a cell with `,`, `"` or a line
   break goes in double quotes, and a `"` inside is doubled); CRLF line
   ends; and a UTF-8 byte order mark, so "CO₂e" and "m²" show intact.
-  Number cells are plain numbers (`52000`, `0.25`, `-10`); an empty cell
-  means no number (n/a or an error).
+  Number cells are plain numbers (`52000`, `0.25`, `-10`); a calculated
+  value that gives text or true/false is written as that text (`high`,
+  `true`), as the table shows it; an empty cell means n/a or an error.
+  The table and the file share these rules (`cellValue`, `optionText`,
+  `kpiHeading` in `calculations-report.js`).
 - **The formula guard**: a text cell that starts with `=`, `+`, `-`, `@`,
   a tab or a carriage return gets an apostrophe in front (`'=SUM(A1)`,
   `'-10%`), so a spreadsheet never runs a label from someone else's file
@@ -724,9 +727,14 @@ saved through `TreeIO.download`:
 - **How** (`TreeIO.savePng`, no library): the card is cloned with each
   part's computed style written into it (the stylesheet doesn't apply
   inside an image), put in an SVG `foreignObject`, drawn on a canvas at
-  twice its size on the surface colour, and downloaded.
+  twice its size on the surface colour, and downloaded. The copy gets
+  the card's size rounded to whole pixels (at most half a pixel off):
+  the browser draws an SVG image at a whole-pixel size, so a fractional
+  card lost part of its right border and left a white strip below.
 - A browser that refuses to draw the image shows an alert: "This browser
-  could not make the image. Try Chrome, Edge, Firefox or Safari."
+  could not make the image. Try Chrome, Edge or Firefox." Safari is left
+  out: WebKit is known to refuse a canvas that has drawn an SVG with a
+  `foreignObject` (not tested here).
 
 ### PDF of the report
 
@@ -738,7 +746,10 @@ saved through `TreeIO.download`:
 - **What the PDF holds**, on A4 landscape pages (`@page`, 10 mm
   margins): a header line "k45-case · Version: Initial version ·
   Profile: Budget · 24 October 2026" (the document's name, then the full
-  names, `· unsaved` when it applies), the
+  names, `· unsaved` when it applies; "(changed)" after the profile when
+  the marks on screen differ from it, or when marks are set and no
+  profile is loaded: "Profile: none (changed)", `Model.profileChanged()`),
+  the
   file's source line under it when there is one (K45 credits COWI and
   PROBONO), the report head ("Report" and its summary line), the KPI
   cards, and the table's page on screen (at most 100 rows). The graph,
@@ -900,6 +911,10 @@ importing.
 | 2 | A single `tree` key; `value` is an array of strings. No profiles, no history. | An AND root is added as above; profiles are reset and history starts with one version, the tree just loaded. |
 | 1 | A single `tree` key; `value` is text (`"a; b"`, split by `Model.parseValues`). | As version 2. |
 | – | A bare array of nodes (no wrapper object). | As version 2. |
+
+Export file suggests the document's name (the imported file's, e.g.
+`k45-case.json`), or `defaultName` (`novadm-action-tree.json`) when
+it has none (the example, Clear tree, a new document).
 
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /

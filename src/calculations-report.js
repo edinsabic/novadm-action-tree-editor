@@ -251,10 +251,19 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		});
 	}
 
+	function kpiHeading(name) { return nameWithUnit(name, derivedUnit(name)); }
+
+	function optionText(entry) { return entry ? entry.value || 'chosen' : null; }
+
+	function cellValue(value) {
+		if (isNumber(value)) return value;
+		return value === null || value === undefined || Calculations.isError(value) ? null : String(value);
+	}
+
 	function sortHeaderHtml(name) {
 		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
 		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
-		var heading = name === BY_NUMBER ? name : nameWithUnit(name, derivedUnit(name));
+		var heading = name === BY_NUMBER ? name : kpiHeading(name);
 		return '<th><button type="button" class="calc-sort-btn" data-calc-sort="' + escapeHtml(name) + '"' +
 			' title="' + escapeHtml(title) + '">' + escapeHtml(heading) + mark + '</button></th>';
 	}
@@ -295,9 +304,9 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 					return '<td' + scaleColor(value, c.stats) + '>' + valueHtml(value) + '</td>';
 				}).join('') +
 				optionBoxes.map(function (b) {
-					var e = entries[b.node.id];
+					var text = optionText(entries[b.node.id]);
 					return '<td class="calc-option-col">' +
-						(e ? escapeHtml(e.value || 'chosen') : '<span class="calc-na">&ndash;</span>') + '</td>';
+						(text === null ? '<span class="calc-na">&ndash;</span>' : escapeHtml(text)) + '</td>';
 				}).join('') + '</tr>';
 		}).join('');
 		var listedIn = sortBy.name !== BY_NUMBER ? 'sorted by ' + escapeHtml(sortBy.name)
@@ -314,15 +323,14 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 
 	function tableRows() {
 		var columns = reportColumns().list;
-		var rows = [[BY_NUMBER].concat(columns.map(function (c) { return nameWithUnit(c.name, derivedUnit(c.name)); }),
+		var rows = [[BY_NUMBER].concat(columns.map(function (c) { return kpiHeading(c.name); }),
 			optionHeadings(optionBoxes))];
 		sortedRows().forEach(function (i) {
 			var entries = Calculations.entriesById(sample.scenarios[i]);
 			rows.push([i + 1].concat(columns.map(function (c) {
-				return isNumber(results[i][c.name]) ? results[i][c.name] : null;
+				return cellValue(results[i][c.name]);
 			}), optionBoxes.map(function (b) {
-				var e = entries[b.node.id];
-				return e ? e.value || 'chosen' : null;
+				return optionText(entries[b.node.id]);
 			})));
 		});
 		return rows;
@@ -462,7 +470,8 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		var name = Model.getDocumentName();
 		return '<p>' + (name ? [escapeHtml(name)] : []).concat([
 			'Version: ' + escapeHtml(History.getHead()) + (History.isDirty() ? ' &middot; unsaved' : ''),
-			'Profile: ' + escapeHtml(Model.getActiveProfileName() || 'none'),
+			'Profile: ' + escapeHtml(Model.getActiveProfileName() || 'none') +
+				(Model.profileChanged() ? ' (changed)' : ''),
 			date
 		]).join(' &middot; ') + '</p>' + (source ? '<p>' + escapeHtml(source) + '</p>' : '');
 	}

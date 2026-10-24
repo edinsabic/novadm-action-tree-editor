@@ -228,6 +228,13 @@ NovaDM.Model = (function (Util) {
 
 	function getActiveProfileName() { return activeProfileName; }
 
+	function profileChanged() {
+		var profile = findProfile(activeProfileName);
+		if (!profile) return hasNodeConstraints();
+		return Util.sortedJson(profile.constraints) !== Util.sortedJson(nodeConstraints) ||
+			Util.sortedJson(profile.valueConstraints || {}) !== Util.sortedJson(valueConstraints);
+	}
+
 	function getProfiles() { return profiles; }
 
 	function saveProfile(name) {
@@ -455,6 +462,7 @@ NovaDM.Model = (function (Util) {
 		hasNodeConstraints: hasNodeConstraints,
 		resetNodeConstraints: resetNodeConstraints,
 		getActiveProfileName: getActiveProfileName,
+		profileChanged: profileChanged,
 		getProfiles: getProfiles,
 		saveProfile: saveProfile,
 		deleteProfile: deleteProfile,

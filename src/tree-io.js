@@ -127,7 +127,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			history: History.getState(),
 			source: Model.getSource()
 		});
-		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
+		download(text, (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension, FORMAT.mimeType);
 	}
 
 	exportBtns.forEach(function (btn) {
@@ -208,16 +208,19 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	}
 
 	function imageFailed() {
-		alert('This browser could not make the image. Try Chrome, Edge, Firefox or Safari.');
+		alert('This browser could not make the image. Try Chrome, Edge or Firefox.');
 	}
 
 	function savePng(element, fileName, leaveOut) {
 		var box = element.getBoundingClientRect();
-		var width = box.width;
-		var height = box.height;
+		var width = Math.round(box.width);
+		var height = Math.round(box.height);
 		var copy = element.cloneNode(true);
 		copyStyles(element, copy);
 		copy.style.margin = '0';
+		copy.style.boxSizing = 'border-box';
+		copy.style.width = width + 'px';
+		copy.style.height = height + 'px';
 		if (leaveOut) {
 			Array.prototype.forEach.call(copy.querySelectorAll(leaveOut), function (el) {
 				el.parentNode.removeChild(el);
@@ -230,8 +233,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		image.onerror = imageFailed;
 		image.onload = function () {
 			var canvas = document.createElement('canvas');
-			canvas.width = Math.round(width * PNG_SCALE);
-			canvas.height = Math.round(height * PNG_SCALE);
+			canvas.width = width * PNG_SCALE;
+			canvas.height = height * PNG_SCALE;
 			var context = canvas.getContext('2d');
 			context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface');
 			context.fillRect(0, 0, canvas.width, canvas.height);
