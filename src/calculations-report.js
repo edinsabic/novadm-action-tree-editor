@@ -10,6 +10,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 
 	var PAGE_SIZE = 100;
 	var BY_NUMBER = '#';
+	var TABLE_FILE_NAME = 'novadm-scenarios.csv';
 	var CHART_WIDTH = 300;
 	var CAPTION_HEIGHT = 20;
 	var PLOT_HEIGHT = 84;
@@ -204,6 +205,47 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		});
 	}
 
+	function labelledAncestors(box) {
+		return box.path.slice(0, -1).filter(function (n) { return n.label; });
+	}
+
+	function ancestorName(node) { return node.value.length === 1 ? node.value[0] : node.label; }
+
+	function headingAt(box, depth) {
+		var above = labelledAncestors(box);
+		return above.slice(above.length - depth).map(ancestorName).concat(box.node.label).join(' / ');
+	}
+
+	function headingsAt(boxes, depths) {
+		return boxes.map(function (b, i) { return headingAt(b, depths[i]); });
+	}
+
+	/**
+	 * Heads each option column by its box's label; a label that repeats gets its labelled ancestors in front
+	 * ("windows / material"), the nearest first, until the headings are unique, and then a count if need be.
+	 */
+	function optionHeadings(boxes) {
+		var depths = boxes.map(function () { return 0; });
+		var headings = headingsAt(boxes, depths);
+		var grew = true;
+		while (grew) {
+			grew = false;
+			for (var i = 0; i < boxes.length; i++) {
+				var repeated = headings.indexOf(headings[i]) !== headings.lastIndexOf(headings[i]);
+				if (repeated && depths[i] < labelledAncestors(boxes[i]).length) {
+					depths[i]++;
+					grew = true;
+				}
+			}
+			headings = headingsAt(boxes, depths);
+		}
+		var seen = Object.create(null);
+		return headings.map(function (h) {
+			seen[h] = (seen[h] || 0) + 1;
+			return seen[h] > 1 ? h + ' (' + seen[h] + ')' : h;
+		});
+	}
+
 	function sortHeaderHtml(name) {
 		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
 		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
@@ -236,8 +278,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var shown = order.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 		var head = '<tr>' + sortHeaderHtml(BY_NUMBER) +
 			columns.map(function (c) { return sortHeaderHtml(c.name); }).join('') +
-			optionBoxes.map(function (b) {
-				return '<th class="calc-option-col">' + escapeHtml(b.node.label) + '</th>';
+			optionHeadings(optionBoxes).map(function (h) {
+				return '<th class="calc-option-col">' + escapeHtml(h) + '</th>';
 			}).join('') + '</tr>';
 		var body = shown.map(function (i) {
 			var entries = Calculations.entriesById(sample.scenarios[i]);
@@ -263,6 +305,26 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			'<thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>' +
 			pagerHtml(order.length, pages) +
 			'<p class="note">' + footer + '</p>';
+	}
+
+	function tableRows() {
+		var columns = reportColumns().list;
+		var rows = [[BY_NUMBER].concat(columns.map(function (c) { return nameWithUnit(c.name, derivedUnit(c.name)); }),
+			optionHeadings(optionBoxes))];
+		sortedRows().forEach(function (i) {
+			var entries = Calculations.entriesById(sample.scenarios[i]);
+			rows.push([i + 1].concat(columns.map(function (c) {
+				return isNumber(results[i][c.name]) ? results[i][c.name] : null;
+			}), optionBoxes.map(function (b) {
+				var e = entries[b.node.id];
+				return e ? e.value || 'chosen' : null;
+			})));
+		});
+		return rows;
+	}
+
+	function exportTable() {
+		if (NovaDM.TreeIO) NovaDM.TreeIO.download(Util.csvText(tableRows()), TABLE_FILE_NAME, Util.CSV_MIME_TYPE);
 	}
 
 	/* ---------- Report ---------- */
@@ -312,6 +374,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 				' option. Click # or a KPI to sort.</span>' +
 			'<span class="calc-scale-legend">lowest' +
 			'<span class="calc-scale-bar" aria-hidden="true"></span>highest</span>' +
+			'<button class="btn" type="button" data-calc-report="csv" title="Save every scenario of the table, in' +
+				' its current order, as a CSV file.">Export table as CSV</button>' +
 			'</div>' +
 			scenarioTableHtml(columns.list) +
 			'</section>';
@@ -357,6 +421,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var show = e.target.closest('[data-calc-show]');
 		var sort = e.target.closest('[data-calc-sort]');
 		var turn = e.target.closest('[data-calc-page]');
+		if (e.target.closest('[data-calc-report="csv"]')) exportTable();
 		if (show) {
 			var index = Number(show.getAttribute('data-calc-show'));
 			var onPage = Math.floor(sortedRows().indexOf(index) / PAGE_SIZE);

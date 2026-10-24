@@ -542,10 +542,9 @@ the Action tree tab (`Render.renderTree()` calls
 - A unit follows its number after a no-break space ("52,000 DKK") in the
   graph, the editor panel and the KPI cards; a heading reads
   "name (unit)" ("sum (DKK)"). n/a and errors get none.
-- **Ready for a CSV export** (later): the report's table already has the
-  form a CSV will have, with the unit in the heading and plain numbers
-  in the cells, so a spreadsheet can calculate with them and an import
-  can read the unit back from the heading.
+- **In a CSV file** (see "CSV files") the unit sits in the heading the
+  same way, and the cells hold plain numbers, so a spreadsheet can
+  calculate with them.
 
 ### Sampling
 
@@ -641,6 +640,13 @@ text never breaks.
   back to page 1. When the sorted KPI leaves the table (no longer a KPI,
   or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) through
   yellow to peach (highest), per column; not red, which is kept for errors.
+- **Option headings** are the boxes' labels. A label that repeats (two
+  `material` boxes) gets its labelled ancestors in front, the nearest
+  first, until the headings are unique: an ancestor with one value adds
+  that value ("windows / material"), any other its label. Headings that
+  are still alike get a count ("material (2)").
+- **"Export table as CSV"** sits on the "Sampled scenarios" heading,
+  next to the table it saves (see "CSV files").
 - **Opening a scenario**: clicking a `#`, or a card's lowest or highest
   button (which first turns to the right page), sets every drop-down in
   the graph to that scenario's options (`Calculations.choicesFor`),
@@ -678,6 +684,32 @@ between thousands. Whole numbers have no decimals ("0", "450"), other
 numbers under 1,000 keep up to two ("0.25"), and numbers from 1,000 up
 are rounded ("27,868"). Counts have no decimals, and shares one
 ("31.8%", or "under 0.1%").
+
+### CSV files
+
+"Export table as CSV" saves the report's scenario table as a CSV file for
+a spreadsheet, `novadm-scenarios.csv`, written by `Util.csvText` and
+saved through `TreeIO.download`:
+
+- **The format**: a comma between cells, a decimal point and no
+  thousands separator; RFC 4180 quoting (a cell with `,`, `"` or a line
+  break goes in double quotes, and a `"` inside is doubled); CRLF line
+  ends; and a UTF-8 byte order mark, so "CO₂e" and "m²" show intact.
+  Number cells are plain numbers (`52000`, `0.25`, `-10`); an empty cell
+  means no number (n/a or an error).
+- **The formula guard**: a text cell that starts with `=`, `+`, `-`, `@`,
+  a tab or a carriage return gets an apostrophe in front (`'=SUM(A1)`,
+  `'-10%`), so a spreadsheet never runs a label from someone else's file
+  as a formula. Numbers are never guarded, so a negative number stays a
+  number.
+- **The rows**: every scenario of the sample, not only the page on
+  screen, in the table's sort order. Its columns are the table's: `#`,
+  each KPI as `name (unit)`, and the option headings; an option cell
+  holds the option, "chosen" for a node without options, or nothing when
+  the scenario leaves the node out.
+- **The tooltip** reads "Save every scenario of the table, in its
+  current order, as a CSV file.": no file name, no format details, and
+  no spreadsheet program or country.
 
 ## File format (`.json`, format id `novadm-action-tree`)
 

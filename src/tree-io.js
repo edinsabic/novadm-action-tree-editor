@@ -4,7 +4,7 @@ window.NovaDM = window.NovaDM || {};
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export on both tabs (via parser.js's TREE_FILE_FORMAT). A
  * document is the tree, the profiles, the Calculations tab's data and the
- * version history (see parser.js and history.js).
+ * version history (see parser.js and history.js). Its download also saves the CSV file.
  */
 NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
@@ -189,7 +189,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	return {
 		sampleSpecs: sampleSpecs,
 		sampleSource: sampleSource,
-		newDocument: newDocument
+		newDocument: newDocument,
+		download: download
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,
 	NovaDM.Parser);
