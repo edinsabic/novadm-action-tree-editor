@@ -188,7 +188,9 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - The Calculations tab has its own "Profiles: …" and "Version: …"
   pills, at the same place as the Action tree tab's. They open the same
   flyouts, with the same Profile/Version switch, moved into the layer of
-  the tab that opens them.
+  the tab that opens them. On both tabs a flyout opens just below the
+  pills, right-aligned with them, as the Generate tree panel opens below
+  its button; the pills stay visible, and the open one looks pressed.
 - In the graph, an edge that spans several columns stays in the row of
   one end (whichever row is free in between) and changes rows within a
   single column, so it never runs through other versions.

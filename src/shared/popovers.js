@@ -10,6 +10,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	'use strict';
 
 	var MAX_COMMENT_CHARS = 64;
+	var FLYOUT_GAP = 6;
 	var MAX_PILL_LABEL_CHARS = 34;
 	var MAX_CONFLICTS_LISTED = 5;
 	var MAX_VERSIONS_NAMED = 3;
@@ -33,8 +34,6 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var versionFlyout = document.getElementById('version-flyout');
 	var profilePane = document.getElementById('profile-pane');
 	var versionPane = document.getElementById('version-pane');
-	var panelsStack = document.getElementById('panels-stack');
-	var calcWorkspace = document.getElementById('calc-workspace');
 	var treeLayer = document.getElementById('tree-popover-layer');
 	var calcLayer = document.getElementById('calc-popover-layer');
 
@@ -84,7 +83,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 		if (profiles.length === 0) {
 			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
-				' (chip) in the Action tree tab to mark it as always/never, then Save profile.</div>';
+				' (chip) in the Action tree tab\'s Workspace panel to mark it as always/never, then Save profile.' +
+				'</div>';
 		} else {
 			var onScreen = Model.getProfileState([Model.treeSpecs()]).saved;
 			html += '<ul class="popover-list">' + profiles.map(function (p, i) {
@@ -464,8 +464,14 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			pill[0].classList.toggle('is-open', pill[1]);
 			pill[0].setAttribute('aria-expanded', pill[1] ? 'true' : 'false');
 		});
-		panelsStack.classList.toggle('flyout-open', name !== null && !fromCalc);
-		calcWorkspace.classList.toggle('flyout-open', name !== null && fromCalc);
+	}
+
+	function placeBelow(pill) {
+		var top = pill.offsetTop + pill.offsetHeight + FLYOUT_GAP;
+		[profileFlyout, versionFlyout].forEach(function (flyout) {
+			flyout.style.top = top + 'px';
+			flyout.style.maxHeight = 'calc(100% - ' + top + 'px)';
+		});
 	}
 
 	function closeFlyouts() {
@@ -485,6 +491,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		var layer = openedFrom === 'calc' ? calcLayer : treeLayer;
 		layer.appendChild(profileFlyout);
 		layer.appendChild(versionFlyout);
+		placeBelow(openedFrom === 'calc' ? calcProfileBtn : profileBtn);
 		renderFlyout();
 		profileFlyout.hidden = name !== 'profile';
 		versionFlyout.hidden = name !== 'version';
