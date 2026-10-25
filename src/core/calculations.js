@@ -6,7 +6,7 @@ window.NovaDM = window.NovaDM || {};
  * uniform sampling, listing every scenario, the scenario picked by hand,
  * statistics, the starter data, moving numbers on a rename, and the data as
  * a flat list of entries (what counts when comparing or saving it). No DOM.
- * Language and sampling: ../spec/action-tree-grammar.md
+ * Language and sampling: ../../spec/action-tree-grammar.md
  */
 NovaDM.Calculations = (function (Util) {
 	'use strict';

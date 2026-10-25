@@ -6,11 +6,11 @@ NovaDM is a formal domain model for building renovation design space exploration
 
 ## Status
 
-Version 1.1.0. The editor in `editor/` has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The report can be saved as a CSV table for a spreadsheet, a PNG image per KPI card and a PDF. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
+Version 1.1.0. The editor (`index.html`) has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The report can be saved as a CSV table for a spreadsheet, a PNG image per KPI card and a PDF. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
 
 ## Quick start
 
-Open `editor/index.html` in a browser. No install, no build step, no server required.
+Download the source code zip, unzip it and open `index.html` in a browser. No install, no build step, no server required. The zip of the latest release is on the [Releases page](https://github.com/edinsabic/novadm-action-tree-editor/releases/latest), under **Assets** → **Source code (zip)**.
 
 - **Drag** AND/XOR nodes from the editor panel onto the tree, and edit the selected node in the panel
 - **Click** a node's dot or an option chip to mark it always or never, and save the result as a **profile**
@@ -23,11 +23,16 @@ Open `editor/index.html` in a browser. No install, no build step, no server requ
 ## Repository structure
 
 ```
-editor/       Tree editor page
-src/          JavaScript modules (model, file format, rendering, history, etc.)
-styles/       Stylesheet
-examples/     Example trees and default tree
-spec/         Grammar, file format and design notes
+index.html        The editor page: open it in a browser
+src/              JavaScript modules
+  core/           Model, file format, version history and calculations (no DOM)
+  action-tree/    The Action tree tab: the tree, its editor panel, Generate tree
+  calculations/   The Calculations tab and its report
+  shared/         Used by both tabs: version and profile flyouts, undo, files
+  app.js          Tabs and start-up (runs last)
+styles/           Stylesheet
+examples/         Example trees and default tree
+spec/             Grammar, file format and design notes
 ```
 
 ## Motivation

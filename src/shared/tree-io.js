@@ -61,7 +61,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	function loadExample() {
 		var specs = sampleSpecs();
 		if (!specs) {
-			alert('sample-tree.js was not found or did not load – check that it sits next to index.html.');
+			alert('sample-tree.js was not found or did not load – check that the examples folder sits next to' +
+				' index.html.');
 			return;
 		}
 		newDocument(specs, CalculationsTab.exampleData(), sampleSource());

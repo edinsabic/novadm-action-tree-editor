@@ -2,7 +2,7 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM file format: the ONLY place that knows how a document looks on
- * disk. Format background and version history: ../spec/action-tree-grammar.md
+ * disk. Format background and version history: ../../spec/action-tree-grammar.md
  * To switch to a different file type, edit TREE_FILE_FORMAT below
  * (extension / mimeType / defaultName) and rewrite serialize() / parse();
  * nothing else needs to change.
