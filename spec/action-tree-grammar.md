@@ -732,7 +732,8 @@ saved through `TreeIO.download`:
   as `novadm-<kpi>.png`, named after the calculated value
   (`novadm-sum.png`), without its PNG button. The graph has no PNG
   button.
-- **How** (`TreeIO.savePng`, no library): the card is cloned with each
+- **How** (`savePng` in `calculations-report.js`, its only user; no library;
+  saved through `TreeIO.download`): the card is cloned with each
   part's computed style written into it (the stylesheet doesn't apply
   inside an image), put in an SVG `foreignObject`, drawn on a canvas at
   twice its size on the surface colour, and downloaded. The copy gets

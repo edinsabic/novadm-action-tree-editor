@@ -13,6 +13,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 	var PDF_NAME = 'novadm-report';
 	var BY_NUMBER = '#';
 	var TABLE_FILE_NAME = 'novadm-scenarios.csv';
+	var PNG_SCALE = 2;
 	var CHART_WIDTH = 300;
 	var CAPTION_HEIGHT = 20;
 	var PLOT_HEIGHT = 84;
@@ -436,8 +437,8 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		var turn = e.target.closest('[data-calc-page]');
 		var png = e.target.closest('[data-calc-png]');
 		if (e.target.closest('[data-calc-report="csv"]')) exportTable();
-		if (png && NovaDM.TreeIO) {
-			NovaDM.TreeIO.savePng(png.closest('.calc-kpi-card'), 'novadm-' + png.getAttribute('data-calc-png') + '.png',
+		if (png) {
+			savePng(png.closest('.calc-kpi-card'), 'novadm-' + png.getAttribute('data-calc-png') + '.png',
 				'[data-calc-png]');
 		}
 		if (show) {
@@ -461,6 +462,63 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 			renderReport();
 		}
 	});
+
+	/* ---------- Images ---------- */
+
+	function copyStyles(source, copy) {
+		var computed = getComputedStyle(source);
+		var text = '';
+		for (var i = 0; i < computed.length; i++) {
+			text += computed[i] + ':' + computed.getPropertyValue(computed[i]) + ';';
+		}
+		copy.setAttribute('style', text);
+		for (var c = 0; c < source.children.length; c++) copyStyles(source.children[c], copy.children[c]);
+	}
+
+	function imageFailed() {
+		alert('This browser could not make the image. Try Chrome, Edge or Firefox.');
+	}
+
+	function savePng(element, fileName, leaveOut) {
+		var box = element.getBoundingClientRect();
+		var width = Math.round(box.width);
+		var height = Math.round(box.height);
+		var copy = element.cloneNode(true);
+		copyStyles(element, copy);
+		copy.style.margin = '0';
+		copy.style.boxSizing = 'border-box';
+		copy.style.width = width + 'px';
+		copy.style.height = height + 'px';
+		if (leaveOut) {
+			Array.prototype.forEach.call(copy.querySelectorAll(leaveOut), function (el) {
+				el.parentNode.removeChild(el);
+			});
+		}
+		var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+			'<foreignObject width="100%" height="100%">' + new XMLSerializer().serializeToString(copy) +
+			'</foreignObject></svg>';
+		var image = new Image();
+		image.onerror = imageFailed;
+		image.onload = function () {
+			var canvas = document.createElement('canvas');
+			canvas.width = width * PNG_SCALE;
+			canvas.height = height * PNG_SCALE;
+			var context = canvas.getContext('2d');
+			context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface');
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.scale(PNG_SCALE, PNG_SCALE);
+			context.drawImage(image, 0, 0);
+			try {
+				canvas.toBlob(function (blob) {
+					if (blob && NovaDM.TreeIO) NovaDM.TreeIO.download(blob, fileName, 'image/png');
+					else imageFailed();
+				}, 'image/png');
+			} catch (e) {
+				imageFailed();
+			}
+		};
+		image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+	}
 
 	/* ---------- Print ---------- */
 
