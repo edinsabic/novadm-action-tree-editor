@@ -46,7 +46,7 @@ default) and `valueConstraints` (`nodeId -> { value -> 'always'|'never' }`)
 constraints, valueConstraints }`), and which one is loaded (`active`).
 
 **Profiles belong to a version.** Every profile change – a dot or a chip,
-and Save, Load, Delete or "Clear all marks" in `popovers.js`'s profile
+and Save, Load, Delete or "Clear marks / Deselect profile" in `popovers.js`'s profile
 pane (it clears every mark on screen and unloads the profile; saved
 profiles stay as they are) – is
 stored straight into the version on screen (`History.storeProfiles()`),
@@ -356,8 +356,8 @@ The tab works on `{ attributes, units, values, derived }`:
 
 Where the data comes from:
 
-- **The example** (`examples/sample-attributes.js`, the global
-  `NOVADM_SAMPLE_ATTRIBUTES`): made-up numbers for the sample tree, the
+- **The example** (each version of `examples/sample-tree.js`, see
+  "Example trees"): made-up numbers for the sample tree, the
   constant `facade_area`, the brick replacement's cost and CO₂, and the
   KPIs `sum` ("Sum", `total(price) + brick_replacement_cost`, in DKK)
   and `gwp` ("GWP", global warming potential, `total(co2) +
@@ -838,8 +838,8 @@ lines between the sections are valid JSON and are written on purpose):
   project). Every export writes it, as `""` when there is none, so users
   can fill it in by hand. The Action tree tab shows a non-empty one under
   the tree. It belongs to the document, so it survives edits, undo/redo
-  and export; Load example tree takes `NOVADM_SAMPLE_SOURCE` from
-  `sample-tree.js`, and Clear tree empties it. It needs no new version:
+  and export; Load example tree takes the one in `sample-tree.js`
+  (empty), and Clear tree empties it. It needs no new version:
   a version 5 file without it still imports (as `""`), and an editor
   that doesn't know the field ignores it.
 - **`actionTree`** – the snapshots: a list of `{ id, created, profile,
@@ -937,15 +937,38 @@ handlers need to change too.)
 ## Example trees
 
 All `.json` examples are format version 6, made with the editor's own
-import and export (never by hand). `sample-tree.json` holds the example
-data (`sample-attributes.js`) in its version; the others have the starter
+import and export (never by hand). `sample-tree.json` holds the
+example's made-up numbers in every version; the others have the starter
 data in every version.
 
-- `examples/sample-tree.js` and `examples/sample-tree.json` mirror the
-  same "windows / outer_doors / facade / roof / ground_floor" example:
-  the `.js` version is what `index.html` preloads on open (as a
-  `<script>` global, so it works over `file://` with no fetch/CORS
-  issues); the `.json` version exists for import/export testing.
+- `examples/sample-tree.json` is the default example, the
+  "windows / outer_doors / facade / roof / ground_floor" tree, made to
+  show every part of the editor at first sight:
+  - two versions: **Initial version**, the tree without the windows
+    (4 Subjects, 1,280 scenarios), and **Add windows**, based on it, the
+    version on screen: the windows Subject and its Feature
+    `windows_glazing` added back (`n2`, `n3`), so it is the real case's
+    tree with its ids, 2,560 scenarios. The version on screen is the
+    newest one, which no version is based on, so its tree can be edited
+    and stored with Update this version straight away;
+  - two profiles, the same in both versions (none of their marks is on
+    the windows, so switching versions never drops a mark), none of them
+    active on open: **Low budget** (never replace the outer doors, the
+    brick facade, the roof or the ground floor: 256 scenarios in Add
+    windows, 128 in Initial version) and **Energy upgrade** (always
+    replace the outer doors and the brick facade, and insulate the
+    facade, roof and ground floor: 32 and 16). Both mark a chip near the
+    top (`outer_doors_replacement`) and a dot (`replace_brick_facade`),
+    so the marks show without scrolling;
+  - the example's numbers and calculated values (see "Calculations
+    tab"), in Initial version without those of `windows_glazing`.
+- `examples/sample-tree.js` holds the same document as the global
+  `NOVADM_SAMPLE_DOCUMENT` (the JSON text after `=`, so it loads over
+  `file://` with no fetch), which `index.html` loads on open and Load
+  example tree loads again, like an import. To change the example, edit
+  `sample-tree.json` in the editor, export it, and paste the file into
+  `sample-tree.js`. As the example isn't empty, Load example tree and
+  Clear tree ask before replacing it, as they always have.
 - `examples/novadm-action-tree.json` is the version-history demo: the
   same tree with five versions – a main line, a branch, and a merge of
   the branch that applies the branch's added and deleted nodes. It is
@@ -969,9 +992,6 @@ data in every version.
   K45 versions) carry a `source` line: "This renovation design concept
   was developed by COWI as part of the Horizon 2020 research project
   PROBONO (No. 101037075) funded by the European Union."
-- `examples/sample-attributes.js` is the Calculations tab's example data
-  for the sample tree (see "Calculations tab"): made-up numbers, the
-  units and the calculated values, with Sum and GWP as KPIs.
 
 These files aren't unified – known and deliberately deferred, not an
 oversight.

@@ -16,7 +16,7 @@ Download the source code zip, unzip it and open `index.html` in a browser. No in
 - **Click** a node's dot or an option chip to mark it always or never, and save the result as a **profile**
 - **Save, open, restore, merge and delete** versions in the version history; each version holds its tree, profiles and numbers
 - **Import file** or **Export file** (on either tab): a `.json` file holding the versions with their trees, profiles and numbers
-- **Load example tree** for a worked example; more examples, such as the K45 case, are in `examples/`
+- **Load example tree** for the worked example the editor opens with; more examples, such as the K45 case, are in `examples/`
 - **Calculations** tab: click a box in the graph to type its numbers, then sample the scenarios to see the KPIs; its **Profiles** pill switches profiles there too, and only the scenarios the marks allow are sampled
 - **Save the report**: **Export table as CSV** on the scenario table, **PNG** on each KPI card, and **Save report as PDF** in the report's head (through the browser's print dialog)
 

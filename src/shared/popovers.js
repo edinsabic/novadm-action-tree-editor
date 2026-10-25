@@ -77,7 +77,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'<button type="button" class="btn" id="save-profile-btn" title="' + SAVE_PROFILE_TITLE + '">' +
 				'Save profile</button>' +
 			'<button type="button" class="btn" id="reset-profile-btn" title="' + CLEAR_MARKS_TITLE + '">' +
-				'Clear all marks</button>' +
+				'Clear marks / Deselect profile</button>' +
 			'</div>' +
 			'<div class="popover-divider"></div>';
 

@@ -595,7 +595,6 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 	return {
 		DEFAULT_SNAPSHOT_ID: DEFAULT_SNAPSHOT_ID,
 		TREE_FILE_FORMAT: TREE_FILE_FORMAT,
-		ensureRoot: ensureRoot,
 		validateDocument: validateDocument,
 		validateSpecs: validateSpecs
 	};

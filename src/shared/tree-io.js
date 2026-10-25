@@ -29,13 +29,9 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		Render.fitTraditionalView();
 	}
 
-	function sampleSpecs() {
-		if (typeof NOVADM_SAMPLE_TREE === 'undefined') return null;
-		return Parser.ensureRoot(NOVADM_SAMPLE_TREE);
-	}
-
-	function sampleSource() {
-		return typeof NOVADM_SAMPLE_SOURCE === 'undefined' ? '' : NOVADM_SAMPLE_SOURCE;
+	function exampleDocument() {
+		if (typeof NOVADM_SAMPLE_DOCUMENT === 'undefined') return null;
+		return FORMAT.parse(JSON.stringify(NOVADM_SAMPLE_DOCUMENT));
 	}
 
 	function headSnapshot(history) {
@@ -59,13 +55,13 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	}
 
 	function loadExample() {
-		var specs = sampleSpecs();
-		if (!specs) {
+		var example = exampleDocument();
+		if (!example) {
 			alert('sample-tree.js was not found or did not load – check that the examples folder sits next to' +
 				' index.html.');
 			return;
 		}
-		newDocument(specs, CalculationsTab.exampleData(), sampleSource());
+		newDocument(example.tree, null, example.source, example.history);
 	}
 
 	/* ---------- Example and clear buttons ---------- */
@@ -196,8 +192,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	});
 
 	return {
-		sampleSpecs: sampleSpecs,
-		sampleSource: sampleSource,
+		exampleDocument: exampleDocument,
 		newDocument: newDocument,
 		download: download
 	};

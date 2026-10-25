@@ -5,7 +5,7 @@ window.NovaDM = window.NovaDM || {};
  * to the calculated values and KPIs, with an option picker per node; an editor panel for the selected
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
  * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
- * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) is the
+ * calculated values: the example's made-up numbers, or Sum and GWP for a new document) is the
  * open version's: history.js stores a copy per version, the file holds it per version, and undo covers it.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
@@ -77,13 +77,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var selected = null;
 	var zoomPercent = 100;
 	var customUnitFor = null;
-
-	function exampleData() {
-		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
-		var example = Util.clone(NOVADM_SAMPLE_ATTRIBUTES);
-		return { attributes: example.attributes || [], units: example.units || {}, values: example.values || {},
-			derived: example.derived || [] };
-	}
 
 	function findDerived(name) {
 		return data.derived.filter(function (d) { return d.name === name; })[0] || null;
@@ -1244,7 +1237,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		getState: getState,
 		setState: setState,
 		reset: reset,
-		isUntouched: isUntouched,
-		exampleData: exampleData
+		isUntouched: isUntouched
 	};
 })(NovaDM.Model, NovaDM.Calculations, NovaDM.Render, NovaDM.CalculationsReport, NovaDM.Util);
