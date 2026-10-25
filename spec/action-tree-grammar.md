@@ -191,6 +191,9 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   the tab that opens them. On both tabs a flyout opens just below the
   pills, right-aligned with them, as the Generate tree panel opens below
   its button; the pills stay visible, and the open one looks pressed.
+  The flyout is placed again whenever the pill labels change and when
+  the window is resized, so it stays below the pills when the control
+  row wraps (a longer version name, the contradiction warning).
 - In the graph, an edge that spans several columns stays in the row of
   one end (whichever row is free in between) and changes rows within a
   single column, so it never runs through other versions.
@@ -998,7 +1001,11 @@ data in every version.
 - `examples/sample-tree.js` holds the same document as the global
   `NOVADM_SAMPLE_DOCUMENT` (the JSON text after `=`, so it loads over
   `file://` with no fetch), which `index.html` loads on open and Load
-  example tree loads again, like an import. To change the example, edit
+  example tree loads again, like an import: it is read and validated by
+  the same `readDocument` as a file. If `sample-tree.js` is missing or
+  doesn't validate, the editor opens an empty tree, and Load example tree
+  says why ("Could not load the example tree (sample-tree.js): …", with
+  the import's message). To change the example, edit
   `sample-tree.json` in the editor, export it, and paste the file into
   `sample-tree.js`. As the example isn't empty, Load example tree and
   Clear tree ask before replacing it, as they always have.

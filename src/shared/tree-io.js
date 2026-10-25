@@ -29,16 +29,22 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		Render.fitTraditionalView();
 	}
 
-	function exampleDocument() {
-		if (typeof NOVADM_SAMPLE_DOCUMENT === 'undefined') return null;
-		return FORMAT.parse(JSON.stringify(NOVADM_SAMPLE_DOCUMENT));
+	function readDocument(text) {
+		try {
+			var doc = FORMAT.parse(text);
+			var problem = Parser.validateDocument(doc);
+			JSON.stringify(doc);
+			return problem ? { problem: problem } : { doc: doc };
+		} catch (err) {
+			return { problem: err instanceof RangeError ? 'the file is nested too deeply to read.' : err.message };
+		}
 	}
 
 	function headSnapshot(history) {
 		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
-	function newDocument(specs, calculations, source, history, name) {
+	function newDocument(specs, source, history, name) {
 		Model.replaceTree(specs);
 		Model.setSource(source);
 		Model.setDocumentName(name);
@@ -48,20 +54,19 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			History.load(history);
 		} else {
 			Model.resetProfiles();
-			CalculationsTab.reset(calculations);
+			CalculationsTab.reset();
 			History.reset();
 		}
 		refreshAll();
 	}
 
-	function loadExample() {
-		var example = exampleDocument();
-		if (!example) {
-			alert('sample-tree.js was not found or did not load – check that the examples folder sits next to' +
-				' index.html.');
-			return;
-		}
-		newDocument(example.tree, null, example.source, example.history);
+	function loadExample(onStart) {
+		var read = typeof NOVADM_SAMPLE_DOCUMENT === 'undefined'
+			? { problem: 'it was not found or did not load – check that the examples folder sits next to index.html.' }
+			: readDocument(JSON.stringify(NOVADM_SAMPLE_DOCUMENT));
+		if (read.doc) newDocument(read.doc.tree, read.doc.source, read.doc.history);
+		else if (onStart) newDocument([], '');
+		else alert('Could not load the example tree (sample-tree.js):\n' + read.problem);
 	}
 
 	/* ---------- Example and clear buttons ---------- */
@@ -87,7 +92,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			' numbers, only Sum and GWP.')) {
 			return;
 		}
-		newDocument([], null, '');
+		newDocument([], '');
 	});
 
 	/* ---------- Export ---------- */
@@ -142,27 +147,18 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	}
 
 	function importDocument(fileName, text) {
-		var doc;
-		var problem;
-		try {
-			doc = FORMAT.parse(text);
-			problem = Parser.validateDocument(doc);
-			JSON.stringify(doc);
-		} catch (err) {
-			alert('Could not import "' + fileName + '":\n' +
-				(err instanceof RangeError ? 'the file is nested too deeply to read.' : err.message));
+		var read = readDocument(text);
+		if (read.problem) {
+			alert('Could not import "' + fileName + '":\n' + read.problem);
 			return;
 		}
-		if (problem) {
-			alert('Could not import "' + fileName + '":\n' + problem);
-			return;
-		}
+		var doc = read.doc;
 		if (!nothingToLose() && !confirm('Replace the current tree with "' + fileName + '"?\n\nIts versions, profiles' +
 			' and the numbers in the Calculations tab replace the ones on screen too.')) {
 			return;
 		}
 
-		newDocument(doc.tree, null, doc.source, doc.history, nameOf(fileName));
+		newDocument(doc.tree, doc.source, doc.history, nameOf(fileName));
 		if (doc.addedRoot) {
 			setTimeout(function () {
 				alert('"' + fileName + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node' +
@@ -192,8 +188,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	});
 
 	return {
-		exampleDocument: exampleDocument,
-		newDocument: newDocument,
+		loadExample: loadExample,
 		download: download
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,

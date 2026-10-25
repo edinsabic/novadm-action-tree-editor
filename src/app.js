@@ -67,7 +67,5 @@ window.NovaDM = window.NovaDM || {};
 
 	/* ---------- Start ---------- */
 
-	var example = TreeIO.exampleDocument();
-	if (example) TreeIO.newDocument(example.tree, null, example.source, example.history);
-	else TreeIO.newDocument([], null, '');
+	TreeIO.loadExample(true);
 })(NovaDM.Render, NovaDM.TreeIO, NovaDM.CalculationsTab);

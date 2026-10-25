@@ -64,6 +64,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		var unsaved = History.isDirty() ? ' · unsaved' : '';
 		setPill(versionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
 		setPill(calcVersionBtn, 'Version: ' + History.getHead(), unsaved, VERSION_PILL_TITLE);
+		placeBelow();
 	}
 
 	function isEmptyProfile(p) {
@@ -466,7 +467,9 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		});
 	}
 
-	function placeBelow(pill) {
+	function placeBelow() {
+		if (openFlyoutName === null) return;
+		var pill = openedFrom === 'calc' ? calcProfileBtn : profileBtn;
 		var top = pill.offsetTop + pill.offsetHeight + FLYOUT_GAP;
 		[profileFlyout, versionFlyout].forEach(function (flyout) {
 			flyout.style.top = top + 'px';
@@ -491,7 +494,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		var layer = openedFrom === 'calc' ? calcLayer : treeLayer;
 		layer.appendChild(profileFlyout);
 		layer.appendChild(versionFlyout);
-		placeBelow(openedFrom === 'calc' ? calcProfileBtn : profileBtn);
+		placeBelow();
 		renderFlyout();
 		profileFlyout.hidden = name !== 'profile';
 		versionFlyout.hidden = name !== 'version';
@@ -538,6 +541,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	document.addEventListener('keydown', function (e) {
 		if (e.key === 'Escape' && openFlyoutName !== null) closeFlyouts();
 	});
+
+	window.addEventListener('resize', placeBelow);
 
 	return {
 		renderFlyout: renderFlyout,
