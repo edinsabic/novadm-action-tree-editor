@@ -5,11 +5,15 @@ window.NovaDM = window.NovaDM || {};
  * banner until the first sample, then a card per KPI (mean, spread, histogram, lowest and highest scenario)
  * and a sortable table of the scenarios. It also formats the numbers the rest of the tab shows.
  */
-NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
+NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Util) {
 	'use strict';
 
 	var PAGE_SIZE = 100;
+	var PRINT_WIDTH = 1040;
+	var PDF_NAME = 'novadm-report';
 	var BY_NUMBER = '#';
+	var TABLE_FILE_NAME = 'novadm-scenarios.csv';
+	var PNG_SCALE = 2;
 	var CHART_WIDTH = 300;
 	var CAPTION_HEIGHT = 20;
 	var PLOT_HEIGHT = 84;
@@ -22,6 +26,10 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	var escapeHtml = Util.escapeHtml;
 
 	var reportHead = document.getElementById('calc-report-head');
+	var reportText = document.getElementById('calc-report-text');
+	var reportClose = document.getElementById('calc-report-close-btn');
+	var pdfBtn = document.getElementById('calc-pdf-btn');
+	var printInfo = document.getElementById('calc-print-info');
 	var reportHost = document.getElementById('calc-report');
 
 	var sample = null;
@@ -32,6 +40,7 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 	var onShowScenario = null;
 	var onClose = null;
 	var shownRow = null;
+	var pageTitle = null;
 	var sortBy = { name: BY_NUMBER, dir: 1 };
 	var page = 0;
 
@@ -163,11 +172,11 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			return '<article class="calc-kpi-card">' + head + '</div>' +
 				'<p class="note">No numbers: every scenario gives n/a or an error.</p></article>';
 		}
-		var missing = sample.scenarios.length - column.numbers.length;
 		var stats = column.stats;
 		return '<article class="calc-kpi-card">' + head +
-			'<span class="note">mean of ' + formatCount(column.numbers.length) + ' scenarios' +
-			(missing ? ' (' + formatCount(missing) + ' without a number)' : '') + '</span></div>' +
+			'<span class="note">mean of ' + formatCount(column.numbers.length) + ' scenarios</span>' +
+			'<button class="btn" type="button" data-calc-png="' + escapeHtml(column.name) + '"' +
+			' title="Save this card as a PNG image">PNG</button></div>' +
 			'<div class="calc-kpi-mean">' + escapeHtml(withUnit(formatNumber(stats.mean), unit)) + '</div>' +
 			'<dl class="calc-kpi-stats">' + [['Min', stats.min], ['Median', stats.median], ['Max', stats.max],
 				['Std dev', stats.stdDev]].map(function (pair) {
@@ -202,10 +211,60 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		});
 	}
 
+	function labelledAncestors(box) {
+		return box.path.slice(0, -1).filter(function (n) { return n.label; });
+	}
+
+	function ancestorName(node) { return node.value.length === 1 ? node.value[0] : node.label; }
+
+	function headingAt(box, depth) {
+		var above = labelledAncestors(box);
+		return above.slice(above.length - depth).map(ancestorName).concat(box.node.label).join(' / ');
+	}
+
+	function headingsAt(boxes, depths) {
+		return boxes.map(function (b, i) { return headingAt(b, depths[i]); });
+	}
+
+	/**
+	 * Heads each option column by its box's label; a label that repeats gets its labelled ancestors in front
+	 * ("windows / material"), the nearest first, until the headings are unique, and then a count if need be.
+	 */
+	function optionHeadings(boxes) {
+		var depths = boxes.map(function () { return 0; });
+		var headings = headingsAt(boxes, depths);
+		var grew = true;
+		while (grew) {
+			grew = false;
+			for (var i = 0; i < boxes.length; i++) {
+				var repeated = headings.indexOf(headings[i]) !== headings.lastIndexOf(headings[i]);
+				if (repeated && depths[i] < labelledAncestors(boxes[i]).length) {
+					depths[i]++;
+					grew = true;
+				}
+			}
+			headings = headingsAt(boxes, depths);
+		}
+		var seen = Object.create(null);
+		return headings.map(function (h) {
+			seen[h] = (seen[h] || 0) + 1;
+			return seen[h] > 1 ? h + ' (' + seen[h] + ')' : h;
+		});
+	}
+
+	function kpiHeading(name) { return nameWithUnit(name, derivedUnit(name)); }
+
+	function optionText(entry) { return entry ? entry.value || 'chosen' : null; }
+
+	function cellValue(value) {
+		if (isNumber(value)) return value;
+		return value === null || value === undefined || Calculations.isError(value) ? null : String(value);
+	}
+
 	function sortHeaderHtml(name) {
 		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
 		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
-		var heading = name === BY_NUMBER ? name : nameWithUnit(name, derivedUnit(name));
+		var heading = name === BY_NUMBER ? name : kpiHeading(name);
 		return '<th><button type="button" class="calc-sort-btn" data-calc-sort="' + escapeHtml(name) + '"' +
 			' title="' + escapeHtml(title) + '">' + escapeHtml(heading) + mark + '</button></th>';
 	}
@@ -234,8 +293,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var shown = order.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 		var head = '<tr>' + sortHeaderHtml(BY_NUMBER) +
 			columns.map(function (c) { return sortHeaderHtml(c.name); }).join('') +
-			optionBoxes.map(function (b) {
-				return '<th class="calc-option-col">' + escapeHtml(b.node.label) + '</th>';
+			optionHeadings(optionBoxes).map(function (h) {
+				return '<th class="calc-option-col">' + escapeHtml(h) + '</th>';
 			}).join('') + '</tr>';
 		var body = shown.map(function (i) {
 			var entries = Calculations.entriesById(sample.scenarios[i]);
@@ -246,9 +305,9 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 					return '<td' + scaleColor(value, c.stats) + '>' + valueHtml(value) + '</td>';
 				}).join('') +
 				optionBoxes.map(function (b) {
-					var e = entries[b.node.id];
+					var text = optionText(entries[b.node.id]);
 					return '<td class="calc-option-col">' +
-						(e ? escapeHtml(e.value || 'chosen') : '<span class="calc-na">&ndash;</span>') + '</td>';
+						(text === null ? '<span class="calc-na">&ndash;</span>' : escapeHtml(text)) + '</td>';
 				}).join('') + '</tr>';
 		}).join('');
 		var listedIn = sortBy.name !== BY_NUMBER ? 'sorted by ' + escapeHtml(sortBy.name)
@@ -263,15 +322,31 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			'<p class="note">' + footer + '</p>';
 	}
 
+	function tableRows() {
+		var columns = reportColumns().list;
+		var rows = [[BY_NUMBER].concat(columns.map(function (c) { return kpiHeading(c.name); }),
+			optionHeadings(optionBoxes))];
+		sortedRows().forEach(function (i) {
+			var entries = Calculations.entriesById(sample.scenarios[i]);
+			rows.push([i + 1].concat(columns.map(function (c) {
+				return cellValue(results[i][c.name]);
+			}), optionBoxes.map(function (b) {
+				return optionText(entries[b.node.id]);
+			})));
+		});
+		return rows;
+	}
+
+	function exportTable() {
+		if (NovaDM.TreeIO) NovaDM.TreeIO.download(Util.csvText(tableRows()), TABLE_FILE_NAME, Util.CSV_MIME_TYPE);
+	}
+
 	/* ---------- Report ---------- */
 
 	function bannerHtml() {
-		return '<div class="calc-report-text">' +
-			'<strong class="calc-report-title">Explore the scenario space</strong>' +
-			'<span>Sample it with the buttons above: <b>30 scenarios</b>, the <b>full scenario space</b>, or your own' +
-			' number of scenarios. A report then opens here: each KPI&rsquo;s mean, spread and distribution, its' +
-			' lowest and highest scenario, and the scenarios themselves, which you can open in the graph.</span>' +
-			'</div>';
+		return '<strong class="calc-report-title">Explore the scenario space</strong>' +
+			'<span>Sample the scenario space to see each KPI&rsquo;s mean, spread and distribution, its lowest and' +
+			' highest scenario, and the scenarios themselves, which you can open in the graph.</span>';
 	}
 
 	function reportHeadHtml() {
@@ -290,13 +365,8 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 				formatShare(sample.distinct, sample.total) + ' of the space) &middot; every scenario is equally' +
 				' likely';
 		}
-		var title = sample.full ? 'Full scenario space' : 'Sample report';
-		return '<div class="calc-report-text">' +
-			'<strong class="calc-report-title">' + title + '</strong>' +
-			'<span>' + meta + '</span>' +
-			'</div>' +
-			'<button class="flyout-close calc-report-close" type="button" data-calc-report="close"' +
-			' aria-label="Close the report" title="Close the report and clear the sample">&times;</button>';
+		return '<strong class="calc-report-title">Report</strong>' +
+			'<span>' + meta + '</span>';
 	}
 
 	function reportBodyHtml() {
@@ -313,10 +383,12 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 			'</section>' +
 			'<section class="calc-report-section">' +
 			'<div class="calc-section-head"><h3>Sampled scenarios</h3>' +
-			'<span class="note">Click a number to show that scenario in the graph: every box switches to its' +
-				' option. Click # or a KPI to sort.</span>' +
+			'<span class="note calc-hint">Click a number to show that scenario in the graph: every box switches to' +
+				' its option. Click # or a KPI to sort.</span>' +
 			'<span class="calc-scale-legend">lowest' +
 			'<span class="calc-scale-bar" aria-hidden="true"></span>highest</span>' +
+			'<button class="btn" type="button" data-calc-report="csv" title="Save every scenario of the table, in' +
+				' its current order, as a CSV file.">Export table as CSV</button>' +
 			'</div>' +
 			scenarioTableHtml(columns.list) +
 			'</section>';
@@ -326,7 +398,9 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var hasBody = !!sample && sample.scenarios.length > 0;
 		reportHead.classList.toggle('open', hasBody);
 		reportHost.hidden = !hasBody;
-		reportHead.innerHTML = sample ? reportHeadHtml() : bannerHtml();
+		reportText.innerHTML = sample ? reportHeadHtml() : bannerHtml();
+		reportClose.hidden = !sample;
+		pdfBtn.hidden = !hasBody;
 		reportHost.innerHTML = hasBody ? reportBodyHtml() : '';
 	}
 
@@ -361,6 +435,12 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		var show = e.target.closest('[data-calc-show]');
 		var sort = e.target.closest('[data-calc-sort]');
 		var turn = e.target.closest('[data-calc-page]');
+		var png = e.target.closest('[data-calc-png]');
+		if (e.target.closest('[data-calc-report="csv"]')) exportTable();
+		if (png) {
+			savePng(png.closest('.calc-kpi-card'), 'novadm-' + png.getAttribute('data-calc-png') + '.png',
+				'[data-calc-png]');
+		}
 		if (show) {
 			var index = Number(show.getAttribute('data-calc-show'));
 			var onPage = Math.floor(sortedRows().indexOf(index) / PAGE_SIZE);
@@ -383,6 +463,140 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		}
 	});
 
+	/* ---------- Images ---------- */
+
+	function copyStyles(source, copy) {
+		var computed = getComputedStyle(source);
+		var text = '';
+		for (var i = 0; i < computed.length; i++) {
+			text += computed[i] + ':' + computed.getPropertyValue(computed[i]) + ';';
+		}
+		copy.setAttribute('style', text);
+		for (var c = 0; c < source.children.length; c++) copyStyles(source.children[c], copy.children[c]);
+	}
+
+	function imageFailed() {
+		alert('This browser could not make the image. Try Chrome, Edge or Firefox.');
+	}
+
+	function savePng(element, fileName, leaveOut) {
+		var box = element.getBoundingClientRect();
+		var width = Math.round(box.width);
+		var height = Math.round(box.height);
+		var copy = element.cloneNode(true);
+		copyStyles(element, copy);
+		copy.style.margin = '0';
+		copy.style.boxSizing = 'border-box';
+		copy.style.width = width + 'px';
+		copy.style.height = height + 'px';
+		if (leaveOut) {
+			Array.prototype.forEach.call(copy.querySelectorAll(leaveOut), function (el) {
+				el.parentNode.removeChild(el);
+			});
+		}
+		var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+			'<foreignObject width="100%" height="100%">' + new XMLSerializer().serializeToString(copy) +
+			'</foreignObject></svg>';
+		var image = new Image();
+		image.onerror = imageFailed;
+		image.onload = function () {
+			var canvas = document.createElement('canvas');
+			canvas.width = width * PNG_SCALE;
+			canvas.height = height * PNG_SCALE;
+			var context = canvas.getContext('2d');
+			context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface');
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			context.scale(PNG_SCALE, PNG_SCALE);
+			context.drawImage(image, 0, 0);
+			try {
+				canvas.toBlob(function (blob) {
+					if (blob && NovaDM.TreeIO) NovaDM.TreeIO.download(blob, fileName, 'image/png');
+					else imageFailed();
+				}, 'image/png');
+			} catch (e) {
+				imageFailed();
+			}
+		};
+		image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+	}
+
+	/* ---------- Print ---------- */
+
+	function printInfoHtml() {
+		var date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+		var source = Model.getSource();
+		var name = Model.getDocumentName();
+		return '<p>' + (name ? [escapeHtml(name)] : []).concat([
+			'Version: ' + escapeHtml(History.getHead()) + (History.isDirty() ? ' &middot; unsaved' : ''),
+			'Profile: ' + escapeHtml(Model.getActiveProfileName() || 'none') +
+				(Model.profileChanged() ? ' (changed)' : ''),
+			date
+		]).join(' &middot; ') + '</p>' + (source ? '<p>' + escapeHtml(source) + '</p>' : '');
+	}
+
+	function leaveOutColumnsThatDontFit(table, kept) {
+		var heads = table.querySelectorAll('thead th');
+		var width = 0;
+		var from = heads.length;
+		for (var i = 0; i < heads.length && from === heads.length; i++) {
+			width += heads[i].getBoundingClientRect().width;
+			if (i >= kept && width > PRINT_WIDTH) from = i;
+		}
+		table.querySelectorAll('tr').forEach(function (row) {
+			for (var k = from; k < row.children.length; k++) row.children[k].classList.add('calc-print-off');
+		});
+		return heads.length - from;
+	}
+
+	function printNoteHtml(leftOut) {
+		var count = sortedRows().length;
+		var parts = [];
+		if (count > PAGE_SIZE) {
+			parts.push('The table shows scenarios ' + formatCount(page * PAGE_SIZE + 1) + '&ndash;' +
+				formatCount(Math.min(count, (page + 1) * PAGE_SIZE)) + ' of ' + formatCount(count) +
+				', the page on screen.');
+		}
+		if (leftOut) {
+			parts.push('The options of ' + formatCount(leftOut) + ' more ' + (leftOut === 1 ? 'box' : 'boxes') +
+				' don&rsquo;t fit the page.');
+		}
+		if (!parts.length) return '';
+		return '<p class="note calc-print-note">' + parts.join(' ') +
+			' Export table as CSV has every scenario and column.</p>';
+	}
+
+	function prepareForPrint() {
+		cleanUpAfterPrint();
+		printInfo.innerHTML = printInfoHtml();
+		var table = reportHost.querySelector('.calc-scenarios');
+		if (table) {
+			var leftOut = leaveOutColumnsThatDontFit(table, reportColumns().list.length + 1);
+			table.parentNode.insertAdjacentHTML('afterend', printNoteHtml(leftOut));
+		}
+		document.documentElement.classList.add('calc-printing');
+		pageTitle = document.title;
+		document.title = PDF_NAME + (Model.getDocumentName() ? '-' + Model.getDocumentName() : '');
+	}
+
+	function cleanUpAfterPrint() {
+		document.documentElement.classList.remove('calc-printing');
+		if (pageTitle !== null) document.title = pageTitle;
+		pageTitle = null;
+		reportHost.querySelectorAll('.calc-print-off').forEach(function (cell) {
+			cell.classList.remove('calc-print-off');
+		});
+		reportHost.querySelectorAll('.calc-print-note').forEach(function (note) {
+			note.parentNode.removeChild(note);
+		});
+	}
+
+	pdfBtn.addEventListener('click', function () {
+		prepareForPrint();
+		window.print();
+	});
+
+	window.addEventListener('afterprint', cleanUpAfterPrint);
+
 	return {
 		render: render,
 		markShownRow: markShownRow,
@@ -392,4 +606,4 @@ NovaDM.CalculationsReport = (function (Calculations, Render, Util) {
 		nameWithUnit: nameWithUnit,
 		valueHtml: valueHtml
 	};
-})(NovaDM.Calculations, NovaDM.Render, NovaDM.Util);
+})(NovaDM.Model, NovaDM.History, NovaDM.Calculations, NovaDM.Render, NovaDM.Util);

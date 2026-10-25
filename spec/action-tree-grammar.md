@@ -316,8 +316,10 @@ on made-up numbers, which the supervisor approved, and now works on
 whatever tree the Action tree tab holds. Its data belongs to the version
 on screen (see "Version history") and is saved per version in the file
 (format version 6). It applies the always/never marks on screen, as the
-Action tree tab does (see "Profiles", "The graph" and "Sampling"). The
-example's numbers are still made up.
+Action tree tab does (see "Profiles", "The graph" and "Sampling"). Its
+report can be saved as a CSV table, a PNG per KPI card and a PDF (see
+"CSV files", "PNG images" and "PDF of the report"). The example's
+numbers are still made up.
 
 "Calculated value" is the UI's name for NovaDM's **derived attribute**;
 identifiers, data keys and CSS classes keep `derived`. The engine is
@@ -542,28 +544,30 @@ the Action tree tab (`Render.renderTree()` calls
 - A unit follows its number after a no-break space ("52,000 DKK") in the
   graph, the editor panel and the KPI cards; a heading reads
   "name (unit)" ("sum (DKK)"). n/a and errors get none.
-- **Ready for a CSV export** (later): the report's table already has the
-  form a CSV will have, with the unit in the heading and plain numbers
-  in the cells, so a spreadsheet can calculate with them and an import
-  can read the unit back from the heading.
+- **In a CSV file** (see "CSV files") the unit sits in the heading the
+  same way, and the cells hold plain numbers, so a spreadsheet can
+  calculate with them.
 
 ### Sampling
 
-The control row reads "Sample", then **30 scenarios**, **Full scenario
-space**, and your own number of scenarios: a box that shows a comma
-between thousands ("1,000"), then its "scenarios" button or Enter. The
-number is a count, so the box ignores commas, points and spaces
-("1.000" is also a thousand). The
-**scenario space size** next to the title is the Action tree tab's
-(`Model.scenarioSpaceSize()`): the always/never marks on screen apply,
-as they do to the sample. When it is 0 every sample control is disabled;
-on a non-empty tree the same warning as on the Action tree tab shows
-next to it, "Full scenario space" says why in its tooltip, and a sample
-on screen becomes empty ("The always/never marks are contradictory, so
-there is nothing to sample."). "+ Calculated value" is disabled only on
-an empty tree. When the control row has no room left (a long profile or
-version name, the warning), it wraps onto a second line; a pill's text
-never breaks.
+The sample controls sit in the "Explore the scenario space" panel below
+the graph (see "Report"), in a row under its text: "Sample", then **30
+scenarios**, **Full scenario space**, and your own number of scenarios:
+a box that shows a comma between thousands ("1,000"), then its
+"scenarios" button or Enter. The number is a count, so the box ignores
+commas, points and spaces ("1.000" is also a thousand). On a narrow
+screen the row wraps; a button's text never breaks.
+
+The control row holds the **scenario space size**, the Action tree
+tab's (`Model.scenarioSpaceSize()`): the always/never marks on screen
+apply, as they do to the sample. When it is 0 every sample control is
+disabled; on a non-empty tree the same warning as on the Action tree tab
+shows next to it, "Full scenario space" says why in its tooltip, and a
+sample on screen becomes empty ("The always/never marks are
+contradictory, so there is nothing to sample."). "+ Calculated value" is
+disabled only on an empty tree. When the control row has no room left
+(a long profile or version name), it wraps onto a second line; a pill's
+text never breaks.
 
 - **Limits**: at most 3,000 scenarios (`MAX_SAMPLE_SIZE`). Your own
   number must be a whole number from 1 to 3,000. "Full scenario space"
@@ -611,13 +615,21 @@ never breaks.
 ### Report
 
 - Until the first sample a **banner** sits below the graph, in a dashed
-  frame. A sample opens the **report** in its place, in a solid frame,
-  and scrolls to it. The × in its top right closes it and drops the
-  sample; that is not an undo step.
-- **The head** says what was drawn, e.g. "1,000 random scenarios out of
-  2,560 · 815 different ones (31.8% of the space) · every scenario is
-  equally likely". A full listing is titled
-  "Full scenario space" and reads "All 2,560 scenarios of the space".
+  frame: its title and text, then a row with the sample controls. A
+  sample opens the **report** in its place, in a solid frame, and
+  scrolls to it. The report's head keeps the same two rows, so the
+  sample controls stay where they were, and a new sample replaces the
+  report. The × in the head's top right closes it and drops the sample;
+  that is not an undo step.
+- Only the text (`calc-report-text`) is redrawn with each render; the
+  sample controls and the × stay in place (the × is shown with
+  `hidden`), so their ids and listeners in `calculations-tab.js`
+  never change.
+- **The head** is titled "Report" and says under it what was drawn,
+  e.g. "1,000 random scenarios out of 2,560 · 815 different ones (31.8%
+  of the space) · every scenario is equally likely", or for a full
+  listing "All 2,560 scenarios of the space". The title is the same for
+  both, so it never reads as an example ("sample") report.
 - **One card per KPI** (or, if no calculated value is a KPI, per
   calculated value that no other formula uses): the heading and the
   mean with the unit, then min, median, max, the sample standard
@@ -631,6 +643,13 @@ never breaks.
   back to page 1. When the sorted KPI leaves the table (no longer a KPI,
   or deleted), the table goes back to sorting by `#`. KPI cells are coloured from green (lowest) through
   yellow to peach (highest), per column; not red, which is kept for errors.
+- **Option headings** are the boxes' labels. A label that repeats (two
+  `material` boxes) gets its labelled ancestors in front, the nearest
+  first, until the headings are unique: an ancestor with one value adds
+  that value ("windows / material"), any other its label. Headings that
+  are still alike get a count ("material (2)").
+- **"Export table as CSV"** sits on the "Sampled scenarios" heading,
+  next to the table it saves (see "CSV files").
 - **Opening a scenario**: clicking a `#`, or a card's lowest or highest
   button (which first turns to the right page), sets every drop-down in
   the graph to that scenario's options (`Calculations.choicesFor`),
@@ -668,6 +687,110 @@ between thousands. Whole numbers have no decimals ("0", "450"), other
 numbers under 1,000 keep up to two ("0.25"), and numbers from 1,000 up
 are rounded ("27,868"). Counts have no decimals, and shares one
 ("31.8%", or "under 0.1%").
+
+### CSV files
+
+"Export table as CSV" saves the report's scenario table as a CSV file for
+a spreadsheet, `novadm-scenarios.csv`, written by `Util.csvText` and
+saved through `TreeIO.download`:
+
+- **The format**: a comma between cells, a decimal point and no
+  thousands separator; RFC 4180 quoting (a cell with `,`, `"` or a line
+  break goes in double quotes, and a `"` inside is doubled); CRLF line
+  ends; and a UTF-8 byte order mark, so "CO₂e" and "m²" show intact.
+  Number cells are plain numbers (`52000`, `0.25`, `-10`); a calculated
+  value that gives text or true/false is written as that text (`high`,
+  `true`), as the table shows it; an empty cell means n/a or an error.
+  The table and the file share these rules (`cellValue`, `optionText`,
+  `kpiHeading` in `calculations-report.js`).
+- **The formula guard**: a text cell that starts with `=`, `+`, `-`, `@`,
+  a tab or a carriage return gets an apostrophe in front (`'=SUM(A1)`,
+  `'-10%`), so a spreadsheet never runs a label from someone else's file
+  as a formula; so does one that starts with spaces or a line break
+  before `=`, `+`, `-` or `@` (`' =1+1`), as some programs trim them
+  first. Inside a text cell, a `;` or tab followed by a formula start
+  gets an apostrophe after it (`roof;'=x`): a spreadsheet set to a
+  decimal comma (Danish, Slovenian Excel) splits the file on `;`, and
+  the part after it would otherwise be a cell of its own that starts
+  with a formula. Quotes don't help there, since such a spreadsheet only
+  honours a quote at the start of its field. Numbers are never guarded,
+  so a negative number stays a number, and normal labels (`a; b`,
+  `keep_current`) are unchanged.
+- **The rows**: every scenario of the sample, not only the page on
+  screen, in the table's sort order. Its columns are the table's: `#`,
+  each KPI as `name (unit)`, and the option headings; an option cell
+  holds the option, "chosen" for a node without options, or nothing when
+  the scenario leaves the node out.
+- **The tooltip** reads "Save every scenario of the table, in its
+  current order, as a CSV file.": no file name, no format details, and
+  no spreadsheet program or country.
+
+### PNG images
+
+- **"PNG"** on each KPI card saves that card as it looks on screen (name
+  and unit, mean, min/median/max/std dev, histogram, lowest and highest)
+  as `novadm-<kpi>.png`, named after the calculated value
+  (`novadm-sum.png`), without its PNG button. The graph has no PNG
+  button.
+- **How** (`savePng` in `calculations-report.js`, its only user; no library;
+  saved through `TreeIO.download`): the card is cloned with each
+  part's computed style written into it (the stylesheet doesn't apply
+  inside an image), put in an SVG `foreignObject`, drawn on a canvas at
+  twice its size on the surface colour, and downloaded. The copy gets
+  the card's size rounded to whole pixels (at most half a pixel off):
+  the browser draws an SVG image at a whole-pixel size, so a fractional
+  card lost part of its right border and left a white strip below.
+- A browser that refuses to draw the image shows an alert: "This browser
+  could not make the image. Try Chrome, Edge or Firefox." Safari is left
+  out: WebKit is known to refuse a canvas that has drawn an SVG with a
+  `foreignObject` (not tested here).
+
+### PDF of the report
+
+- **"Save report as PDF"** sits at the right of the report head's Sample
+  row, centred on it like the Sample buttons, while a report with
+  scenarios is open. It calls `window.print()`; the browser's print
+  dialog saves the PDF. Its tooltip: "Open the print dialog, where you
+  can save the report as a PDF file".
+- **What the PDF holds**, on A4 landscape pages (`@page`, 10 mm
+  margins): a header line "k45-case · Version: Initial version ·
+  Profile: Budget · 24 October 2026" (the document's name, then the full
+  names, `· unsaved` when it applies; "(changed)" after the profile when
+  the marks on screen differ from it, or when marks are set and no
+  profile is loaded: "Profile: none (changed)", `Model.profileChanged()`),
+  the
+  file's source line under it when there is one (K45 credits COWI and
+  PROBONO), the report head ("Report" and its summary line), the KPI
+  cards, and the table's page on screen (at most 100 rows). The graph,
+  the tabs, the control rows, the editor panel, every button, the pagers
+  and the hint above the table are left out. Table cells keep their
+  colours (`print-color-adjust: exact`); a card or a table row never
+  breaks across two pages, and the table's heading repeats on each page.
+- **A wide table**: # and the KPI columns always print; option columns
+  follow from the left as long as they fit the page width (1,040 px of
+  the 1,047 within the margins, measured on screen, where the table has
+  the same font). The others are left out for the print only.
+- **The print note** under the table says what is left out, e.g. "The
+  table shows scenarios 1–100 of 2,560, the page on screen. The options
+  of 6 more boxes don't fit the page. Export table as CSV has every
+  scenario and column." Nothing is left out, no note.
+- **The document's name** is the imported file's name without `.json`
+  (`Model.getDocumentName()`, set by `TreeIO.newDocument`); the example,
+  Clear tree and a new document have none, and the header then starts at
+  "Version: …". It isn't saved in the file; undo and redo keep it, so
+  undoing an import also brings the earlier name back.
+- **The PDF's file name**: browsers suggest the page's title, so while
+  printing the title is `novadm-report-<name>` (`novadm-report` without
+  a name), and `afterprint` restores "NovaDM action tree editor".
+- **How**: the button fills the header and the note, marks the columns
+  that don't fit and puts the class `calc-printing` on `<html>`; the
+  print stylesheet applies only under that class, so printing the page
+  any other way (Ctrl+P) is as before, apart from the A4 landscape page.
+  `afterprint` undoes it all.
+- **Size**: the example's full listing prints on 5 pages, a sample of 30
+  on 2, and `full-tree.json` with 3,000 scenarios on 5 (6 of its 139
+  columns fit). The histograms stay vector graphics, so they stay sharp
+  in the PDF and in a LaTeX document (`\includegraphics`).
 
 ## File format (`.json`, format id `novadm-action-tree`)
 
@@ -797,6 +920,10 @@ importing.
 | 2 | A single `tree` key; `value` is an array of strings. No profiles, no history. | An AND root is added as above; profiles are reset and history starts with one version, the tree just loaded. |
 | 1 | A single `tree` key; `value` is text (`"a; b"`, split by `Model.parseValues`). | As version 2. |
 | – | A bare array of nodes (no wrapper object). | As version 2. |
+
+Export file suggests the document's name (the imported file's, e.g.
+`k45-case.json`), or `defaultName` (`novadm-action-tree.json`) when
+it has none (the example, Clear tree, a new document).
 
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /

@@ -6,7 +6,7 @@ NovaDM is a formal domain model for building renovation design space exploration
 
 ## Status
 
-Version 1.1.0. The editor in `editor/` has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
+Version 1.1.0. The editor in `editor/` has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The report can be saved as a CSV table for a spreadsheet, a PNG image per KPI card and a PDF. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
 
 ## Quick start
 
@@ -18,6 +18,7 @@ Open `editor/index.html` in a browser. No install, no build step, no server requ
 - **Import file** or **Export file** (on either tab): a `.json` file holding the versions with their trees, profiles and numbers
 - **Load example tree** for a worked example; more examples, such as the K45 case, are in `examples/`
 - **Calculations** tab: click a box in the graph to type its numbers, then sample the scenarios to see the KPIs; its **Profiles** pill switches profiles there too, and only the scenarios the marks allow are sampled
+- **Save the report**: **Export table as CSV** on the scenario table, **PNG** on each KPI card, and **Save report as PDF** in the report's head (through the browser's print dialog)
 
 ## Repository structure
 

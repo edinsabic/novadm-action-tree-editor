@@ -4,7 +4,8 @@ window.NovaDM = window.NovaDM || {};
  * Getting a document in and out of the live model: the example/clear buttons,
  * and file import/export on both tabs (via parser.js's TREE_FILE_FORMAT). A
  * document is the tree, the profiles, the Calculations tab's data and the
- * version history (see parser.js and history.js).
+ * version history (see parser.js and history.js). `download` also saves the
+ * report's CSV file and PNG images.
  */
 NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
@@ -41,9 +42,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
-	function newDocument(specs, calculations, source, history) {
+	function newDocument(specs, calculations, source, history, name) {
 		Model.replaceTree(specs);
 		Model.setSource(source);
+		Model.setDocumentName(name);
 		if (history) {
 			Model.applyProfileState(headSnapshot(history).profile, [specs]);
 			CalculationsTab.reset(headSnapshot(history).calculations);
@@ -124,7 +126,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			history: History.getState(),
 			source: Model.getSource()
 		});
-		download(text, FORMAT.defaultName + FORMAT.extension, FORMAT.mimeType);
+		download(text, (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension, FORMAT.mimeType);
 	}
 
 	exportBtns.forEach(function (btn) {
@@ -135,6 +137,12 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	/* ---------- Import ---------- */
 
 	importInput.accept = FORMAT.extension;
+
+	function nameOf(fileName) {
+		var extension = FORMAT.extension;
+		var hasExtension = fileName.toLowerCase().slice(-extension.length) === extension;
+		return hasExtension ? fileName.slice(0, -extension.length) : fileName;
+	}
 
 	function importDocument(fileName, text) {
 		var doc;
@@ -157,7 +165,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			return;
 		}
 
-		newDocument(doc.tree, null, doc.source, doc.history);
+		newDocument(doc.tree, null, doc.source, doc.history, nameOf(fileName));
 		if (doc.addedRoot) {
 			setTimeout(function () {
 				alert('"' + fileName + '" has no root node, so an empty ' + Model.TOP_LEVEL_KIND + ' root node' +
@@ -189,7 +197,8 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	return {
 		sampleSpecs: sampleSpecs,
 		sampleSource: sampleSource,
-		newDocument: newDocument
+		newDocument: newDocument,
+		download: download
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,
 	NovaDM.Parser);

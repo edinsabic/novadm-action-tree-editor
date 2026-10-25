@@ -2,7 +2,7 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * NovaDM action-tree data model: the node shape, tree queries and mutations,
- * always/never constraints, profiles, the file's source line, the nodes per
+ * always/never constraints, profiles, the file's source line and name, the nodes per
  * class and the scenario space size. No DOM references live here: render.js and the
  * interaction modules read and write this state and redraw.
  * Grammar background: ../spec/action-tree-grammar.md
@@ -23,6 +23,7 @@ NovaDM.Model = (function (Util) {
 	var profiles = [];
 	var activeProfileName = null;
 	var source = '';
+	var documentName = '';
 
 	/* ---------- Ids ---------- */
 
@@ -227,6 +228,13 @@ NovaDM.Model = (function (Util) {
 
 	function getActiveProfileName() { return activeProfileName; }
 
+	function profileChanged() {
+		var profile = findProfile(activeProfileName);
+		if (!profile) return hasNodeConstraints();
+		return Util.sortedJson(profile.constraints) !== Util.sortedJson(nodeConstraints) ||
+			Util.sortedJson(profile.valueConstraints || {}) !== Util.sortedJson(valueConstraints);
+	}
+
 	function getProfiles() { return profiles; }
 
 	function saveProfile(name) {
@@ -261,6 +269,10 @@ NovaDM.Model = (function (Util) {
 	function getSource() { return source; }
 
 	function setSource(text) { source = text || ''; }
+
+	function getDocumentName() { return documentName; }
+
+	function setDocumentName(name) { documentName = name || ''; }
 
 	function emptyProfileState() {
 		return { active: null, current: {}, currentValues: {}, saved: [] };
@@ -450,6 +462,7 @@ NovaDM.Model = (function (Util) {
 		hasNodeConstraints: hasNodeConstraints,
 		resetNodeConstraints: resetNodeConstraints,
 		getActiveProfileName: getActiveProfileName,
+		profileChanged: profileChanged,
 		getProfiles: getProfiles,
 		saveProfile: saveProfile,
 		deleteProfile: deleteProfile,
@@ -457,6 +470,8 @@ NovaDM.Model = (function (Util) {
 		resetProfiles: resetProfiles,
 		getSource: getSource,
 		setSource: setSource,
+		getDocumentName: getDocumentName,
+		setDocumentName: setDocumentName,
 		emptyProfileState: emptyProfileState,
 		getProfileState: getProfileState,
 		prunedProfileState: prunedProfileState,
