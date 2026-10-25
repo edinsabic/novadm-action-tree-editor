@@ -74,6 +74,15 @@ NovaDM.Model = (function (Util) {
 		return null;
 	}
 
+	function eachNode(visit) {
+		(function walk(nodes) {
+			nodes.forEach(function (n) {
+				visit(n);
+				walk(n.children);
+			});
+		})(root.children);
+	}
+
 	function isDescendant(ancestor, node) {
 		for (var i = 0; i < ancestor.children.length; i++) {
 			if (ancestor.children[i].id === node.id) return true;
@@ -355,17 +364,14 @@ NovaDM.Model = (function (Util) {
 
 	function classCounts() {
 		var counts = { subjects: 0, approaches: 0, features: 0, featureValues: 0 };
-		(function walk(nodes) {
-			nodes.forEach(function (n) {
-				if (n.nodeClass === 'Subject') counts.subjects++;
-				if (n.nodeClass === 'Approach') counts.approaches++;
-				if (n.nodeClass === 'Feature') {
-					counts.features++;
-					counts.featureValues += n.value.length;
-				}
-				walk(n.children);
-			});
-		})(root.children);
+		eachNode(function (n) {
+			if (n.nodeClass === 'Subject') counts.subjects++;
+			if (n.nodeClass === 'Approach') counts.approaches++;
+			if (n.nodeClass === 'Feature') {
+				counts.features++;
+				counts.featureValues += n.value.length;
+			}
+		});
 		return counts;
 	}
 
@@ -444,6 +450,7 @@ NovaDM.Model = (function (Util) {
 		isRootNode: isRootNode,
 		hasOptions: hasOptions,
 		findNode: findNode,
+		eachNode: eachNode,
 		isDescendant: isDescendant,
 		removeNode: removeNode,
 		siblingKind: siblingKind,

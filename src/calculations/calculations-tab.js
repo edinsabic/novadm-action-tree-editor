@@ -96,16 +96,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function rootNode() { return Model.root.children[0] || null; }
 
-	function walkTree(nodes, visit) {
-		nodes.forEach(function (n) {
-			visit(n);
-			walkTree(n.children, visit);
-		});
-	}
-
 	function treeLabels() {
 		var labels = [];
-		walkTree(Model.root.children, function (n) {
+		Model.eachNode(function (n) {
 			if (n.label && labels.indexOf(n.label) === -1) labels.push(n.label);
 		});
 		return labels;

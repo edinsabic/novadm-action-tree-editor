@@ -226,12 +226,17 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   The attributes and calculated values keep mine's order, with theirs-only
   ones at the end. A label and attribute that would end up with both a
   plain number and numbers per option keeps mine and is a conflict.
-  The base is the common ancestor's numbers as they are now, not as they
-  were when the branches split: a version others are based on still takes
-  number changes (Update this version, number corrections), so after
-  such a change a merge can take theirs without a conflict, or report one
-  that isn't. Keeping each version's numbers from the split is on the
-  plan's "Later" list.
+  **A known limitation, kept on purpose:** the base is the common
+  ancestor's numbers and profiles as they are now, not as they were when
+  the branches split. A version others are based on still takes number
+  changes (Update this version, number corrections) and profile changes,
+  so after such a change a merge can take theirs without a conflict, or
+  report one that isn't. Example: A has 5, B and C are based on A, C sets
+  7, then A is set to 6 and the correction is accepted for B; merging C
+  into B takes 7 with no conflict. It is rare, the dry run shows every
+  change before the merge, and undo reverts it. Fixing it would mean
+  storing each version's numbers and profiles at every split in the file,
+  which isn't worth it here.
 
   Conflicts of all three parts are listed together ("profile "Budget" –
   changed differently on both sides", "windows_glazing · price ·
