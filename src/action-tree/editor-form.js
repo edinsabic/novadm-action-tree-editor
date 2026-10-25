@@ -188,13 +188,10 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	function usedElsewhere(node, label, option) {
 		var found = false;
-		(function walk(nodes) {
-			nodes.forEach(function (n) {
-				var same = n.label === label && (option === undefined || n.value.indexOf(option) !== -1);
-				if (n.id !== node.id && same) found = true;
-				walk(n.children);
-			});
-		})(Model.root.children);
+		Model.eachNode(function (n) {
+			var same = n.label === label && (option === undefined || n.value.indexOf(option) !== -1);
+			if (n.id !== node.id && same) found = true;
+		});
 		return found;
 	}
 

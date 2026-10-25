@@ -67,25 +67,18 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 		updateButtons();
 	}
 
-	function eachNode(nodes, visit) {
-		nodes.forEach(function (n) {
-			visit(n);
-			eachNode(n.children, visit);
-		});
-	}
-
 	/** Loads a recorded state, keeping which nodes are expanded and which one is selected. */
 	function restore(state) {
 		var doc = JSON.parse(state);
 		var versionTrees = doc.history.snapshots.map(function (s) { return s.tree; });
 		var expanded = {};
-		eachNode(Model.root.children, function (n) { expanded[n.id] = n.expanded; });
+		Model.eachNode(function (n) { expanded[n.id] = n.expanded; });
 		var selected = Model.getSelectedId();
 
 		restoring = true;
 		try {
 			Model.replaceTree(doc.tree, versionTrees);
-			eachNode(Model.root.children, function (n) {
+			Model.eachNode(function (n) {
 				if (expanded[n.id] !== undefined) n.expanded = expanded[n.id];
 			});
 			if (selected && Model.findNode(Model.root, selected)) Model.setSelectedId(selected);

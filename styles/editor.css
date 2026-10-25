@@ -241,13 +241,6 @@ main {
 	flex-direction: column;
 }
 
-.panels-stack.flyout-open .control-right { visibility: hidden; }
-
-.calc-workspace.flyout-open #calc-profile-btn,
-.calc-workspace.flyout-open #calc-version-btn {
-	visibility: hidden;
-}
-
 .viewport-row {
 	position: relative;
 	display: flex;
@@ -432,7 +425,6 @@ main {
 
 .flyout {
 	position: absolute;
-	top: 0;
 	right: 0;
 	z-index: 30;
 	display: flex;
@@ -440,7 +432,6 @@ main {
 	width: calc(var(--editor-width) + 8%);
 	min-width: 320px;
 	max-width: 560px;
-	max-height: 100%;
 	overflow: hidden;
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-lg);
@@ -1017,6 +1008,11 @@ main {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 6px 16px;
+}
+
+.gen-list-toggle .toggle-btn {
+	padding: 4px 10px;
+	font-size: 0.78rem;
 }
 
 .gen-depth,

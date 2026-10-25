@@ -5,7 +5,7 @@ window.NovaDM = window.NovaDM || {};
  * always/never constraints, profiles, the file's source line and name, the nodes per
  * class and the scenario space size. No DOM references live here: render.js and the
  * interaction modules read and write this state and redraw.
- * Grammar background: ../spec/action-tree-grammar.md
+ * Grammar background: ../../spec/action-tree-grammar.md
  */
 NovaDM.Model = (function (Util) {
 	'use strict';
@@ -72,6 +72,15 @@ NovaDM.Model = (function (Util) {
 			if (found) return found;
 		}
 		return null;
+	}
+
+	function eachNode(visit) {
+		(function walk(nodes) {
+			nodes.forEach(function (n) {
+				visit(n);
+				walk(n.children);
+			});
+		})(root.children);
 	}
 
 	function isDescendant(ancestor, node) {
@@ -355,17 +364,14 @@ NovaDM.Model = (function (Util) {
 
 	function classCounts() {
 		var counts = { subjects: 0, approaches: 0, features: 0, featureValues: 0 };
-		(function walk(nodes) {
-			nodes.forEach(function (n) {
-				if (n.nodeClass === 'Subject') counts.subjects++;
-				if (n.nodeClass === 'Approach') counts.approaches++;
-				if (n.nodeClass === 'Feature') {
-					counts.features++;
-					counts.featureValues += n.value.length;
-				}
-				walk(n.children);
-			});
-		})(root.children);
+		eachNode(function (n) {
+			if (n.nodeClass === 'Subject') counts.subjects++;
+			if (n.nodeClass === 'Approach') counts.approaches++;
+			if (n.nodeClass === 'Feature') {
+				counts.features++;
+				counts.featureValues += n.value.length;
+			}
+		});
 		return counts;
 	}
 
@@ -444,6 +450,7 @@ NovaDM.Model = (function (Util) {
 		isRootNode: isRootNode,
 		hasOptions: hasOptions,
 		findNode: findNode,
+		eachNode: eachNode,
 		isDescendant: isDescendant,
 		removeNode: removeNode,
 		siblingKind: siblingKind,

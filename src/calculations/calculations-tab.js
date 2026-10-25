@@ -5,7 +5,7 @@ window.NovaDM = window.NovaDM || {};
  * to the calculated values and KPIs, with an option picker per node; an editor panel for the selected
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
  * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
- * calculated values: the example's NOVADM_SAMPLE_ATTRIBUTES, or Sum and GWP for a new document) is the
+ * calculated values: the example's made-up numbers, or Sum and GWP for a new document) is the
  * open version's: history.js stores a copy per version, the file holds it per version, and undo covers it.
  */
 NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsReport, Util) {
@@ -78,13 +78,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var zoomPercent = 100;
 	var customUnitFor = null;
 
-	function exampleData() {
-		if (typeof NOVADM_SAMPLE_ATTRIBUTES === 'undefined') return starterData();
-		var example = Util.clone(NOVADM_SAMPLE_ATTRIBUTES);
-		return { attributes: example.attributes || [], units: example.units || {}, values: example.values || {},
-			derived: example.derived || [] };
-	}
-
 	function findDerived(name) {
 		return data.derived.filter(function (d) { return d.name === name; })[0] || null;
 	}
@@ -103,16 +96,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function rootNode() { return Model.root.children[0] || null; }
 
-	function walkTree(nodes, visit) {
-		nodes.forEach(function (n) {
-			visit(n);
-			walkTree(n.children, visit);
-		});
-	}
-
 	function treeLabels() {
 		var labels = [];
-		walkTree(Model.root.children, function (n) {
+		Model.eachNode(function (n) {
 			if (n.label && labels.indexOf(n.label) === -1) labels.push(n.label);
 		});
 		return labels;
@@ -1244,7 +1230,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		getState: getState,
 		setState: setState,
 		reset: reset,
-		isUntouched: isUntouched,
-		exampleData: exampleData
+		isUntouched: isUntouched
 	};
 })(NovaDM.Model, NovaDM.Calculations, NovaDM.Render, NovaDM.CalculationsReport, NovaDM.Util);

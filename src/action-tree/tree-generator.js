@@ -73,7 +73,8 @@ window.NovaDM = window.NovaDM || {};
 		body.innerHTML =
 			'<div class="gen-row">' +
 			'<span class="note">Subject list</span>' +
-			'<div class="toggle-group" role="group" aria-label="Subject list">' + listsHtml() + '</div>' +
+			'<div class="toggle-group gen-list-toggle" role="group" aria-label="Subject list">' + listsHtml() +
+			'</div>' +
 			'</div>' +
 			'<div class="gen-row" role="radiogroup" aria-label="Renovation depth">' +
 			'<span class="note">Renovation depth</span>' + depthsHtml() +
