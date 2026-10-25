@@ -265,6 +265,34 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   (`Render.fitTraditionalView()`, between 50% and 100%). It refits on
   switching to it and on loading or importing a tree.
 
+## Screen sizes and scaling
+
+The page has no zoom of its own and no "Fit to screen". It never reads
+`devicePixelRatio`, which mixes the operating system's scaling with the
+browser's zoom: scaling the page by it would also undo the user's own
+Ctrl +/– and override an accessibility setting. The operating system's
+scaling makes the page narrower and shorter in CSS pixels instead (a
+1,920 × 1,080 screen at 150 % leaves about 1,280 × 600 for the page), so
+the layout is checked at the sizes the common settings give:
+
+| Screen and scaling | Page (CSS pixels) |
+|---|---|
+| 1,920 × 1,080 at 175 % | 1,097 × 500 |
+| 1,920 × 1,080 at 150 % | 1,280 × 600 |
+| 1,366 × 768 at 100 % | 1,366 × 640 |
+| 1,440 × 900 at 100 % | 1,440 × 770 |
+| 1,920 × 1,080 at 125 % | 1,536 × 750 |
+| 1,920 × 1,080 at 100 % | 1,920 × 950 |
+| 3,840 × 2,160 at 150 % | 2,560 × 1,300 |
+
+At every size there is no sideways scrolling, no clipped text and no
+overlap, and open flyouts stay inside the window. From 1,280 pixels wide
+the control rows, the tree toolbar and the bottom bar each fit on one
+line; at 1,097 the toolbar and the bottom bar wrap onto a second line and
+the page scrolls a little. A short window shows fewer tree rows (about 9
+at 1,280 × 600); the page doesn't tighten for it, and users zoom with
+Ctrl +/– to fit more. Check a layout change at these sizes.
+
 ## Predefined subjects and Generate tree
 
 `subjects.js` holds lists of renovation subjects grouped by category.
