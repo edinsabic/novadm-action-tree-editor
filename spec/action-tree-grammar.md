@@ -414,15 +414,16 @@ Where the data comes from:
 - **The example** (each version of `examples/sample-tree.js`, see
   "Example trees"): made-up numbers for the sample tree, the
   constant `facade_area`, the brick replacement's cost and CO₂, and the
-  KPIs `sum` ("Sum", `total(price) + brick_replacement_cost`, in DKK)
+  KPIs `cost` ("Cost", `total(price) + brick_replacement_cost`, in DKK)
   and `gwp` ("GWP", global warming potential, `total(co2) +
   brick_replacement_co2`, in kg CO₂e). The editor opens with it, and
   "Load example" and "Load example tree" load it again.
 - **Starter data** (`Calculations.starterData()`), for Clear tree and for
   every version of a file older than version 6: the attributes `price`
-  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `sum =
-  total(price)` and `gwp = total(co2)`. Typing prices for a few options
-  is then enough to get a Sum.
+  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `cost =
+  total(price)` ("Cost") and `gwp = total(co2)` ("GWP"). Typing prices
+  for a few options is then enough to get a Cost. Older files call this
+  KPI `sum` ("Sum") and keep it on import.
 - **A file** (Import file, on either tab): each version's own data; the
   tab shows the current version's.
 - A new document starts the tab over: no sample, no option picks and
@@ -547,7 +548,7 @@ the Action tree tab (`Render.renderTree()` calls
   value it uses: `label.attribute` from that attribute's row (or the
   box's head), `selected(label)` and a plain label from the head, and
   `total(attribute)` from the attribute's row in every box that has
-  one, which is why `sum` has an arrow from every priced box.
+  one, which is why `cost` has an arrow from every priced box.
 - **Picking an option** also picks the branch of every XOR above the
   node; "not chosen" switches the nearest XOR with another possible
   child to that child. The picks are kept by node id
@@ -600,7 +601,7 @@ the Action tree tab (`Render.renderTree()` calls
   matching units.
 - A unit follows its number after a no-break space ("52,000 DKK") in the
   graph, the editor panel and the KPI cards; a heading reads
-  "name (unit)" ("sum (DKK)"). n/a and errors get none.
+  "name (unit)" ("cost (DKK)"). n/a and errors get none.
 - **In a CSV file** (see "CSV files") the unit sits in the heading the
   same way, and the cells hold plain numbers, so a spreadsheet can
   calculate with them.
@@ -787,7 +788,7 @@ saved through `TreeIO.download`:
 - **"PNG"** on each KPI card saves that card as it looks on screen (name
   and unit, mean, min/median/max/std dev, histogram, lowest and highest)
   as `novadm-<kpi>.png`, named after the calculated value
-  (`novadm-sum.png`), without its PNG button. The graph has no PNG
+  (`novadm-cost.png`), without its PNG button. The graph has no PNG
   button.
 - **How** (`savePng` in `calculations-report.js`, its only user; no library;
   saved through `TreeIO.download`): the card is cloned with each
@@ -881,7 +882,7 @@ lines between the sections are valid JSON and are written on purpose):
 				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": { "windows_glazing": { "price": { "keep_double": 0, "replace_triple": 52000 } },
 					"replace_brick_facade": { "price": 210000 } },
-				"derived": [ { "name": "sum", "displayName": "Sum", "formula": "total(price)",
+				"derived": [ { "name": "cost", "displayName": "Cost", "formula": "total(price)",
 					"unit": "DKK", "kpi": true } ] } },
 
 		{ "id": "Add scaffolding", ... } ]
@@ -970,7 +971,7 @@ importing.
 
 | Version | What it introduced | On import |
 |---|---|---|
-| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Sum and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
+| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
 | 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | The global profiles are copied into every snapshot, pruned to its tree; every snapshot gets the starter data. |
 | 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | As version 5. No explicit root node: an AND root is added above the top-level nodes (with the same new id in every snapshot), the user is told, and the scenario space is unchanged. |
 | 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |

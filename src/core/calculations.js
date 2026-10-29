@@ -305,7 +305,7 @@ NovaDM.Calculations = (function (Util) {
 			units: { price: 'DKK', co2: 'kg CO₂e' },
 			values: {},
 			derived: [
-				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
+				{ name: 'cost', displayName: 'Cost', formula: 'total(price)', unit: 'DKK', kpi: true },
 				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
 			]
 		};
