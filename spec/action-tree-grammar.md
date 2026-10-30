@@ -414,7 +414,7 @@ The tab works on `{ attributes, units, values, derived }`:
   tab's bottom bar (`Calculations.shownName`). It is set with Rename…
   (below); a new calculated value gets its name with a capital first
   letter (`Calculations.displayNameOf`), and a value without one shows its
-  name that way. The starter data has "Cost", "GWP" and "U-value". Formulas, the
+  name that way. The starter data has "Cost" and "GWP". Formulas, the
   graph, the editor panel and the PNG's file name use `name`. `kpi: true`
   makes it a KPI.
 
@@ -425,20 +425,18 @@ Where the data comes from:
   constant `facade_area`, the brick replacement's cost and CO₂, and the
   KPIs `cost` ("Cost", `total(price) + brick_replacement_cost`, in DKK)
   and `gwp` ("GWP", global warming potential, `total(co2) +
-  brick_replacement_co2`, in kg CO₂e), plus the U-value set-up of the
-  starter data with made-up R values (insulation on facade 3.0, roof 5.0
-  and ground floor 2.5 m²K/W; windows double 0.35, triple 0.7). The
-  editor opens with it, and "Load example" and "Load example tree" load
-  it again.
+  brick_replacement_co2`, in kg CO₂e). The editor opens with it, and
+  "Load example" and "Load example tree" load it again.
+  `examples/sample-tree-with-u-value.json` is the same document with a
+  third KPI, U-value (see "A custom KPI: U-value" below); it is opened
+  with Import file.
 - **Starter data** (`Calculations.starterData()`), for Clear tree and for
   every version of a file older than version 6: the attributes `price`
-  (DKK), `co2` (kg CO₂e) and `r_value` (m²K/W), no numbers, the KPIs
-  `cost = total(price)` ("Cost") and `gwp = total(co2)` ("GWP"), and the
-  U-value set-up (see "U-value" below): the constants `rsi = 0.13` and
-  `rse = 0.04`, `rt = rsi + total(r_value) + rse` (all m²K/W) and the KPI
-  `u_value` ("U-value", W/m²K). Typing prices for a few options is then
-  enough to get a Cost. Older files call this
-  KPI `sum` ("Sum") and keep it on import.
+  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `cost =
+  total(price)` ("Cost") and `gwp = total(co2)` ("GWP"). Typing prices
+  for a few options is then enough to get a Cost. Older files call this
+  KPI `sum` ("Sum") and keep it on import. Any other KPI, such as a
+  U-value, is added by the user.
 - **A file** (Import file, on either tab): each version's own data; the
   tab shows the current version's.
 - A new document starts the tab over: no sample, no option picks and
@@ -708,43 +706,109 @@ the Action tree tab (`Render.renderTree()` calls
   same way, and the cells hold plain numbers, so a spreadsheet can
   calculate with them.
 
-### U-value
+### A custom KPI: U-value
 
-Every new document (and every example, in every version) has a U-value
-KPI, after the supervisor's formula: an element's total thermal
-resistance is Rt = Rsi + R1 + R2 + … + Rn + Rse, and its U-value is
-1 / Rt.
+New documents have only Cost and GWP. Any other KPI is a calculated
+value with **KPI** ticked: the report, its CSV and PDF, and the Action
+tree tab's bottom bar then show it like Cost and GWP, with no code.
+`examples/sample-tree-with-u-value.json` (opened with Import file) is
+the default example with a third KPI, the building's U-value, built
+this way from the formula language as it is.
 
-- `r_value` (m²K/W) is the thermal resistance of an option, typed like a
-  price, only for the options that have one (e.g. an insulation option).
-  Options without one count as 0.
-- `rsi = 0.13` and `rse = 0.04` (m²K/W) are the inside and outside
-  surface resistances, the usual values for walls in EN ISO 6946;
-  constants, changed like `facade_area`.
-- `rt = rsi + total(r_value) + rse`.
-- `u_value = if total(r_value) = 0 then 1 / 0 else 1 / rt` ("U-value",
-  W/m²K, a KPI): while no chosen option has an R value it is n/a (a
-  division by zero), not 1 / (0.13 + 0.04) ≈ 5.9, which would look like a
-  real result. The bar then shows "–" for it.
+It follows the supervisor's formula per element, an element's total
+thermal resistance Rt = Rsi + R1 + R2 + … + Rn + Rse and its U-value
+1 / Rt, and combines the elements as EN ISO 6946 and the transmission
+heat loss do:
 
-**Limitation**: `total(r_value)` adds the R values of every element in the
-scenario. That is right when the R values describe the layers of one
-element (one wall build-up), and too high when several elements (wall,
-roof, floor) have them: a building's U-value is an area-weighted mean,
-U = Σ(A·U) / ΣA, which needs an area and a formula per element. Kept
-simple for now (supervisor); to be checked with Ali.
+1. **One U-value per element** (wall, roof, ground floor):
+   U = 1 / (Rsi + R_existing + ΣR_new + Rse).
+2. **The existing construction** has an R value of its own. Without it,
+   keeping the current wall has no R value at all, and an added layer
+   looks like the whole element.
+3. **Surface resistances by the direction of heat flow** (EN ISO 6946),
+   written into the formulas as numbers: Rsi 0.13 for walls (sideways),
+   0.10 for roofs (up), 0.17 for floors (down); Rse 0.04.
+4. **Windows** have a product U-value (U_w), not R layers.
+5. **The building's U-value** is the area-weighted mean,
+   U = Σ(A·U) / ΣA, the same Σ A·U as the transmission heat loss H_T.
 
-**As a worked example** (for the thesis and the tutorial), on a new
-document with a wall's insulation as a node `wall_insulation` with the
-options `none; mineral_wool`:
+What the file adds to each version's data (the numbers are made up,
+like the prices):
 
-1. Calculations tab: click the `wall_insulation` box, and in its table
-   type 4 in the `r_value (m²K/W)` column for `mineral_wool`.
-2. Pick `mineral_wool` in the box's option picker: `rt` shows
-   0.13 + 4 + 0.04 = 4.17 m²K/W and `u_value` 1 / 4.17 = 0.24 W/m²K.
-3. Pick `none`: no chosen option has an R value, so U-value is n/a.
-4. Sample the scenario space: the report's U-value card and the Action
-   tree tab's bottom bar show its mean over the sample.
+| Name | Unit | Formula, or number |
+|---|---|---|
+| `r_wall`, `r_roof`, `r_floor` (attributes) | m²K/W | the R value an option adds to that element: 3 for `facade_insulation = add_insulation`, 5 for `roof_insulation`, 2.5 for `ground_floor_insulation` |
+| `u_window` (attribute) | W/m²K | the U-value of an option's new windows: 0.8 for `windows_glazing = replace_triple` |
+| `wall_area`, `roof_area`, `floor_area`, `window_area` | m² | constants 380, 250, 250 and 70 (wall and windows make up `facade_area`, 450) |
+| `wall_r_existing`, `roof_r_existing`, `floor_r_existing` | m²K/W | constants 0.5, 1 and 0.6: the current construction, without the surface resistances |
+| `window_u_existing` | W/m²K | constant 2.8: the current windows |
+| `wall_u` ("Wall U-value") | W/m²K | `1 / (0.13 + wall_r_existing + total(r_wall) + 0.04)` |
+| `roof_u` ("Roof U-value") | W/m²K | `1 / (0.10 + roof_r_existing + total(r_roof) + 0.04)` |
+| `floor_u` ("Floor U-value") | W/m²K | `1 / (0.17 + floor_r_existing + total(r_floor) + 0.04)` |
+| `window_u` ("Window U-value") | W/m²K | `if total(u_window) > 0 then total(u_window) else window_u_existing` |
+| `u_value` ("U-value", KPI) | W/m²K | `(wall_area * wall_u + roof_area * roof_u + floor_area * floor_u + window_area * window_u) / (wall_area + roof_area + floor_area + window_area)` |
+
+- **One attribute per element**: `total(r_wall)` adds the R values of
+  the wall's new layers chosen in the scenario, whatever their nodes are
+  called (two roof insulation nodes both count towards `r_roof`). No
+  formula names a label, so the same set-up works on any tree; the
+  project's part is typing numbers into the right column. A single
+  `r_value` for every element would not do: `total(r_value)` would add
+  the wall's, roof's and floor's R values together as if they were the
+  layers of one element (with the numbers above, 0.09 W/m²K instead of
+  0.29).
+- **An element whose area is 0 drops out**, and with every area at 0 the
+  U-value is 0 / 0, n/a. A scenario that renovates nothing gives the
+  existing building's U-value.
+- **When only the existing U-value is known**, its R value is
+  1 / U − Rsi − Rse (a wall with U = 1.49: 1 / 1.49 − 0.13 − 0.04 = 0.5).
+
+**Adding it yourself** (on any document, in the Calculations tab): "+
+Attribute" for `r_wall`, `r_roof`, `r_floor` and `u_window`, with their
+units from the Thermal group; "+ Calculated value" for each constant (a
+single number as its formula) and each formula in the table, in that
+order, so each formula's inputs exist; tick **KPI** on `u_value`, and
+give it the shown name "U-value" with Rename…; then type the R values
+into the nodes' tables.
+
+**More elements** (e.g. a brick wall and a timber wall, doors, a
+skylight): one more attribute, two constants and one formula each,
+written like the wall's (or the windows' for doors), and the element's
+`area * u` and `area` added to `u_value`'s formula. Ticking KPI on
+`wall_u` and the others shows each element in the report too.
+
+**Limitations** (kept simple; to be checked with a domain expert, below):
+
+- A ground floor on the ground follows EN ISO 13370, a different method;
+  here it is treated like the others (Rsi 0.17, Rse 0.04).
+- Thermal bridges are ignored.
+- The existing R value stays when an option replaces the construction
+  (e.g. `roof_replacement = replace`); removing a layer is not modelled.
+- Areas are the same in every scenario.
+- `total(u_window)` adds up: several window nodes in one scenario with a
+  `u_window` each would add their U-values. Give it to one window node.
+
+**Open questions:** is the area-weighted envelope U-value the KPI
+wanted, or one per element, or H_T in W/K (the formula's numerator)?
+Should the existing construction's R or U be part of each project's
+data, and where should it come from? Should Rsi and Rse differ by
+direction, and how should ground floors be handled? Should windows and
+doors be included through U_w, and with what areas? Can thermal bridges
+be ignored for now?
+
+**As a worked example** (for the thesis and the tutorial), after
+importing `sample-tree-with-u-value.json`:
+
+1. Calculations tab, every picker on `keep_current` / `keep_double`:
+   `wall_u` shows 1 / (0.13 + 0.5 + 0.04) = 1.49, `roof_u` 0.88,
+   `floor_u` 1.23, `window_u` 2.8 and `u_value` (380 · 1.49 + 250 · 0.88
+   + 250 · 1.23 + 70 · 2.8) / 950 = 1.36 W/m²K, the existing building.
+2. Pick `add_insulation` on the facade, roof and ground floor insulation
+   and `replace_triple` on the glazing: `wall_u` becomes
+   1 / (0.13 + 0.5 + 3 + 0.04) = 0.27, and `u_value` 0.29 W/m²K.
+3. Sample the scenario space: the report's U-value card and the Action
+   tree tab's bottom bar show its mean over the sample, between those
+   two.
 
 ### Sampling
 
@@ -1158,7 +1222,7 @@ importing.
 
 | Version | What it introduced | On import |
 |---|---|---|
-| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost, GWP and U-value, no numbers); a `calculations` without `attributes` takes them from `values`. |
+| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
 | 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | The global profiles are copied into every snapshot, pruned to its tree; every snapshot gets the starter data. |
 | 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | As version 5. No explicit root node: an AND root is added above the top-level nodes (with the same new id in every snapshot), the user is told, and the scenario space is unchanged. |
 | 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |
@@ -1180,9 +1244,9 @@ handlers need to change too.)
 ## Example trees
 
 All `.json` examples are format version 6, made with the editor's own
-import and export (never by hand). `sample-tree.json` holds the
-example's made-up numbers in every version; the others have the starter
-data in every version.
+import and export (never by hand). `sample-tree.json` and
+`sample-tree-with-u-value.json` hold the example's made-up numbers in
+every version; the others have the starter data in every version.
 
 - `examples/sample-tree.json` is the default example, the
   "windows / outer_doors / facade / roof / ground_floor" tree, made to
@@ -1216,6 +1280,11 @@ data in every version.
   `sample-tree.json` in the editor, export it, and paste the file into
   `sample-tree.js`. As the example isn't empty, Load example tree and
   Clear tree ask before replacing it, as they always have.
+- `examples/sample-tree-with-u-value.json` is `sample-tree.json` with a
+  third KPI, U-value, in both versions: per-element R values, areas,
+  existing constructions and formulas (see "A custom KPI: U-value").
+  It shows how to add a KPI of your own, and is opened with Import file
+  only: it is not loaded on open and has no `.js` copy.
 - `examples/novadm-action-tree.json` is the version-history demo: the
   same tree with five versions – a main line, a branch, and a merge of
   the branch that applies the branch's added and deleted nodes. It is

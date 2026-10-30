@@ -305,22 +305,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -640,22 +630,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -721,22 +701,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -871,22 +841,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -978,22 +938,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -1109,22 +1059,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -1257,22 +1197,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -1448,22 +1378,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		},
@@ -1623,22 +1543,12 @@
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2", "r_value"],
-				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
+				"attributes": ["price", "co2"],
+				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": {},
 				"derived": [
 					{ "name": "cost", "displayName": "Cost", "formula": "total(price)", "unit": "DKK", "kpi": true },
-					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true },
-					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
-					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
-					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
-					{
-						"name": "u_value",
-						"displayName": "U-value",
-						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
-						"unit": "W/m²K",
-						"kpi": true
-					}
+					{ "name": "gwp", "displayName": "GWP", "formula": "total(co2)", "unit": "kg CO₂e", "kpi": true }
 				]
 			}
 		}

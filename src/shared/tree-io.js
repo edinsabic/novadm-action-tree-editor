@@ -89,7 +89,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	document.getElementById('clear-tree-btn').addEventListener('click', function () {
 		if (!nothingToLose() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
-			' numbers, only Cost, GWP and U-value.')) {
+			' numbers, only Cost and GWP.')) {
 			return;
 		}
 		newDocument([], '');
