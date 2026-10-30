@@ -4,7 +4,7 @@ window.NovaDM = window.NovaDM || {};
  * The Calculations tab: a graph from the labelled nodes of the action tree on screen and their numbers
  * to the calculated values and KPIs, with an option picker per node; an editor panel for the selected
  * box; and a sample of scenarios, reported by calculations-report.js. It also fills the KPIs in the
- * Action tree tab's bottom bar, greyed out while BAR_SHOWS_MEANS is false. Its data (numbers, units and
+ * Action tree tab's bottom bar with their mean over that sample, as an estimate. Its data (numbers, units and
  * calculated values: the example's made-up numbers, or Cost and GWP for a new document) is the
  * open version's: history.js stores a copy per version, the file holds it per version, and undo covers it.
  */
@@ -12,7 +12,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	'use strict';
 
 	var MAX_SAMPLE_SIZE = 3000;
-	var BAR_SHOWS_MEANS = false;
+	var SLOW_REDRAW_MS = 50;
+	var BAR_SLICE_MS = 12;
 	var SEED_RANGE = 4294967296;
 	var LABEL_WIDTH = 370;
 	var INDENT = 16;
@@ -72,6 +73,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var analysis = Calculations.analyze(data, []);
 	var evaluatedSpaceKey = null;
 	var sample = null;
+	var barJob = null;
+	var evaluateMs = 0;
 	var results = [];
 	var choices = { options: {}, branches: {} };
 	var selected = null;
@@ -89,8 +92,6 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function isUntouched() { return Calculations.signature(data) === Calculations.signature(starterData()); }
 
 	function isVisible() { return !panel.hidden; }
-
-	function resultsAreShown() { return isVisible() || BAR_SHOWS_MEANS; }
 
 	/* ---------- Tree ---------- */
 
@@ -215,14 +216,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return scenario.map(function (e) { return e.id + '=' + e.value; }).join('|');
 	}
 
-	function takeSample(size, seed, key) {
-		var applied = Model.applyMarks();
-		var scenarios = applied.size > 0
-			? Calculations.sample(rootNode(), size, Calculations.seededRandom(seed), applied.allowed)
-			: [];
-		var distinct = Object.create(null);
-		scenarios.forEach(function (s) { distinct[scenarioKey(s)] = true; });
-		sample = {
+	function randomSampleRecord(scenarios, distinct, size, seed, key, applied, drawMs) {
+		return {
 			full: false,
 			tooMany: false,
 			size: size,
@@ -230,21 +225,35 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			spaceKey: key,
 			total: applied.size,
 			contradictory: applied.contradictory,
-			distinct: Object.keys(distinct).length,
-			scenarios: scenarios
+			distinct: distinct,
+			scenarios: scenarios,
+			drawMs: drawMs
 		};
-		markShown(null);
 	}
 
-	function listFullSpace(seed, sizeIfTooMany, key) {
+	function randomSample(size, seed, key) {
+		var start = performance.now();
+		var applied = Model.applyMarks();
+		var scenarios = applied.size > 0
+			? Calculations.sample(rootNode(), size, Calculations.seededRandom(seed), applied.allowed)
+			: [];
+		var distinct = Object.create(null);
+		scenarios.forEach(function (s) { distinct[scenarioKey(s)] = true; });
+		return randomSampleRecord(scenarios, Object.keys(distinct).length, size, seed, key, applied,
+			performance.now() - start);
+	}
+
+	function fullListing(seed, sizeIfTooMany, key) {
+		var start = performance.now();
 		var applied = Model.applyMarks();
 		var total = applied.size;
 		if (total > MAX_SAMPLE_SIZE) {
-			takeSample(sizeIfTooMany, seed, key);
-			sample.tooMany = true;
-			return;
+			var record = randomSample(sizeIfTooMany, seed, key);
+			record.tooMany = true;
+			return record;
 		}
-		sample = {
+		var scenarios = total > 0 ? Calculations.enumerate(rootNode(), applied.allowed) : [];
+		return {
 			full: true,
 			tooMany: false,
 			size: total || sizeIfTooMany,
@@ -253,8 +262,18 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			total: total,
 			contradictory: applied.contradictory,
 			distinct: total,
-			scenarios: total > 0 ? Calculations.enumerate(rootNode(), applied.allowed) : []
+			scenarios: scenarios,
+			drawMs: performance.now() - start
 		};
+	}
+
+	function takeSample(size, seed, key) {
+		sample = randomSample(size, seed, key);
+		markShown(null);
+	}
+
+	function listFullSpace(seed, sizeIfTooMany, key) {
+		sample = fullListing(seed, sizeIfTooMany, key);
 		markShown(null);
 	}
 
@@ -264,12 +283,15 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function evaluateAll() {
+		barJob = null;
 		var key = spaceKey();
 		if (sample && sample.spaceKey !== key) drawAgain(key);
 		analysis = Calculations.analyze(data, treeLabels());
+		var start = performance.now();
 		results = sample
 			? sample.scenarios.map(function (s) { return Calculations.evaluateScenario(analysis, data, s); })
 			: [];
+		evaluateMs = performance.now() - start;
 		evaluatedSpaceKey = key;
 	}
 
@@ -314,11 +336,101 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		renderSummary();
 	}
 
+	function redrawBar() {
+		dropStaleSelection();
+		evaluateAll();
+		renderSummary();
+	}
+
+	/**
+	 * Recalculates the bar's sample in slices between frames, so typing and clicking never wait for it;
+	 * a newer change drops it. It ends with the same scenarios and numbers as a calculation in one go.
+	 */
+	function startBarJob() {
+		var job = {};
+		var base = sample;
+		var key = spaceKey();
+		var applied = Model.applyMarks();
+		var redraw = base.spaceKey !== key;
+		var listAll = redraw && (base.full || base.tooMany) && applied.size <= MAX_SAMPLE_SIZE;
+		var random = Calculations.seededRandom(base.seed);
+		var drawn = [];
+		var distinct = Object.create(null);
+		var drawMs = 0;
+		var next = null;
+		var scenarios = redraw ? null : base.scenarios;
+		var jobAnalysis = Calculations.analyze(data, treeLabels());
+		var jobResults = [];
+		var jobEvaluateMs = 0;
+		barJob = job;
+
+		function drawOne() {
+			var start = performance.now();
+			var scenario = Calculations.sample(rootNode(), 1, random, applied.allowed)[0];
+			drawMs += performance.now() - start;
+			drawn.push(scenario);
+			distinct[scenarioKey(scenario)] = true;
+		}
+
+		function finishDrawing() {
+			if (listAll) {
+				next = fullListing(base.seed, base.size, key);
+			} else {
+				next = randomSampleRecord(drawn, Object.keys(distinct).length, base.size, base.seed, key, applied,
+					drawMs);
+				next.tooMany = base.full || base.tooMany;
+			}
+			scenarios = next.scenarios;
+		}
+
+		function evaluateOne() {
+			var start = performance.now();
+			jobResults.push(Calculations.evaluateScenario(jobAnalysis, data, scenarios[jobResults.length]));
+			jobEvaluateMs += performance.now() - start;
+		}
+
+		function finish() {
+			barJob = null;
+			if (next) {
+				sample = next;
+				markShown(null);
+			}
+			analysis = jobAnalysis;
+			results = jobResults;
+			evaluateMs = jobEvaluateMs;
+			evaluatedSpaceKey = key;
+			dropStaleSelection();
+			renderSummary();
+		}
+
+		function step() {
+			if (barJob !== job) return;
+			var until = performance.now() + BAR_SLICE_MS;
+			while (performance.now() < until) {
+				if (!scenarios && (listAll || applied.size === 0 || drawn.length >= base.size)) finishDrawing();
+				else if (!scenarios) drawOne();
+				else if (jobResults.length < scenarios.length) evaluateOne();
+				else return finish();
+			}
+			setTimeout(step, 0);
+		}
+
+		requestAnimationFrame(function () { setTimeout(step, 0); });
+	}
+
+	function updateBar() {
+		barJob = null;
+		if (sample.drawMs + evaluateMs < SLOW_REDRAW_MS) redrawBar();
+		else startBarJob();
+	}
+
 	function treeChanged() {
-		if (resultsAreShown() && spaceKey() !== evaluatedSpaceKey) {
+		if (isVisible() && spaceKey() !== evaluatedSpaceKey) {
 			dropStaleSelection();
 			evaluateAll();
-			if (isVisible()) renderTab();
+			renderTab();
+		} else if (!isVisible() && sample) {
+			updateBar();
 		}
 		renderSize();
 		renderSummary();
@@ -329,12 +441,17 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function setState(state) {
 		data = state ? Util.clone(state) : starterData();
 		dropStaleSelection();
-		if (resultsAreShown()) evaluateAll();
-		if (isVisible()) renderTab();
+		if (isVisible()) {
+			evaluateAll();
+			renderTab();
+		} else if (sample) {
+			updateBar();
+		}
 		renderSummary();
 	}
 
 	function reset(state) {
+		barJob = null;
 		sample = null;
 		choices = { options: {}, branches: {} };
 		selected = null;
@@ -1095,22 +1212,40 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	/* ---------- Action tree tab's bottom bar ---------- */
 
+	function sampleHasScenarios() { return !!sample && sample.scenarios.length > 0; }
+
+	function sampleText() {
+		if (sample.full) return 'all ' + formatCount(sample.total) + ' scenarios';
+		return 'a random sample of ' + formatCount(sample.size) + ' of the ' + Render.scenarioSizeText(sample.total) +
+			' scenarios';
+	}
+
+	function summaryCaptionHtml() {
+		if (!sampleHasScenarios()) return '';
+		var title = sample.full
+			? 'Exact mean: each KPI\'s mean over ' + sampleText() + ' of the space ("Full scenario space" in the' +
+				' Calculations tab).'
+			: 'Estimated: each KPI\'s mean over ' + sampleText() + ', an estimate of its mean over all of them.' +
+				' A larger sample gives a closer estimate; "Full scenario space" in the Calculations tab gives the' +
+				' exact mean.';
+		return '<span class="metric-caption" title="' + escapeHtml(title) + '">' +
+			(sample.full ? 'Exact mean' : 'Estimated') + '</span>';
+	}
+
 	function summaryTitle(d, stats) {
-		if (!BAR_SHOWS_MEANS) {
-			return 'Not shown yet. Later this bar shows the scenario chosen in the Calculations tab.';
-		}
+		var name = d.displayName || d.name;
+		if (barJob) return name + ' is being calculated again for the changed tree.';
 		if (stats) {
-			var scenarios = sample.full
-				? 'all ' + formatCount(sample.total)
-				: 'a sample of ' + formatCount(sample.size);
-			return d.name + ': mean of ' + scenarios + ' scenarios.' +
-				' Min ' + withUnit(formatNumber(stats.min), d.unit) +
-				', max ' + withUnit(formatNumber(stats.max), d.unit) + '.';
+			return name + ': ' + (sample.full ? 'exact mean of ' : 'mean of ') + sampleText() + ' (min ' +
+				withUnit(formatNumber(stats.min), d.unit) + ', max ' + withUnit(formatNumber(stats.max), d.unit) +
+				'). Exact numbers per scenario are in the Calculations tab.';
 		}
-		if (sample && sample.scenarios.length) {
-			return d.name + ' has no number: every sampled scenario gives n/a or an error.';
+		if (sampleHasScenarios()) return name + ' has no number: every sampled scenario gives n/a or an error.';
+		if (sample) {
+			return (sample.contradictory ? 'The always/never marks are contradictory' : 'The tree is empty') +
+				', so there is no scenario to estimate ' + name + ' from.';
 		}
-		return 'Not calculated yet. Sample the scenario space in the Calculations tab to estimate ' + d.name + '.';
+		return 'Sample the scenario space in the Calculations tab to estimate ' + name + '.';
 	}
 
 	function renderSummary() {
@@ -1121,13 +1256,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 				'<span class="metric-label">KPIs</span><span class="metric-value">none yet</span></span>';
 			return;
 		}
-		kpiBar.innerHTML = kpis.map(function (d) {
-			var stats = BAR_SHOWS_MEANS && sample
-				? Calculations.statistics(Calculations.numbersOf(results, d.name))
-				: null;
+		kpiBar.innerHTML = summaryCaptionHtml() + kpis.map(function (d) {
+			var stats = sample ? Calculations.statistics(Calculations.numbersOf(results, d.name)) : null;
 			var mean = stats ? escapeHtml(withUnit(formatNumber(stats.mean), d.unit)) : '';
 			var value = !stats ? '&ndash;' : sample.full ? mean : '&asymp; ' + mean;
-			return '<span class="metric' + (stats ? '' : ' muted') + '"' +
+			return '<span class="metric' + (stats && !barJob ? '' : ' muted') + '"' +
 				' title="' + escapeHtml(summaryTitle(d, stats)) + '">' +
 				'<span class="metric-label">' + escapeHtml(d.displayName || d.name) + '</span>' +
 				'<span class="metric-value">' + value + '</span></span>';
@@ -1170,8 +1303,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function typedSize() {
-		var digits = sampleSizeInput.value.replace(/[\s,.]/g, '');
-		return /^\d+$/.test(digits) ? Number(digits) : null;
+		var typed = sampleSizeInput.value.trim();
+		if (!/^\d+$/.test(typed) && !/^\d{1,3}([,. ]\d{3})+$/.test(typed)) return null;
+		return Number(typed.replace(/[,. ]/g, ''));
 	}
 
 	function sampleCustom() {

@@ -12,6 +12,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	var MENU_GAP = 4;
 	var SCREEN_MARGIN = 8;
+	var LARGE_TREE_NODES = 150;
+	var TYPING_PAUSE_MS = 300;
 
 	var escapeHtml = Util.escapeHtml;
 	var formHost = document.getElementById('editor-form-host');
@@ -20,6 +22,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	var customSubjectId = null;
 	var rename = null;
 	var mouseIsDown = false;
+	var pendingEdit = null;
+	var editTimer = null;
 
 	function on(id, type, handler) {
 		document.getElementById(id).addEventListener(type, handler);
@@ -156,18 +160,24 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 			on('f-label', 'focus', function () { startRename(node); });
 			on('f-label', 'input', function (e) {
 				node.label = e.target.value;
-				followLabel(node);
-				Render.renderTree();
+				editSoon(function () {
+					followLabel(node);
+					Render.renderTree();
+				});
 			});
-			on('f-label', 'blur', finishRename);
+			on('f-label', 'keydown', flushEditOnTab);
+			on('f-label', 'blur', finishTyping);
 			on('f-value', 'focus', function () { startRename(node); });
 			on('f-value', 'input', function (e) {
 				node.value = Model.parseValues(e.target.value);
-				followOptions(node);
-				Render.renderTree();
-				renderValueChips(node);
+				editSoon(function () {
+					followOptions(node);
+					Render.renderTree();
+					renderValueChips(node);
+				});
 			});
-			on('f-value', 'blur', finishRename);
+			on('f-value', 'keydown', flushEditOnTab);
+			on('f-value', 'blur', finishTyping);
 		}
 		on('add-and-child', 'click', function () { addChildTo(node, 'AND'); });
 		on('add-xor-child', 'click', function () { addChildTo(node, 'XOR'); });
@@ -227,6 +237,39 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	function hideRenameNote() {
 		var note = document.getElementById('f-rename-note');
 		if (note) note.hidden = true;
+	}
+
+	function treeIsLarge() {
+		var count = 0;
+		Model.eachNode(function () { count++; });
+		return count >= LARGE_TREE_NODES;
+	}
+
+	function editSoon(update) {
+		var scheduled = pendingEdit !== null;
+		pendingEdit = update;
+		if (treeIsLarge()) {
+			clearTimeout(editTimer);
+			editTimer = setTimeout(flushEdit, TYPING_PAUSE_MS);
+		} else if (!scheduled) {
+			requestAnimationFrame(function () { setTimeout(flushEdit, 0); });
+		}
+	}
+
+	function flushEdit() {
+		clearTimeout(editTimer);
+		var update = pendingEdit;
+		pendingEdit = null;
+		if (update) update();
+	}
+
+	function flushEditOnTab(e) {
+		if (e.key === 'Tab') flushEdit();
+	}
+
+	function finishTyping() {
+		flushEdit();
+		finishRename();
 	}
 
 	function finishRename() {
@@ -422,6 +465,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	window.addEventListener('resize', closeSubjectMenu);
 
+	document.addEventListener('pointerdown', flushEdit, true);
 	document.addEventListener('mousedown', function () { mouseIsDown = true; }, true);
 	document.addEventListener('mouseup', function () { mouseIsDown = false; }, true);
 

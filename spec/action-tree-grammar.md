@@ -309,9 +309,10 @@ the layout is checked at the sizes the common settings give:
 
 At every size there is no sideways scrolling, no clipped text and no
 overlap, and open flyouts stay inside the window. From 1,280 pixels wide
-the control rows, the tree toolbar and the bottom bar each fit on one
-line; at 1,097 the toolbar and the bottom bar wrap onto a second line and
-the page scrolls a little. A short window shows fewer tree rows (about 9
+the control rows and the tree toolbar each fit on one line, and the
+bottom bar takes at most two (its KPI group moves to the second line
+below about 1,920); at 1,097 the toolbar and the bottom bar wrap onto a
+second line and the page scrolls a little. A short window shows fewer tree rows (about 9
 at 1,280 × 600); the page doesn't tighten for it, and users zoom with
 Ctrl +/– to fit more. Check a layout change at these sizes.
 
@@ -439,11 +440,28 @@ Where the data comes from:
 Renaming a node in the Action tree tab's editor panel (the Label and
 Value / options fields, also of a custom subject) takes its numbers
 along, in the version on screen only. When the field gets focus,
-`editor-form.js` keeps a copy of the Calculations data; every keystroke
-rebuilds the data from that copy with the move applied
+`editor-form.js` keeps a copy of the Calculations data; after a
+keystroke the data is rebuilt from that copy with the move applied
 (`Calculations.renameLabel` / `renameOptions`), so a name typed on the
 way ("roof" on the way to "roof_new") never moves anything for good, and
 the move is part of the field's one undo step.
+
+A keystroke itself only stores the new label or options, so the letter
+shows at once. The rest (the numbers moving, the tree redrawn, the
+size, "unsaved", the undo step and the bottom bar's KPIs) runs later
+(`editSoon`):
+
+- **A tree under 150 nodes** (`LARGE_TREE_NODES`), such as every example
+  but `full-tree.json`: just after the browser has shown the letter (the
+  next animation frame, then a zero-delay timer), so the tree follows
+  every keystroke.
+- **A larger tree**: once typing pauses for 300 ms (`TYPING_PAUSE_MS`).
+  Nothing heavy runs while typing, so the field never waits; the tree
+  shows the old label until the pause.
+
+A pointer press anywhere, Tab and leaving the field run it at once
+first, so the numbers always follow the last letter and the rename
+stays one undo step.
 
 - A label renamed from `old` to `new`: its numbers move to `new`, or are
   copied when another node still has `old`. If `new` already has
@@ -612,8 +630,10 @@ The sample controls sit in the "Explore the scenario space" panel below
 the graph (see "Report"), in a row under its text: "Sample", then **30
 scenarios**, **Full scenario space**, and your own number of scenarios:
 a box that shows a comma between thousands ("1,000"), then its
-"scenarios" button or Enter. The number is a count, so the box ignores
-commas, points and spaces ("1.000" is also a thousand). On a narrow
+"scenarios" button or Enter. The number is a count, so a comma, point
+or space only separates thousands, between groups of three digits
+("1,000", "1.000" and "1 000" are a thousand); anything else ("1.5",
+"0,5", "1,00") is refused with the alert below. On a narrow
 screen the row wraps; a button's text never breaks.
 
 The control row holds the **scenario space size**, the Action tree
@@ -664,10 +684,10 @@ text never breaks.
   numbers only move because of the change, and undoing it gives them
   back. A full listing is listed again; if the tree now has more than
   3,000 scenarios, it becomes a random sample of the same size, and the
-  report says so. While the tab is hidden, a tree change only updates
-  the size and the bottom bar; the sample is drawn again when the tab
-  opens, so typing in the Action tree tab stays fast with a large
-  sample.
+  report says so. While the tab is hidden, the sample is drawn again
+  for the Action tree tab's bottom bar: at once, or, when that is slow,
+  in small slices between frames, so typing and clicking stay smooth
+  with a large sample (see "The Action tree tab's bottom bar").
 - Undo and redo keep the sample; a new document drops it.
 
 ### Report
@@ -729,14 +749,56 @@ KPI it shows "KPIs none yet". The metrics wrap as three groups, each kept
 on one line while it fits: the size with its warning, the four counts,
 and the KPIs; a group breaks inside only when it is wider than the bar.
 
-For now the KPIs stay greyed out with "–", and their tooltip reads "Not
-shown yet. Later this bar shows the scenario chosen in the Calculations
-tab." A sample's mean on the Action tree tab was unclear. The code that
-showed it (`≈` and the sample's mean, or the exact mean of a full
-listing) is still in `calculations-tab.js`, switched off by
-`BAR_SHOWS_MEANS = false`. How the Action tree tab should show a chosen
-scenario (the tree and these KPIs) is still open: a first version was
-built and taken out again, to be settled with the supervisor first.
+**The KPIs are estimates** (agreed with the supervisor): each shows its
+mean over the sample on screen in the Calculations tab, the same number
+as its KPI card. Once the sample holds scenarios, a caption in front of
+the group says what they are: muted small capitals and a thin divider,
+not a filled pill, so it doesn't read like "Calculations (live)" or the
+panel labels.
+
+- **ESTIMATED** after a random sample: "Cost ≈ 240,696 DKK". The mean
+  of, say, 30 of the 2,560 scenarios estimates the mean of all of them;
+  a larger sample lands closer, and another sample gives a slightly
+  different number.
+- **EXACT MEAN** after "Full scenario space": the mean of every
+  scenario, without `≈`. A listing that became a random sample (more
+  than 3,000 scenarios) reads "Estimated" again.
+- **Before any sample** (and after Load example, Clear tree or Import,
+  which drop it): no caption, every KPI "–" and greyed out; the tooltip
+  says to sample in the Calculations tab. Nothing has been estimated, so
+  the bar doesn't say "Estimated".
+- **No scenario** (contradictory marks, or an empty tree): no caption,
+  "–", and the tooltip says why. A KPI that every sampled scenario gives
+  n/a or an error for also shows "–".
+
+The caption's tooltip explains the estimate; each KPI's tooltip names the
+sample ("Cost: mean of a random sample of 30 of the 2,560 scenarios (min
+…, max …). Exact numbers per scenario are in the Calculations tab.").
+The exact KPIs of one picked scenario are not shown here: they couldn't
+follow changes to the tree or the profile.
+
+The estimates follow the document: opening another version, loading a
+profile, deleting a node or undoing changes them, with the sample drawn
+again at the same size and seed (see "Sampling"). How depends on how
+long the last draw and evaluation of the sample took:
+
+- **Under 50 ms** (`SLOW_REDRAW_MS`), as on the example: at once, in
+  the same click or keystroke.
+- **50 ms or more**, as on a huge tree with a large sample: the change
+  itself (the tree, the size, the counts) shows at once, the KPIs are
+  greyed out ("being calculated again"), and the sample is drawn and
+  evaluated in slices of about 12 ms (`BAR_SLICE_MS`) between frames
+  (`startBarJob`), so typing and clicking never wait for it. A newer
+  change drops the unfinished calculation and starts again; opening the
+  Calculations tab finishes it at once. Drawing in slices takes the
+  same scenarios from the same seeded random numbers, so the result is
+  the same as a calculation in one go and matches the KPI card.
+
+Measured: the example with 30 scenarios takes under 1 ms, with 3,000
+about 20 ms; `full-tree.json` with made-up numbers on every option and
+3,000 scenarios about 400 ms of work (drawing about 150 ms, 318 choices
+per scenario; evaluating about 165 ms), which in slices shows up about
+half a second after the last change.
 
 ### Numbers
 

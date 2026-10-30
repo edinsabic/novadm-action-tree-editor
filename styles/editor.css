@@ -745,6 +745,18 @@ main {
 
 .metric.muted { opacity: 0.5; }
 
+.metric-caption {
+	flex-shrink: 0;
+	padding-right: 14px;
+	border-right: 1px solid var(--color-border);
+	color: var(--color-ink-muted);
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
 .scenario-summary-link {
 	flex-shrink: 0;
 	padding: 0;
