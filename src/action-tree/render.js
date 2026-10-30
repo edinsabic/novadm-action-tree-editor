@@ -114,10 +114,34 @@ NovaDM.Render = (function (Model, Util) {
 		currentLayout = layout === 'traditional' ? 'traditional' : 'directory';
 	}
 
+	function startTileHtml(title, text, actionHtml) {
+		return '<li class="empty-start-tile">' +
+			'<strong class="empty-start-title">' + title + '</strong>' +
+			'<span class="empty-start-text">' + text + '</span>' + actionHtml +
+			'</li>';
+	}
+
+	function startButtonHtml(targetId, text) {
+		return '<button class="btn" type="button" data-click-for="' + targetId + '">' + text + '</button>';
+	}
+
 	function emptyTreeHtml() {
-		return '<div class="root-drop-zone" data-root-drop="true" title="The tree needs one root node"></div>' +
-			'<div class="empty-tree-message">No nodes yet.<br>Drag an AND or XOR node from the editor panel' +
-			' to create the root node, or click "Load example tree" / "Import tree…".</div>';
+		return '<div class="empty-start">' +
+			'<ol class="empty-start-tiles">' +
+			startTileHtml('1. Drag a node',
+				'Drag an AND or XOR node from the editor panel onto this area to create the root node.',
+				'<div class="root-drop-zone empty-start-drop" data-root-drop="true"' +
+				' title="Drop an AND or XOR node here to create the root node">Drop here</div>') +
+			startTileHtml('2. Start from a file', 'Open the example tree, or a .json file you saved before.',
+				'<div class="empty-start-actions">' + startButtonHtml('load-example-btn', 'Load example tree') +
+				startButtonHtml('import-file-btn', 'Import file') + '</div>') +
+			startTileHtml('3. Generate a tree',
+				'Pick subjects from one of two subject lists (Danish Energy Agency or NovaDM).',
+				'<div class="empty-start-actions">' + startButtonHtml('generate-tree-btn', 'Generate tree') +
+				'</div>') +
+			'</ol>' +
+			'<p class="empty-start-note">(No nodes yet.)</p>' +
+			'</div>';
 	}
 
 	function scenarioSizeText(size) {
