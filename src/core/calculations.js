@@ -170,13 +170,16 @@ NovaDM.Calculations = (function (Util) {
 			next();
 			if (FUNCTIONS.indexOf(word) !== -1) {
 				expectSymbol('(');
+				var argAt = peek().pos;
 				var arg = expectName('a name');
 				expectSymbol(')');
-				return { type: word, name: arg };
+				return { type: word, name: arg, at: argAt };
 			}
-			if (!isSymbol(peek(), ['.'])) return { type: 'name', name: token.raw };
+			if (!isSymbol(peek(), ['.'])) return { type: 'name', name: token.raw, at: token.pos };
 			next();
-			return { type: 'lookup', label: token.raw, attribute: expectName('an attribute name') };
+			var attributeAt = peek().pos;
+			return { type: 'lookup', label: token.raw, at: token.pos, attribute: expectName('an attribute name'),
+				attributeAt: attributeAt };
 		}
 
 		var tree = expr();
@@ -297,6 +300,11 @@ NovaDM.Calculations = (function (Util) {
 		return { items: items, byName: byName, order: order, labels: labels, attributes: attributes };
 	}
 
+	function isConstant(item) {
+		var ast = item && !item.error ? item.ast : null;
+		return !!ast && (ast.type === 'number' || (ast.type === 'negate' && ast.operand.type === 'number'));
+	}
+
 	/* ---------- Data ---------- */
 
 	function starterData() {
@@ -305,7 +313,7 @@ NovaDM.Calculations = (function (Util) {
 			units: { price: 'DKK', co2: 'kg CO₂e' },
 			values: {},
 			derived: [
-				{ name: 'sum', displayName: 'Sum', formula: 'total(price)', unit: 'DKK', kpi: true },
+				{ name: 'cost', displayName: 'Cost', formula: 'total(price)', unit: 'DKK', kpi: true },
 				{ name: 'gwp', displayName: 'GWP', formula: 'total(co2)', unit: 'kg CO₂e', kpi: true }
 			]
 		};
@@ -354,21 +362,105 @@ NovaDM.Calculations = (function (Util) {
 		});
 	}
 
+	function namePositions(node, kind, from, plainNames, found) {
+		found = found || [];
+		var plain = node.type === 'name' && plainNames;
+		if (node.name === from && (plain || (kind === 'label' && node.type === 'selected'))) found.push(node.at);
+		if (kind === 'label' && node.type === 'lookup' && node.label === from) found.push(node.at);
+		CHILD_KEYS.forEach(function (key) {
+			if (node[key]) namePositions(node[key], kind, from, plainNames, found);
+		});
+		return found;
+	}
+
+	function renameInFormulas(derived, kind, from, to) {
+		var plainNames = kind === 'derived' || !derived.some(function (d) { return d.name === from; });
+		var skipped = [];
+		var renamed = derived.map(function (d) {
+			var text = String(d.formula);
+			var positions;
+			try {
+				positions = namePositions(parse(text), kind, from, plainNames);
+			} catch (err) {
+				if (text.indexOf(from) !== -1) skipped.push(d.name);
+				return d;
+			}
+			positions.sort(function (a, b) { return b - a; });
+			if (!positions.length) return d;
+			positions.forEach(function (at) { text = text.slice(0, at - 1) + to + text.slice(at - 1 + from.length); });
+			var copy = Util.clone(d);
+			copy.formula = text;
+			return copy;
+		});
+		return { derived: renamed, skipped: skipped };
+	}
+
+	function displayNameOf(name) { return name.charAt(0).toUpperCase() + name.slice(1); }
+
+	function shownName(derived) { return derived.displayName || displayNameOf(derived.name); }
+
+	function namePartAt(name, part) {
+		var parts = name.split('_');
+		var index = parts.indexOf(part);
+		return index === -1 ? -1 : parts.slice(0, index).join('_').length + (index ? 1 : 0);
+	}
+
+	function suggestedDisplayName(from, shown, to) {
+		var at = namePartAt(to, from);
+		var spelling = shown.toLowerCase() === from.toLowerCase() && shown !== displayNameOf(from);
+		if (!spelling || at === -1) return displayNameOf(to);
+		return displayNameOf(to.slice(0, at) + shown + to.slice(at + from.length));
+	}
+
+	function renameDerived(data, from, to, shown) {
+		var out = Util.clone(data);
+		var result = from === to ? { derived: out.derived, skipped: [] } : renameInFormulas(out.derived, 'derived', from, to);
+		out.derived = result.derived.map(function (d) {
+			if (d.name !== from) return d;
+			var copy = Util.clone(d);
+			copy.name = to;
+			copy.displayName = shown || displayNameOf(to);
+			return copy;
+		});
+		return { data: out, skipped: result.skipped };
+	}
+
+	function removeAttribute(data, name) {
+		var out = Util.clone(data);
+		out.attributes = (out.attributes || []).filter(function (a) { return a !== name; });
+		if (out.units && own(out.units, name)) delete out.units[name];
+		Object.keys(out.values || {}).forEach(function (label) {
+			var byAttribute = out.values[label];
+			if (!byAttribute || typeof byAttribute !== 'object') return;
+			if (own(byAttribute, name)) delete byAttribute[name];
+			if (Object.keys(byAttribute).length === 0) delete out.values[label];
+		});
+		return out;
+	}
+
 	function renameLabel(data, from, to, keep) {
 		var out = Util.clone(data);
+		var isDerivedName = (out.derived || []).some(function (d) { return d.name === to; });
+		var skipped = [];
+		if (from && from !== to && !keep && isName(to) && !isDerivedName) {
+			var formulas = renameInFormulas(out.derived || [], 'label', from, to);
+			out.derived = formulas.derived;
+			skipped = formulas.skipped;
+		}
 		var values = out.values || {};
 		if (!from || !to || from === to || !own(values, from) || !hasNumbers(values[from])) {
-			return { data: out, blocked: [] };
+			return { data: out, blocked: [], skipped: skipped };
 		}
 		var target = own(values, to) ? values[to] : {};
 		var clash = labelClash(values[from], target);
 		if (clash) {
-			return { data: out, blocked: [{ from: from, to: to, attribute: clash.attribute, option: clash.option }] };
+			return { data: out, blocked: [{ from: from, to: to, attribute: clash.attribute, option: clash.option }],
+				skipped: skipped };
 		}
 		mergeLabel(values[from], target);
 		Util.setOwn(values, to, target);
 		if (!keep) delete values[from];
-		return { data: out, blocked: [] };
+		return { data: out, blocked: [], skipped: skipped };
 	}
 
 	function renameOptions(data, label, renames) {
@@ -438,12 +530,17 @@ NovaDM.Calculations = (function (Util) {
 
 	function putNumber(data, label, attribute, option, number) {
 		var byAttribute = own(data.values, label) ? data.values[label] : Util.setOwn(data.values, label, {});
-		if (option === '') {
+		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
+		var isTable = !!stored && typeof stored === 'object';
+		if (option === '' && !isTable) {
 			Util.setOwn(byAttribute, attribute, number);
 			return;
 		}
-		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
-		if (!stored || typeof stored !== 'object') stored = Util.setOwn(byAttribute, attribute, {});
+		if (!isTable) {
+			var plain = stored;
+			stored = Util.setOwn(byAttribute, attribute, {});
+			if (typeof plain === 'number') Util.setOwn(stored, '', plain);
+		}
 		Util.setOwn(stored, option, number);
 	}
 
@@ -726,8 +823,14 @@ NovaDM.Calculations = (function (Util) {
 		NAME_RULE: NAME_RULE,
 		isName: isName,
 		analyze: analyze,
+		isConstant: isConstant,
 		starterData: starterData,
 		renameLabel: renameLabel,
+		renameDerived: renameDerived,
+		displayNameOf: displayNameOf,
+		suggestedDisplayName: suggestedDisplayName,
+		shownName: shownName,
+		removeAttribute: removeAttribute,
 		renameOptions: renameOptions,
 		entryKey: entryKey,
 		entries: entries,

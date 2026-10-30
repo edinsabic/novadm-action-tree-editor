@@ -244,8 +244,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 						"unit": "kg CO₂e"
 					},
 					{
-						"name": "sum",
-						"displayName": "Sum",
+						"name": "cost",
+						"displayName": "Cost",
 						"formula": "total(price) + brick_replacement_cost",
 						"unit": "DKK",
 						"kpi": true
@@ -507,8 +507,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 						"unit": "kg CO₂e"
 					},
 					{
-						"name": "sum",
-						"displayName": "Sum",
+						"name": "cost",
+						"displayName": "Cost",
 						"formula": "total(price) + brick_replacement_cost",
 						"unit": "DKK",
 						"kpi": true

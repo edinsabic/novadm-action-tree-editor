@@ -550,7 +550,8 @@ main {
 
 .profile-empty { color: var(--color-ink-muted); }
 
-.profile-delete-btn {
+.profile-delete-btn,
+.calc-remove-attribute {
 	display: flex;
 	flex-shrink: 0;
 	align-items: center;
@@ -563,7 +564,8 @@ main {
 	color: var(--color-ink-muted);
 }
 
-.profile-delete-btn:hover {
+.profile-delete-btn:hover,
+.calc-remove-attribute:hover {
 	background-color: var(--color-danger-light);
 	color: var(--color-danger);
 }
@@ -744,6 +746,18 @@ main {
 }
 
 .metric.muted { opacity: 0.5; }
+
+.metric-caption {
+	flex-shrink: 0;
+	padding-right: 14px;
+	border-right: 1px solid var(--color-border);
+	color: var(--color-ink-muted);
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
 
 .scenario-summary-link {
 	flex-shrink: 0;
@@ -1626,6 +1640,30 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	font-variant-numeric: tabular-nums;
 }
 
+.calc-delete-derived {
+	position: absolute;
+	right: 3px;
+	bottom: 2px;
+	width: 18px;
+	height: 18px;
+	background-color: var(--color-surface);
+}
+
+.calc-delete-derived svg {
+	width: 12px;
+	height: 12px;
+}
+
+.calc-derived-node:hover .calc-delete-derived,
+.calc-derived-node.selected .calc-delete-derived {
+	display: flex;
+}
+
+.calc-derived-node:hover .calc-formula-line,
+.calc-derived-node.selected .calc-formula-line {
+	padding-right: 24px;
+}
+
 .calc-formula-line {
 	height: 18px;
 	padding: 0 8px;
@@ -1673,6 +1711,32 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	font-size: 0.95rem;
 	font-weight: 600;
 }
+
+.calc-editor-name-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.calc-rename-btn {
+	padding: 2px 10px;
+	font-size: 0.8rem;
+}
+
+.calc-constant {
+	flex-shrink: 0;
+	padding: 0 6px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	color: var(--color-ink-muted);
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.calc-node-head .calc-constant { margin-right: auto; }
 
 .calc-editor-title.calc-label-title {
 	color: var(--feature-color);
@@ -1725,6 +1789,11 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 }
 
 .calc-unit-custom { width: 120px; }
+
+.calc-remove-attribute {
+	height: 32px;
+	margin-left: auto;
+}
 
 .calc-editor-value {
 	font-size: 1rem;

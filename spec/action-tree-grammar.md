@@ -309,9 +309,10 @@ the layout is checked at the sizes the common settings give:
 
 At every size there is no sideways scrolling, no clipped text and no
 overlap, and open flyouts stay inside the window. From 1,280 pixels wide
-the control rows, the tree toolbar and the bottom bar each fit on one
-line; at 1,097 the toolbar and the bottom bar wrap onto a second line and
-the page scrolls a little. A short window shows fewer tree rows (about 9
+the control rows and the tree toolbar each fit on one line, and the
+bottom bar takes at most two (its KPI group moves to the second line
+below about 1,920); at 1,097 the toolbar and the bottom bar wrap onto a
+second line and the page scrolls a little. A short window shows fewer tree rows (about 9
 at 1,280 × 600); the page doesn't tighten for it, and users zoom with
 Ctrl +/– to fit more. Check a layout change at these sizes.
 
@@ -402,27 +403,40 @@ The tab works on `{ attributes, units, values, derived }`:
   one of those rows turns it into one number per option, and the other
   options keep the plain number. A node without options that shares its
   label with a node that has numbers per option stores its number under
-  the option `''`, so neither node loses its numbers. Labels, options,
+  the option `''`, so neither node loses its numbers; writing the file,
+  merges and number corrections keep it there too
+  (`Calculations.putNumber`). Labels, options,
   attributes and units are written as own keys (`Util.setOwn`), so a
   name such as `__proto__` from a file works like any other.
 - `derived` – the calculated values, `{ name, formula, displayName?,
-  unit?, kpi? }`. `displayName` is the name in the Action tree tab's
-  bottom bar, and `kpi: true` makes it a KPI.
+  unit?, kpi? }`. `displayName` is the name people see: on the KPI cards, in the
+  report's table, in the CSV and PDF headings and in the Action tree
+  tab's bottom bar (`Calculations.shownName`). It is set with Rename
+  (below); a new calculated value gets its name with a capital first
+  letter (`Calculations.displayNameOf`), and a value without one shows its
+  name that way. The starter data has "Cost" and "GWP". Formulas, the
+  graph, the editor panel and the PNG's file name use `name`. `kpi: true`
+  makes it a KPI.
 
 Where the data comes from:
 
 - **The example** (each version of `examples/sample-tree.js`, see
   "Example trees"): made-up numbers for the sample tree, the
   constant `facade_area`, the brick replacement's cost and CO₂, and the
-  KPIs `sum` ("Sum", `total(price) + brick_replacement_cost`, in DKK)
+  KPIs `cost` ("Cost", `total(price) + brick_replacement_cost`, in DKK)
   and `gwp` ("GWP", global warming potential, `total(co2) +
   brick_replacement_co2`, in kg CO₂e). The editor opens with it, and
   "Load example" and "Load example tree" load it again.
+  `examples/sample-tree-with-u-value.json` is the same document with a
+  third KPI, U-value (see "A custom KPI: U-value" below); it is opened
+  with Import file.
 - **Starter data** (`Calculations.starterData()`), for Clear tree and for
   every version of a file older than version 6: the attributes `price`
-  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `sum =
-  total(price)` and `gwp = total(co2)`. Typing prices for a few options
-  is then enough to get a Sum.
+  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `cost =
+  total(price)` ("Cost") and `gwp = total(co2)` ("GWP"). Typing prices
+  for a few options is then enough to get a Cost. Older files call this
+  KPI `sum` ("Sum") and keep it on import. Any other KPI, such as a
+  U-value, is added by the user.
 - **A file** (Import file, on either tab): each version's own data; the
   tab shows the current version's.
 - A new document starts the tab over: no sample, no option picks and
@@ -438,11 +452,28 @@ Where the data comes from:
 Renaming a node in the Action tree tab's editor panel (the Label and
 Value / options fields, also of a custom subject) takes its numbers
 along, in the version on screen only. When the field gets focus,
-`editor-form.js` keeps a copy of the Calculations data; every keystroke
-rebuilds the data from that copy with the move applied
+`editor-form.js` keeps a copy of the Calculations data; after a
+keystroke the data is rebuilt from that copy with the move applied
 (`Calculations.renameLabel` / `renameOptions`), so a name typed on the
 way ("roof" on the way to "roof_new") never moves anything for good, and
 the move is part of the field's one undo step.
+
+A keystroke itself only stores the new label or options, so the letter
+shows at once. The rest (the numbers moving, the tree redrawn, the
+size, "unsaved", the undo step and the bottom bar's KPIs) runs later
+(`editSoon`):
+
+- **A tree under 150 nodes** (`LARGE_TREE_NODES`), such as every example
+  but `full-tree.json`: just after the browser has shown the letter (the
+  next animation frame, then a zero-delay timer), so the tree follows
+  every keystroke.
+- **A larger tree**: once typing pauses for 300 ms (`TYPING_PAUSE_MS`).
+  Nothing heavy runs while typing, so the field never waits; the tree
+  shows the old label until the pause.
+
+A pointer press anywhere, Tab and leaving the field run it at once
+first, so the numbers always follow the last letter and the rename
+stays one undo step.
 
 - A label renamed from `old` to `new`: its numbers move to `new`, or are
   copied when another node still has `old`. If `new` already has
@@ -459,6 +490,20 @@ the move is part of the field's one undo step.
   at the same place to a name that wasn't in the list before, its numbers
   move within the label, by the same rules. Adding, removing or
   reordering options moves nothing.
+- **Formulas follow a renamed label** (`Calculations.renameLabel`, with
+  `renameInFormulas`): when the old label goes from the tree (not when
+  another node still has it, so its numbers are only copied), every
+  formula that uses it as a label (a plain name that is no calculated
+  value, the name in `selected()`, the part before a dot) gets the new
+  one, rebuilt from the copy taken on focus like the numbers, so renaming
+  back restores them and the whole rename stays one undo step. Only
+  while the new label is a name a formula can use (no `-`, no space, no
+  keyword) and no calculated value has it. A formula that can't be read
+  (a syntax error, or too long) stays on the old label, and the note
+  under the field names it ("The formula of x can't be read because of
+  an error, so it still uses roof."). Texts in quotes are never
+  changed, so a renamed option compared as text
+  (`roof_replacement = 'replace'`) stays as it is.
 - Picking another subject in the Subject menu moves nothing: it is a
   different subject. Formulas are not rewritten; one that names the old
   label shows the "Not in the tree" note.
@@ -511,6 +556,18 @@ primary = number | text | name [ "." name ]
 - When no node in the tree has a number for `total()`'s attribute, the
   total is 0 and has no arrows; the editor panel and the tooltip say so
   ("No node in the tree has a number for price yet …").
+- **Renaming a name in formulas** (`renameInFormulas(derived, kind, from,
+  to)` inside `calculations.js`, kind `'derived'` or `'label'`, used by
+  `Calculations.renameDerived` and `renameLabel`): the parser records
+  where each name starts (`at` on a name, a `lookup`'s label, a
+  function's argument), and a rename replaces exactly those places where
+  the formula uses the name as that kind: a calculated value is a plain
+  name; a label is a plain name, the name in `selected()` and the part
+  before a dot. So a text in quotes, a keyword, the attribute in
+  `total()` or after a dot, and a longer name that only starts the same
+  (`cost_extra` when renaming `cost`) never change, and spacing stays as
+  typed. A formula that doesn't parse stays as it is; the rename lists it
+  when it contains the old name.
 
 ### The graph
 
@@ -542,12 +599,27 @@ the Action tree tab (`Render.renderTree()` calls
   furthest-right input, and in column 1 at least once its formula refers
   to anything, even before it has an arrow. A column is stacked from the
   top in the order of its inputs' height. Each shows its value and its
-  formula.
+  formula. A **constant**, a calculated value whose formula is a single
+  number (`facade_area = 450`, also `-5`), has a small grey "constant"
+  label after its name, in the graph and in the editor panel; it is
+  worked out from the formula (`Calculations.isConstant`), so nothing is
+  saved for it.
+- **Deleting a calculated value from its box**: a small red trash icon
+  (the tree's `.node-delete-btn`, with `.calc-delete-derived` making it
+  12 px and placing it) in the box's bottom right,
+  over the end of the formula line, shown only on the selected box and
+  the box under the mouse, so the graph stays calm; the formula line then
+  ends earlier so the icon never covers text, and it never covers the
+  value and unit in the head. Its tooltip reads "Delete calculated value
+  cost". Clicking it asks the same confirm as the editor panel's Delete
+  (naming the formulas that use it), without selecting the box; another
+  selected box stays selected. Label boxes have no icon: a label belongs
+  to a tree node, which is deleted on the Action tree tab.
 - **Arrows** run into a calculated value from every box and calculated
   value it uses: `label.attribute` from that attribute's row (or the
   box's head), `selected(label)` and a plain label from the head, and
   `total(attribute)` from the attribute's row in every box that has
-  one, which is why `sum` has an arrow from every priced box.
+  one, which is why `cost` has an arrow from every priced box.
 - **Picking an option** also picks the branch of every XOR above the
   node; "not chosen" switches the nearest XOR with another possible
   child to that child. The picks are kept by node id
@@ -574,12 +646,40 @@ the Action tree tab (`Render.renderTree()` calls
   text that isn't a number is ignored and put back. Under the table come the **Units** list (one
   drop-down per attribute) and "+ Attribute", which adds an attribute at
   the end of the list.
-- **A calculated value**: its name, a KPI box, the formula box
+- **Removing an attribute**: a trash icon at the far right of each row in
+  the Units list (styled like a profile's delete button; its tooltip
+  reads "Remove price from this version: its numbers in every node and
+  its unit") asks first: "Remove the attribute "co2" from this
+  version? Its 19 numbers and its unit (kg CO₂e) go with it. The formula
+  of gwp uses it, and will show an error until you change it. Other
+  versions keep it. You can undo this." OK removes it from `attributes`,
+  its unit and every number (`Calculations.removeAttribute`; a label left
+  with no numbers goes too), in the version on screen only, in one undo
+  step. Formulas are not rewritten: one that uses it shows "Unknown name".
+- **A calculated value**: its name with **Rename** (and "constant" for
+  a constant, updated on every keystroke in the formula), a KPI box, the formula box
   (evaluated again on every keystroke; an error shows in red below it,
   the notes in grey), its **Unit**, its value in the scenario on screen
   and Delete. Before deleting, the confirm names the calculated values
   whose formulas use it, as those then read its name as a label that
   isn't in the tree. "+ Calculated value" in the toolbar adds one.
+- **Rename** asks for the new name (native `prompt`, the same rules as
+  "+ Calculated value": a valid name, no other calculated value, no
+  label) and renames it and every formula that uses it
+  (`Calculations.renameDerived`), in one undo step; it stays selected,
+  with its unit and KPI box. Then it asks for the name shown on the KPI
+  cards, in the report and in the bottom bar (any text, at most 60
+  characters), suggesting one (`Calculations.suggestedDisplayName`): the
+  old shown name's spelling where the old name is a whole part of the
+  new one (between `_`), when that spelling was only a different case (`gwp` "GWP" -> `gwp_total`
+  gives "GWP_total"), otherwise the new name with a capital first letter
+  (`cost` "Cost" -> `total_cost` gives "Total_cost"). Enter takes the
+  suggestion (cut to 60 characters); keeping the formula name changes
+  only the shown name.
+  Cancel at either question changes nothing; both answers are one undo
+  step. Other versions keep the old
+  name, so a merge shows the old one removed and the new one added. A
+  formula that can't be read is left alone and named in an alert.
 - The panel is kept deliberately simple: there is no help on the formula
   language in it yet.
 
@@ -589,7 +689,7 @@ the Action tree tab (`Render.renderTree()` calls
   each calculated value has its own (`unit`). No unit is an empty or
   missing value.
 - The drop-down offers No unit; Currency: DKK, EUR, USD; Climate:
-  kg CO₂e, t CO₂e; Other: m², kWh, years; then "Custom unit…", which
+  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit…", which
   shows a text box for any unit of up to 20 characters, like the custom
   subject in the Action tree tab. Currencies use their ISO 4217 codes:
   "kr." and "$" are shared by several currencies, and the codes are
@@ -600,10 +700,115 @@ the Action tree tab (`Render.renderTree()` calls
   matching units.
 - A unit follows its number after a no-break space ("52,000 DKK") in the
   graph, the editor panel and the KPI cards; a heading reads
-  "name (unit)" ("sum (DKK)"). n/a and errors get none.
+  "name (unit)" ("price (DKK)"; a calculated value's heading uses its
+  display name, "Cost (DKK)"). n/a and errors get none.
 - **In a CSV file** (see "CSV files") the unit sits in the heading the
   same way, and the cells hold plain numbers, so a spreadsheet can
   calculate with them.
+
+### A custom KPI: U-value
+
+New documents have only Cost and GWP. Any other KPI is a calculated
+value with **KPI** ticked: the report, its CSV and PDF, and the Action
+tree tab's bottom bar then show it like Cost and GWP, with no code.
+`examples/sample-tree-with-u-value.json` (opened with Import file) is
+the default example with a third KPI, the building's U-value, built
+this way from the formula language as it is.
+
+It follows the supervisor's formula per element, an element's total
+thermal resistance Rt = Rsi + R1 + R2 + … + Rn + Rse and its U-value
+1 / Rt, and combines the elements as EN ISO 6946 and the transmission
+heat loss do:
+
+1. **One U-value per element** (wall, roof, ground floor):
+   U = 1 / (Rsi + R_existing + ΣR_new + Rse).
+2. **The existing construction** has an R value of its own. Without it,
+   keeping the current wall has no R value at all, and an added layer
+   looks like the whole element.
+3. **Surface resistances by the direction of heat flow** (EN ISO 6946),
+   written into the formulas as numbers: Rsi 0.13 for walls (sideways),
+   0.10 for roofs (up), 0.17 for floors (down); Rse 0.04.
+4. **Windows** have a product U-value (U_w), not R layers.
+5. **The building's U-value** is the area-weighted mean,
+   U = Σ(A·U) / ΣA, the same Σ A·U as the transmission heat loss H_T.
+
+What the file adds to each version's data (the numbers are made up,
+like the prices):
+
+| Name | Unit | Formula, or number |
+|---|---|---|
+| `r_wall`, `r_roof`, `r_floor` (attributes) | m²K/W | the R value an option adds to that element: 3 for `facade_insulation = add_insulation`, 5 for `roof_insulation`, 2.5 for `ground_floor_insulation` |
+| `u_window` (attribute) | W/m²K | the U-value of an option's new windows: 0.8 for `windows_glazing = replace_triple` |
+| `wall_area`, `roof_area`, `floor_area`, `window_area` | m² | constants 380, 250, 250 and 70 (wall and windows make up `facade_area`, 450) |
+| `wall_r_existing`, `roof_r_existing`, `floor_r_existing` | m²K/W | constants 0.5, 1 and 0.6: the current construction, without the surface resistances |
+| `window_u_existing` | W/m²K | constant 2.8: the current windows |
+| `wall_u` ("Wall U-value") | W/m²K | `1 / (0.13 + wall_r_existing + total(r_wall) + 0.04)` |
+| `roof_u` ("Roof U-value") | W/m²K | `1 / (0.10 + roof_r_existing + total(r_roof) + 0.04)` |
+| `floor_u` ("Floor U-value") | W/m²K | `1 / (0.17 + floor_r_existing + total(r_floor) + 0.04)` |
+| `window_u` ("Window U-value") | W/m²K | `if total(u_window) > 0 then total(u_window) else window_u_existing` |
+| `u_value` ("U-value", KPI) | W/m²K | `(wall_area * wall_u + roof_area * roof_u + floor_area * floor_u + window_area * window_u) / (wall_area + roof_area + floor_area + window_area)` |
+
+- **One attribute per element**: `total(r_wall)` adds the R values of
+  the wall's new layers chosen in the scenario, whatever their nodes are
+  called (two roof insulation nodes both count towards `r_roof`). No
+  formula names a label, so the same set-up works on any tree; the
+  project's part is typing numbers into the right column. A single
+  `r_value` for every element would not do: `total(r_value)` would add
+  the wall's, roof's and floor's R values together as if they were the
+  layers of one element (with the numbers above, 0.09 W/m²K instead of
+  0.29).
+- **An element whose area is 0 drops out**, and with every area at 0 the
+  U-value is 0 / 0, n/a. A scenario that renovates nothing gives the
+  existing building's U-value.
+- **When only the existing U-value is known**, its R value is
+  1 / U − Rsi − Rse (a wall with U = 1.49: 1 / 1.49 − 0.13 − 0.04 = 0.5).
+
+**Adding it yourself** (on any document, in the Calculations tab): "+
+Attribute" for `r_wall`, `r_roof`, `r_floor` and `u_window`, with their
+units from the Thermal group; "+ Calculated value" for each constant (a
+single number as its formula) and each formula in the table, in that
+order, so each formula's inputs exist; tick **KPI** on `u_value`, and
+give it the shown name "U-value" with Rename; then type the R values
+into the nodes' tables.
+
+**More elements** (e.g. a brick wall and a timber wall, doors, a
+skylight): one more attribute, two constants and one formula each,
+written like the wall's (or the windows' for doors), and the element's
+`area * u` and `area` added to `u_value`'s formula. Ticking KPI on
+`wall_u` and the others shows each element in the report too.
+
+**Limitations** (kept simple; to be checked with a domain expert, below):
+
+- A ground floor on the ground follows EN ISO 13370, a different method;
+  here it is treated like the others (Rsi 0.17, Rse 0.04).
+- Thermal bridges are ignored.
+- The existing R value stays when an option replaces the construction
+  (e.g. `roof_replacement = replace`); removing a layer is not modelled.
+- Areas are the same in every scenario.
+- `total(u_window)` adds up: several window nodes in one scenario with a
+  `u_window` each would add their U-values. Give it to one window node.
+
+**Open questions:** is the area-weighted envelope U-value the KPI
+wanted, or one per element, or H_T in W/K (the formula's numerator)?
+Should the existing construction's R or U be part of each project's
+data, and where should it come from? Should Rsi and Rse differ by
+direction, and how should ground floors be handled? Should windows and
+doors be included through U_w, and with what areas? Can thermal bridges
+be ignored for now?
+
+**As a worked example** (for the thesis and the tutorial), after
+importing `sample-tree-with-u-value.json`:
+
+1. Calculations tab, every picker on `keep_current` / `keep_double`:
+   `wall_u` shows 1 / (0.13 + 0.5 + 0.04) = 1.49, `roof_u` 0.88,
+   `floor_u` 1.23, `window_u` 2.8 and `u_value` (380 · 1.49 + 250 · 0.88
+   + 250 · 1.23 + 70 · 2.8) / 950 = 1.36 W/m²K, the existing building.
+2. Pick `add_insulation` on the facade, roof and ground floor insulation
+   and `replace_triple` on the glazing: `wall_u` becomes
+   1 / (0.13 + 0.5 + 3 + 0.04) = 0.27, and `u_value` 0.29 W/m²K.
+3. Sample the scenario space: the report's U-value card and the Action
+   tree tab's bottom bar show its mean over the sample, between those
+   two.
 
 ### Sampling
 
@@ -611,8 +816,10 @@ The sample controls sit in the "Explore the scenario space" panel below
 the graph (see "Report"), in a row under its text: "Sample", then **30
 scenarios**, **Full scenario space**, and your own number of scenarios:
 a box that shows a comma between thousands ("1,000"), then its
-"scenarios" button or Enter. The number is a count, so the box ignores
-commas, points and spaces ("1.000" is also a thousand). On a narrow
+"scenarios" button or Enter. The number is a count, so a comma, point
+or space only separates thousands, between groups of three digits
+("1,000", "1.000" and "1 000" are a thousand); anything else ("1.5",
+"0,5", "1,00") is refused with the alert below. On a narrow
 screen the row wraps; a button's text never breaks.
 
 The control row holds the **scenario space size**, the Action tree
@@ -628,8 +835,10 @@ text never breaks.
 
 - **Limits**: at most 3,000 scenarios (`MAX_SAMPLE_SIZE`). Your own
   number must be a whole number from 1 to 3,000. "Full scenario space"
-  refuses a space of more than 3,000 with an alert; its tooltip gives the
-  count. Asking for more scenarios than the space has, with 30 or your
+  on a space of more than 3,000 asks whether to sample 3,000 random
+  scenarios instead (a `confirm`); OK takes that sample and puts "3,000"
+  in your own number's box, Cancel changes nothing. Its tooltip gives
+  the count. Asking for more scenarios than the space has, with 30 or your
   own number, shows an alert and lists the full space instead; your own
   number's box then shows the size of the space.
 - **Counting**: the size shown is `Model.scenarioSpaceSize()`, and the
@@ -663,10 +872,10 @@ text never breaks.
   numbers only move because of the change, and undoing it gives them
   back. A full listing is listed again; if the tree now has more than
   3,000 scenarios, it becomes a random sample of the same size, and the
-  report says so. While the tab is hidden, a tree change only updates
-  the size and the bottom bar; the sample is drawn again when the tab
-  opens, so typing in the Action tree tab stays fast with a large
-  sample.
+  report says so. While the tab is hidden, the sample is drawn again
+  for the Action tree tab's bottom bar: at once, or, when that is slow,
+  in small slices between frames, so typing and clicking stay smooth
+  with a large sample (see "The Action tree tab's bottom bar").
 - Undo and redo keep the sample; a new document drops it.
 
 ### Report
@@ -723,19 +932,61 @@ contradiction warning, then the nodes in the tree
 count the nodes of that class, and **Feature values** adds up the options
 of every Feature node (a Feature with `(keep_current; replace)` counts
 2). Profiles don't change these counts. Then each KPI under its
-`displayName` (or its name), and the link "Go to Calculations →". With no
+display name (or its name), and the link "Go to Calculations →". With no
 KPI it shows "KPIs none yet". The metrics wrap as three groups, each kept
 on one line while it fits: the size with its warning, the four counts,
 and the KPIs; a group breaks inside only when it is wider than the bar.
 
-For now the KPIs stay greyed out with "–", and their tooltip reads "Not
-shown yet. Later this bar shows the scenario chosen in the Calculations
-tab." A sample's mean on the Action tree tab was unclear. The code that
-showed it (`≈` and the sample's mean, or the exact mean of a full
-listing) is still in `calculations-tab.js`, switched off by
-`BAR_SHOWS_MEANS = false`. How the Action tree tab should show a chosen
-scenario (the tree and these KPIs) is still open: a first version was
-built and taken out again, to be settled with the supervisor first.
+**The KPIs are estimates** (agreed with the supervisor): each shows its
+mean over the sample on screen in the Calculations tab, the same number
+as its KPI card. Once the sample holds scenarios, a caption in front of
+the group says what they are: muted small capitals and a thin divider,
+not a filled pill, so it doesn't read like "Calculations (live)" or the
+panel labels.
+
+- **ESTIMATED** after a random sample: "Cost ≈ 240,696 DKK". The mean
+  of, say, 30 of the 2,560 scenarios estimates the mean of all of them;
+  a larger sample lands closer, and another sample gives a slightly
+  different number.
+- **EXACT MEAN** after "Full scenario space": the mean of every
+  scenario, without `≈`. A listing that became a random sample (more
+  than 3,000 scenarios) reads "Estimated" again.
+- **Before any sample** (and after Load example, Clear tree or Import,
+  which drop it): no caption, every KPI "–" and greyed out; the tooltip
+  says to sample in the Calculations tab. Nothing has been estimated, so
+  the bar doesn't say "Estimated".
+- **No scenario** (contradictory marks, or an empty tree): no caption,
+  "–", and the tooltip says why. A KPI that every sampled scenario gives
+  n/a or an error for also shows "–".
+
+The caption's tooltip explains the estimate; each KPI's tooltip names the
+sample ("Cost: mean of a random sample of 30 of the 2,560 scenarios (min
+…, max …). Exact numbers per scenario are in the Calculations tab.").
+The exact KPIs of one picked scenario are not shown here: they couldn't
+follow changes to the tree or the profile.
+
+The estimates follow the document: opening another version, loading a
+profile, deleting a node or undoing changes them, with the sample drawn
+again at the same size and seed (see "Sampling"). How depends on how
+long the last draw and evaluation of the sample took:
+
+- **Under 50 ms** (`SLOW_REDRAW_MS`), as on the example: at once, in
+  the same click or keystroke.
+- **50 ms or more**, as on a huge tree with a large sample: the change
+  itself (the tree, the size, the counts) shows at once, the KPIs are
+  greyed out ("being calculated again"), and the sample is drawn and
+  evaluated in slices of about 12 ms (`BAR_SLICE_MS`) between frames
+  (`startBarJob`), so typing and clicking never wait for it. A newer
+  change drops the unfinished calculation and starts again; opening the
+  Calculations tab finishes it at once. Drawing in slices takes the
+  same scenarios from the same seeded random numbers, so the result is
+  the same as a calculation in one go and matches the KPI card.
+
+Measured: the example with 30 scenarios takes under 1 ms, with 3,000
+about 20 ms; `full-tree.json` with made-up numbers on every option and
+3,000 scenarios about 400 ms of work (drawing about 150 ms, 318 choices
+per scenario; evaluating about 165 ms), which in slices shows up about
+half a second after the last change.
 
 ### Numbers
 
@@ -786,8 +1037,9 @@ saved through `TreeIO.download`:
 
 - **"PNG"** on each KPI card saves that card as it looks on screen (name
   and unit, mean, min/median/max/std dev, histogram, lowest and highest)
-  as `novadm-<kpi>.png`, named after the calculated value
-  (`novadm-sum.png`), without its PNG button. The graph has no PNG
+  as `novadm-<kpi>.png`, named after the calculated value's name, not
+  its display name, so the file name is always safe
+  (`novadm-cost.png`), without its PNG button. The graph has no PNG
   button.
 - **How** (`savePng` in `calculations-report.js`, its only user; no library;
   saved through `TreeIO.download`): the card is cloned with each
@@ -881,7 +1133,7 @@ lines between the sections are valid JSON and are written on purpose):
 				"units": { "price": "DKK", "co2": "kg CO₂e" },
 				"values": { "windows_glazing": { "price": { "keep_double": 0, "replace_triple": 52000 } },
 					"replace_brick_facade": { "price": 210000 } },
-				"derived": [ { "name": "sum", "displayName": "Sum", "formula": "total(price)",
+				"derived": [ { "name": "cost", "displayName": "Cost", "formula": "total(price)",
 					"unit": "DKK", "kpi": true } ] } },
 
 		{ "id": "Add scaffolding", ... } ]
@@ -970,7 +1222,7 @@ importing.
 
 | Version | What it introduced | On import |
 |---|---|---|
-| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Sum and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
+| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
 | 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | The global profiles are copied into every snapshot, pruned to its tree; every snapshot gets the starter data. |
 | 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | As version 5. No explicit root node: an AND root is added above the top-level nodes (with the same new id in every snapshot), the user is told, and the scenario space is unchanged. |
 | 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |
@@ -992,9 +1244,9 @@ handlers need to change too.)
 ## Example trees
 
 All `.json` examples are format version 6, made with the editor's own
-import and export (never by hand). `sample-tree.json` holds the
-example's made-up numbers in every version; the others have the starter
-data in every version.
+import and export (never by hand). `sample-tree.json` and
+`sample-tree-with-u-value.json` hold the example's made-up numbers in
+every version; the others have the starter data in every version.
 
 - `examples/sample-tree.json` is the default example, the
   "windows / outer_doors / facade / roof / ground_floor" tree, made to
@@ -1028,6 +1280,11 @@ data in every version.
   `sample-tree.json` in the editor, export it, and paste the file into
   `sample-tree.js`. As the example isn't empty, Load example tree and
   Clear tree ask before replacing it, as they always have.
+- `examples/sample-tree-with-u-value.json` is `sample-tree.json` with a
+  third KPI, U-value, in both versions: per-element R values, areas,
+  existing constructions and formulas (see "A custom KPI: U-value").
+  It shows how to add a KPI of your own, and is opened with Import file
+  only: it is not loaded on open and has no `.js` copy.
 - `examples/novadm-action-tree.json` is the version-history demo: the
   same tree with five versions – a main line, a branch, and a merge of
   the branch that applies the branch's added and deleted nodes. It is

@@ -78,9 +78,16 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 
 	/* ---------- KPI cards ---------- */
 
+	function derivedNamed(name) { return derived.filter(function (d) { return d.name === name; })[0] || null; }
+
 	function derivedUnit(name) {
-		var match = derived.filter(function (d) { return d.name === name; })[0];
+		var match = derivedNamed(name);
 		return match && match.unit ? match.unit : '';
+	}
+
+	function shownName(name) {
+		var match = derivedNamed(name);
+		return match ? Calculations.shownName(match) : name;
 	}
 
 	function reportColumns() {
@@ -150,7 +157,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		var axisY = PLOT_HEIGHT + AXIS_HEIGHT - 4;
 		return '<svg class="calc-histogram" width="' + CHART_WIDTH + '"' +
 			' height="' + (CAPTION_HEIGHT + PLOT_HEIGHT + AXIS_HEIGHT) + '"' +
-			' role="img" aria-label="' + escapeHtml('Distribution of ' + name + ' over the sample') + '">' +
+			' role="img" aria-label="' + escapeHtml('Distribution of ' + shownName(name) + ' over the sample') + '">' +
 			'<text class="calc-axis-text" x="0" y="11">Scenarios per range (tallest bar: ' + formatCount(tallest) +
 				')</text>' +
 			'<g transform="translate(0 ' + CAPTION_HEIGHT + ')">' +
@@ -167,7 +174,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 	function kpiCardHtml(column) {
 		var unit = derivedUnit(column.name);
 		var head = '<div class="calc-kpi-card-head"><span class="calc-kpi-name">' +
-			escapeHtml(nameWithUnit(column.name, unit)) + '</span>';
+			escapeHtml(nameWithUnit(shownName(column.name), unit)) + '</span>';
 		if (!column.stats) {
 			return '<article class="calc-kpi-card">' + head + '</div>' +
 				'<p class="note">No numbers: every scenario gives n/a or an error.</p></article>';
@@ -252,7 +259,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		});
 	}
 
-	function kpiHeading(name) { return nameWithUnit(name, derivedUnit(name)); }
+	function kpiHeading(name) { return nameWithUnit(shownName(name), derivedUnit(name)); }
 
 	function optionText(entry) { return entry ? entry.value || 'chosen' : null; }
 
@@ -263,7 +270,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 
 	function sortHeaderHtml(name) {
 		var mark = sortBy.name === name ? (sortBy.dir === 1 ? ' &uarr;' : ' &darr;') : '';
-		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + name;
+		var title = name === BY_NUMBER ? 'Sort by number' : 'Sort by ' + shownName(name);
 		var heading = name === BY_NUMBER ? name : kpiHeading(name);
 		return '<th><button type="button" class="calc-sort-btn" data-calc-sort="' + escapeHtml(name) + '"' +
 			' title="' + escapeHtml(title) + '">' + escapeHtml(heading) + mark + '</button></th>';
@@ -310,7 +317,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 						(text === null ? '<span class="calc-na">&ndash;</span>' : escapeHtml(text)) + '</td>';
 				}).join('') + '</tr>';
 		}).join('');
-		var listedIn = sortBy.name !== BY_NUMBER ? 'sorted by ' + escapeHtml(sortBy.name)
+		var listedIn = sortBy.name !== BY_NUMBER ? 'sorted by ' + escapeHtml(shownName(sortBy.name))
 			: (sample.full ? 'in tree order' : 'in the order they were drawn') +
 				(sortBy.dir === 1 ? '' : ', last first');
 		var footer = 'All ' + formatCount(order.length) + ' scenarios, ' +
