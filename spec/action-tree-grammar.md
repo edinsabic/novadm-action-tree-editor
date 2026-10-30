@@ -269,7 +269,11 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   Calculations data, in the same single step.
 - The **selected node** shows a red delete icon in both layouts; it runs
   the same `EditorForm.deleteNode()` as the editor's delete button.
-- The **traditional layout** opens zoomed to fit the whole tree, centred
+- The two layouts are called **List** (an indented list, like a file
+  directory; `data-layout="directory"`) and **Diagram** (boxes and
+  lines; `data-layout="traditional"`, the `tt-` classes). Only the names
+  on screen changed: the identifiers keep the old names.
+- The **Diagram** layout opens zoomed to fit the whole tree, centred
   (`Render.fitTraditionalView()`, between 50% and 100%). It refits on
   switching to it and on loading or importing a tree.
 

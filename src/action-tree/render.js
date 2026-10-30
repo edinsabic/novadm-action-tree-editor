@@ -1,8 +1,8 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * Draws the live tree into #tree-viewport-content, in the directory or the
- * traditional layout, updates the live scenario space size and node counts,
+ * Draws the live tree into #tree-viewport-content, in the List or the
+ * Diagram layout, updates the live scenario space size and node counts,
  * and owns the tree's zoom. Also holds the node badge/chip helpers other modules reuse.
  */
 NovaDM.Render = (function (Model, Util) {
@@ -197,7 +197,7 @@ NovaDM.Render = (function (Model, Util) {
 		if (fitWhenShown) fitTraditionalView();
 	}
 
-	/* ---------- Directory layout ---------- */
+	/* ---------- List layout ---------- */
 
 	function directoryNodeHtml(node) {
 		var html = '<li class="tree-node">' +
@@ -215,7 +215,7 @@ NovaDM.Render = (function (Model, Util) {
 		return html + '</li>';
 	}
 
-	/* ---------- Traditional layout ---------- */
+	/* ---------- Diagram layout ---------- */
 
 	var TT_SLOT_WIDTH = 240;
 	var TT_ROW_HEIGHT = 120;
