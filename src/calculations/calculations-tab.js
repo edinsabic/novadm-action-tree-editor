@@ -738,7 +738,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			constantHtml(node.name) +
 			'<span class="calc-derived-value">' + valueHtml(values[node.name], derived.unit) + '</span>' +
 			'</div>' +
-			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div></div>';
+			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div>' +
+			'<button type="button" class="calc-delete-derived" data-calc-delete-derived="' + escapeHtml(node.name) + '"' +
+				' aria-label="' + escapeHtml('Delete calculated value ' + node.name) + '"' +
+				' title="' + escapeHtml('Delete calculated value ' + node.name) + '">' + Render.trashIconHtml() + '</button>' +
+			'</div>';
 	}
 
 	function renderGraph() {
@@ -814,6 +818,11 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	graphHost.addEventListener('click', function (e) {
 		if (e.target.closest('select')) return;
+		var deleteBtn = e.target.closest('[data-calc-delete-derived]');
+		if (deleteBtn) {
+			deleteDerived(deleteBtn.getAttribute('data-calc-delete-derived'));
+			return;
+		}
 		customUnitFor = null;
 		var nodeEl = e.target.closest('[data-calc-node]');
 		var derivedEl = e.target.closest('[data-calc-derived]');
@@ -1151,7 +1160,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 				name + '" as a label that isn\'t in the tree, which counts as not chosen.';
 		if (!confirm('Delete the calculated value "' + name + '"?' + warning)) return;
 		data.derived = data.derived.filter(function (d) { return d.name !== name; });
-		selected = null;
+		dropStaleSelection();
 		dataChanged();
 		renderEditor();
 	}

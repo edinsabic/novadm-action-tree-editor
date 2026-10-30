@@ -595,6 +595,16 @@ the Action tree tab (`Render.renderTree()` calls
   number (`facade_area = 450`, also `-5`), has a small grey "constant"
   label after its name, in the graph and in the editor panel; it is
   worked out from the formula, so nothing is saved for it.
+- **Deleting a calculated value from its box**: a small red trash icon
+  (the tree's, 12 px, `.calc-delete-derived`) in the box's bottom right,
+  over the end of the formula line, shown only on the selected box and
+  the box under the mouse, so the graph stays calm; the formula line then
+  ends earlier so the icon never covers text, and it never covers the
+  value and unit in the head. Its tooltip reads "Delete calculated value
+  cost". Clicking it asks the same confirm as the editor panel's Delete
+  (naming the formulas that use it), without selecting the box; another
+  selected box stays selected. Label boxes have no icon: a label belongs
+  to a tree node, which is deleted on the Action tree tab.
 - **Arrows** run into a calculated value from every box and calculated
   value it uses: `label.attribute` from that attribute's row (or the
   box's head), `selected(label)` and a plain label from the head, and
