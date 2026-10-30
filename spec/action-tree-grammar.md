@@ -276,6 +276,16 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - The **Diagram** layout opens zoomed to fit the whole tree, centred
   (`Render.fitTraditionalView()`, between 50% and 100%). It refits on
   switching to it and on loading or importing a tree.
+- An **empty tree** (after Clear tree, or on a start without
+  `sample-tree.js`) shows the three ways to start as three tiles, the
+  same in both layouts: 1. drag an AND or XOR node onto the tree area
+  (a dashed "Drop here" area, though a drop anywhere in the area works);
+  2. Load example tree or Import file; 3. Generate tree. "(No nodes
+  yet.)" follows, muted. The tiles' buttons click the toolbar's own
+  buttons (`data-click-for` holds the button's id), so they behave
+  exactly the same. The Calculations tab's empty graph reads alike:
+  "Build a tree in the Action tree tab, or click "Load example"." with
+  "(No nodes yet.)" on the next line.
 
 ## Screen sizes and scaling
 
@@ -308,11 +318,16 @@ Ctrl +/– to fit more. Check a layout change at these sizes.
 ## Predefined subjects and Generate tree
 
 `subjects.js` holds lists of renovation subjects grouped by category.
-The **Subject list** switch (for now at the top of the Generate tree
-panel) picks the list the editor uses; `DEFAULT_LIST` is the one it
-starts with. The subject menu and the checklist always show the list in
-use; switching clears the checklist's ticks. The choice is a setting,
-not part of the document: it is not saved in the file and not undone.
+The **Subject list** switch (Danish Energy Agency / NovaDM) picks the
+list the editor uses; `DEFAULT_LIST` is the one it starts with. It sits
+at the top of the Subject menu and at the top of the Generate tree
+panel: both are the same setting (`Subjects.setActiveList`, drawn by
+`EditorForm.subjectListToggleHtml`) and always show the same list.
+Switching in the Subject menu redraws it with the other list's
+categories and keeps it open; the node's own subject doesn't change.
+The checklist's ticks are cleared whenever the list changed, in either
+place. The choice is a setting, not part of the document: it is not
+saved in the file and not undone.
 
 - `'energyAgency'` (default) – the Danish Energy Agency's renovation
   measures from sparenergi.dk ("Spar energi med boligens energimærke"),
