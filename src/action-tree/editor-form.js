@@ -261,6 +261,19 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	/* ---------- Subject menu ---------- */
 
+	function subjectListToggleHtml() {
+		var active = Subjects.getActiveList();
+		return '<span class="note">Subject list</span>' +
+			'<div class="toggle-group subject-list-toggle" role="group" aria-label="Subject list">' +
+			Subjects.lists().map(function (list) {
+				var isActive = list.key === active;
+				return '<button type="button" class="toggle-btn' + (isActive ? ' active' : '') + '"' +
+					' data-subject-list="' + escapeHtml(list.key) + '" aria-pressed="' + isActive + '"' +
+					' title="' + escapeHtml(list.name) + '">' + escapeHtml(list.shortName) + '</button>';
+			}).join('') +
+			'</div>';
+	}
+
 	function subjectMenuHtml(node) {
 		var match = Subjects.find(node.label, node.value);
 		var categoriesHtml = Subjects.categories().map(function (category) {
@@ -278,7 +291,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 				'<ul class="subject-menu-list subject-submenu" role="menu">' + items + '</ul>' +
 				'</li>';
 		}).join('');
-		return '<ul class="subject-menu-list">' + categoriesHtml +
+		return '<div class="subject-menu-lists">' + subjectListToggleHtml() + '</div>' +
+			'<ul class="subject-menu-list">' + categoriesHtml +
 			'<li class="popover-divider" role="separator"></li>' +
 			'<li><button type="button" class="subject-menu-item" role="menuitem" data-custom-subject="true">' +
 			'+ Custom subject…</button></li>' +
@@ -349,6 +363,23 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 		renderEditorForm();
 	}
 
+	function switchSubjectList(key) {
+		if (key === Subjects.getActiveList()) return;
+		Subjects.setActiveList(key);
+		var node = selectedNode();
+		var scrollTop = formHost.scrollTop;
+		renderEditorForm();
+		var picker = document.getElementById('f-subject');
+		if (!node || !picker) return;
+		var reopen = function () {
+			if (!document.body.contains(picker) || selectedNode() !== node) return;
+			openSubjectMenu(picker, node);
+			subjectMenu.querySelector('[data-subject-list="' + key + '"]').focus();
+		};
+		if (formHost.scrollTop === scrollTop) reopen();
+		else formHost.addEventListener('scroll', reopen, { once: true });
+	}
+
 	function chooseCustomSubject() {
 		var node = selectedNode();
 		if (!node) return;
@@ -375,7 +406,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	subjectMenu.addEventListener('click', function (e) {
 		var btn = e.target.closest('button');
 		if (!btn) return;
-		if (btn.hasAttribute('data-subject')) chooseSubject(btn.getAttribute('data-subject'));
+		if (btn.hasAttribute('data-subject-list')) switchSubjectList(btn.getAttribute('data-subject-list'));
+		else if (btn.hasAttribute('data-subject')) chooseSubject(btn.getAttribute('data-subject'));
 		else if (btn.hasAttribute('data-custom-subject')) chooseCustomSubject();
 		else if (btn.hasAttribute('data-category')) openCategory(btn.parentNode);
 	});
@@ -399,6 +431,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	return {
 		renderEditorForm: renderEditorForm,
+		subjectListToggleHtml: subjectListToggleHtml,
 		addChildTo: addChildTo,
 		deleteNode: deleteNode
 	};

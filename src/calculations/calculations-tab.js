@@ -626,7 +626,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var isEmpty = !rootNode();
 		graphHost.classList.toggle('empty-hint', isEmpty);
 		if (isEmpty) {
-			graphHost.innerHTML = 'No nodes yet. Build a tree in the Action tree tab, or click "Load example".';
+			graphHost.innerHTML = '<div>Build a tree in the Action tree tab, or click "Load example".' +
+				'<br>(No nodes yet.)</div>';
 			return;
 		}
 

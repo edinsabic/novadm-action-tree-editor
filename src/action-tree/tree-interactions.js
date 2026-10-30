@@ -35,6 +35,11 @@ window.NovaDM = window.NovaDM || {};
 	/* ---------- Clicks ---------- */
 
 	treeContent.addEventListener('click', function (e) {
+		var startBtn = e.target.closest('[data-click-for]');
+		if (startBtn) {
+			document.getElementById(startBtn.getAttribute('data-click-for')).click();
+			return;
+		}
 		var deleteBtn = e.target.closest('[data-delete-node]');
 		if (deleteBtn) {
 			var doomed = nodeFor(deleteBtn, 'data-delete-node');

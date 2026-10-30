@@ -6,13 +6,14 @@ NovaDM is a formal domain model for building renovation design space exploration
 
 ## Status
 
-Version 1.2.0. The editor (`index.html`) has two tabs. The **Action tree** tab builds and edits trees in two layouts, with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The report can be saved as a CSV table for a spreadsheet, a PNG image per KPI card and a PDF. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
+Version 1.2.0. The editor (`index.html`) has two tabs. The **Action tree** tab builds and edits trees in two layouts (List and Diagram), with always/never profiles, a version history, undo/redo and counts of the subjects, approaches, features and feature values. The **Calculations** tab follows that tree: it gives every option numbers with units (such as a price and its CO₂), works out calculated values and KPIs (Sum and GWP) with small formulas, and samples the scenario space, or lists all of it, in a report with each KPI's mean, spread and distribution. The report can be saved as a CSV table for a spreadsheet, a PNG image per KPI card and a PDF. The always/never marks apply there too, so both tabs count the same scenarios. Every version keeps its own tree, profiles and numbers, and the `.json` file (format version 6) holds them all. The example's numbers are made up.
 
 ## Quick start
 
 Download the source code zip, unzip it and open `index.html` in a browser. No install, no build step, no server required. The zip of the latest release is on the [Releases page](https://github.com/edinsabic/novadm-action-tree-editor/releases/latest), under **Assets** → **Source code (zip)**.
 
-- **Drag** AND/XOR nodes from the editor panel onto the tree, and edit the selected node in the panel
+- **Start a tree**: drag an AND or XOR node from the editor panel onto the empty tree, load the example or a file, or **Generate tree** from one of two subject lists (Danish Energy Agency or NovaDM)
+- **Switch the layout** between **List** and **Diagram**, and edit the selected node in the editor panel; a Subject node is picked from a menu, with the same subject list switch at its top
 - **Click** a node's dot or an option chip to mark it always or never, and save the result as a **profile**
 - **Save, open, restore, merge and delete** versions in the version history; each version holds its tree, profiles and numbers
 - **Import file** or **Export file** (on either tab): a `.json` file holding the versions with their trees, profiles and numbers

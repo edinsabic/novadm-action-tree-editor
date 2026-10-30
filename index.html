@@ -25,8 +25,10 @@
 					<span class="viewport-box-label">Workspace panel</span>
 					<span class="control-label">Select the tree layout</span>
 					<div class="toggle-group" role="group" aria-label="Tree layout">
-						<button class="toggle-btn active" type="button" data-layout="directory">Directory</button>
-						<button class="toggle-btn" type="button" data-layout="traditional">Traditional</button>
+						<button class="toggle-btn active" type="button" data-layout="directory"
+							title="Show the tree as an indented list">List</button>
+						<button class="toggle-btn" type="button" data-layout="traditional"
+							title="Show the tree as a diagram of boxes and lines">Diagram</button>
 					</div>
 				</div>
 
@@ -47,10 +49,11 @@
 				<div class="viewport-box viewport-tree">
 					<div class="viewport-toolbar">
 						<div class="toolbar-group" role="group" aria-label="Zoom">
-							<button id="zoom-out-btn" class="btn-icon" type="button"
-								aria-label="Zoom out">&minus;</button>
+							<button id="zoom-out-btn" class="btn-icon" type="button" aria-label="Zoom out"
+								title="Zoom out">&minus;</button>
 							<span id="zoom-label">100%</span>
-							<button id="zoom-in-btn" class="btn-icon" type="button" aria-label="Zoom in">+</button>
+							<button id="zoom-in-btn" class="btn-icon" type="button" aria-label="Zoom in"
+								title="Zoom in">+</button>
 							<button id="zoom-reset-btn" class="btn" type="button">Reset zoom</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="Undo and redo">
@@ -59,17 +62,22 @@
 							<button class="btn-icon" type="button" aria-label="Redo"
 								title="Redo (Ctrl+Y)" data-undo-action="redo">&#8631;</button>
 						</div>
-						<div class="toolbar-group" role="group" aria-label="Tree file">
-							<button id="load-example-btn" class="btn" type="button">Load example tree</button>
-							<button id="clear-tree-btn" class="btn" type="button">Clear tree</button>
-							<button class="btn" type="button" data-file-action="import">Import file</button>
+						<div class="toolbar-group" role="group" aria-label="File">
+							<button id="load-example-btn" class="btn" type="button"
+								title="Load the example tree. It also replaces the numbers in the Calculations tab.">
+								Load example tree</button>
+							<button id="clear-tree-btn" class="btn" type="button"
+								title="Remove the whole tree and start over. The Calculations tab starts over too.">
+								Clear tree</button>
+							<button id="import-file-btn" class="btn" type="button" data-file-action="import">
+								Import file</button>
 							<button class="btn" type="button" data-file-action="export">Export file</button>
 							<input id="import-file-input" type="file" hidden />
 						</div>
 						<div class="toolbar-group toolbar-end">
 							<button id="generate-tree-btn" class="btn" type="button" aria-haspopup="dialog"
 								aria-expanded="false" title="Build a tree from a checklist of subjects">
-								Generate tree&hellip;</button>
+								Generate tree</button>
 						</div>
 					</div>
 					<div id="tree-viewport-content" class="viewport-content"></div>
@@ -234,8 +242,10 @@
 							<button class="btn-icon" type="button" aria-label="Redo" title="Redo (Ctrl+Y)"
 								data-undo-action="redo">&#8631;</button>
 						</div>
-						<div class="toolbar-group" role="group" aria-label="Attributes">
-							<button id="calc-add-derived-btn" class="btn" type="button">+ Calculated value</button>
+						<div class="toolbar-group" role="group" aria-label="Calculated values">
+							<button id="calc-add-derived-btn" class="btn" type="button"
+								title="Add a value worked out with a formula, such as a total price">
+								+ Calculated value</button>
 						</div>
 						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="calc-load-example-btn" class="btn" type="button"
@@ -269,7 +279,8 @@
 				<div class="calc-report-tools">
 					<div class="calc-sample-controls" role="group" aria-labelledby="calc-sample-label">
 						<span id="calc-sample-label" class="control-label">Sample</span>
-						<button class="pill-btn" type="button" data-calc-sample="30">30 scenarios</button>
+						<button class="pill-btn" type="button" data-calc-sample="30"
+							title="Sample 30 scenarios">30 scenarios</button>
 						<button id="calc-sample-all-btn" class="pill-btn" type="button">Full scenario space</button>
 						<div class="calc-sample-custom" role="group" aria-label="Your own number of scenarios">
 							<input id="calc-sample-size" type="text" inputmode="numeric" value="1,000"
