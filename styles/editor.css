@@ -929,6 +929,16 @@ main {
 	overflow-y: auto;
 }
 
+.subject-menu-lists {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 4px;
+	padding: 4px 6px 8px;
+	border-bottom: 1px solid var(--color-border-soft);
+	white-space: nowrap;
+}
+
 .subject-menu-list {
 	margin: 0;
 	padding: 0;
@@ -1010,7 +1020,7 @@ main {
 	gap: 6px 16px;
 }
 
-.gen-list-toggle .toggle-btn {
+.subject-list-toggle .toggle-btn {
 	padding: 4px 10px;
 	font-size: 0.78rem;
 }

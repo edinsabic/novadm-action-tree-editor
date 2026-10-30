@@ -1,5 +1,9 @@
 window.NovaDM = window.NovaDM || {};
 
+/**
+ * The Generate tree panel: a checklist of the predefined subjects of the subject list in use, filtered by
+ * renovation depth, that replaces the tree with one Subject node per checked subject.
+ */
 (function (Model, History, Render, EditorForm, Subjects, Util) {
 	'use strict';
 
@@ -16,6 +20,7 @@ window.NovaDM = window.NovaDM || {};
 
 	var depth = Subjects.DEPTHS[Subjects.DEPTHS.length - 1].key;
 	var checked = {};
+	var checkedList = Subjects.getActiveList();
 
 	function eachSubject(visit) {
 		Subjects.categories().forEach(function (category) {
@@ -31,16 +36,6 @@ window.NovaDM = window.NovaDM || {};
 			if (checked[id] && Subjects.isInDepth(subject, depth)) ids.push(id);
 		});
 		return ids;
-	}
-
-	function listsHtml() {
-		var active = Subjects.getActiveList();
-		return Subjects.lists().map(function (list) {
-			var isActive = list.key === active;
-			return '<button type="button" class="toggle-btn' + (isActive ? ' active' : '') + '"' +
-				' data-gen-list="' + escapeHtml(list.key) + '" aria-pressed="' + isActive + '"' +
-				' title="' + escapeHtml(list.name) + '">' + escapeHtml(list.shortName) + '</button>';
-		}).join('');
 	}
 
 	function depthsHtml() {
@@ -70,11 +65,13 @@ window.NovaDM = window.NovaDM || {};
 	}
 
 	function renderBody() {
+		if (checkedList !== Subjects.getActiveList()) {
+			checked = {};
+			checkedList = Subjects.getActiveList();
+		}
 		body.innerHTML =
 			'<div class="gen-row">' +
-			'<span class="note">Subject list</span>' +
-			'<div class="toggle-group gen-list-toggle" role="group" aria-label="Subject list">' + listsHtml() +
-			'</div>' +
+			'<span class="note">Subject list</span>' + EditorForm.subjectListToggleHtml() +
 			'</div>' +
 			'<div class="gen-row" role="radiogroup" aria-label="Renovation depth">' +
 			'<span class="note">Renovation depth</span>' + depthsHtml() +
@@ -87,7 +84,6 @@ window.NovaDM = window.NovaDM || {};
 	function switchList(key) {
 		if (key === Subjects.getActiveList()) return;
 		Subjects.setActiveList(key);
-		checked = {};
 		renderBody();
 		EditorForm.renderEditorForm();
 	}
@@ -147,9 +143,9 @@ window.NovaDM = window.NovaDM || {};
 	});
 
 	panel.addEventListener('click', function (e) {
-		var listBtn = e.target.closest('[data-gen-list]');
+		var listBtn = e.target.closest('[data-subject-list]');
 		if (listBtn) {
-			switchList(listBtn.getAttribute('data-gen-list'));
+			switchList(listBtn.getAttribute('data-subject-list'));
 			return;
 		}
 		var btn = e.target.closest('[data-gen]');

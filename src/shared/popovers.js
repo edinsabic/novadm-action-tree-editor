@@ -162,9 +162,11 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		if (!selectedVersion || !History.has(selectedVersion)) selectedVersion = History.getHead();
 		versionPane.innerHTML =
 			'<div class="viewport-toolbar">' +
-			'<button type="button" class="btn-icon" data-vg="zoom-out" aria-label="Zoom out">−</button>' +
+			'<button type="button" class="btn-icon" data-vg="zoom-out" aria-label="Zoom out"' +
+			' title="Zoom out">−</button>' +
 			'<span class="metric-label" id="vg-zoom-label"></span>' +
-			'<button type="button" class="btn-icon" data-vg="zoom-in" aria-label="Zoom in">+</button>' +
+			'<button type="button" class="btn-icon" data-vg="zoom-in" aria-label="Zoom in"' +
+			' title="Zoom in">+</button>' +
 			'<button type="button" class="btn" data-vg="recenter" title="Fit the whole graph into view">' +
 			'Re-center</button>' +
 			'<button type="button" class="btn" data-vg="save"' +
