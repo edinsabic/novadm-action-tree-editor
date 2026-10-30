@@ -411,7 +411,7 @@ The tab works on `{ attributes, units, values, derived }`:
 - `derived` – the calculated values, `{ name, formula, displayName?,
   unit?, kpi? }`. `displayName` is the name people see: on the KPI cards, in the
   report's table, in the CSV and PDF headings and in the Action tree
-  tab's bottom bar (`Calculations.shownName`). It is set with Rename…
+  tab's bottom bar (`Calculations.shownName`). It is set with Rename
   (below); a new calculated value gets its name with a capital first
   letter (`Calculations.displayNameOf`), and a value without one shows its
   name that way. The starter data has "Cost" and "GWP". Formulas, the
@@ -656,14 +656,14 @@ the Action tree tab (`Render.renderTree()` calls
   its unit and every number (`Calculations.removeAttribute`; a label left
   with no numbers goes too), in the version on screen only, in one undo
   step. Formulas are not rewritten: one that uses it shows "Unknown name".
-- **A calculated value**: its name with **Rename…** (and "constant" for
+- **A calculated value**: its name with **Rename** (and "constant" for
   a constant, updated on every keystroke in the formula), a KPI box, the formula box
   (evaluated again on every keystroke; an error shows in red below it,
   the notes in grey), its **Unit**, its value in the scenario on screen
   and Delete. Before deleting, the confirm names the calculated values
   whose formulas use it, as those then read its name as a label that
   isn't in the tree. "+ Calculated value" in the toolbar adds one.
-- **Rename…** asks for the new name (native `prompt`, the same rules as
+- **Rename** asks for the new name (native `prompt`, the same rules as
   "+ Calculated value": a valid name, no other calculated value, no
   label) and renames it and every formula that uses it
   (`Calculations.renameDerived`), in one undo step; it stays selected,
@@ -768,7 +768,7 @@ Attribute" for `r_wall`, `r_roof`, `r_floor` and `u_window`, with their
 units from the Thermal group; "+ Calculated value" for each constant (a
 single number as its formula) and each formula in the table, in that
 order, so each formula's inputs exist; tick **KPI** on `u_value`, and
-give it the shown name "U-value" with Rename…; then type the R values
+give it the shown name "U-value" with Rename; then type the R values
 into the nodes' tables.
 
 **More elements** (e.g. a brick wall and a timber wall, doors, a

@@ -19,7 +19,7 @@ Download the source code zip, unzip it and open `index.html` in a browser. No in
 - **Import file** or **Export file** (on either tab): a `.json` file holding the versions with their trees, profiles and numbers
 - **Load example tree** for the worked example the editor opens with; more examples, such as the K45 case and `sample-tree-with-u-value.json` (the example with a U-value as a KPI of its own), are in `examples/`
 - **Calculations** tab: click a box in the graph to type its numbers, then sample the scenarios to see the KPIs; its **Profiles** pill switches profiles there too, and only the scenarios the marks allow are sampled
-- **Rename…** a calculated value (its name in formulas and the name shown in the report), remove an attribute with the trash icon in its Units list, or delete a calculated value with the icon on its box
+- **Rename** a calculated value (its name in formulas and the name shown in the report), remove an attribute with the trash icon in its Units list, or delete a calculated value with the icon on its box
 - **Save the report**: **Export table as CSV** on the scenario table, **PNG** on each KPI card, and **Save report as PDF** in the report's head (through the browser's print dialog)
 
 ## Repository structure

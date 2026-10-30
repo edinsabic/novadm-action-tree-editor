@@ -922,7 +922,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 						'<span id="calc-editor-constant">' + constantHtml(derived.name) + '</span>' +
 						'<button class="btn calc-rename-btn" type="button" data-calc-action="rename-derived"' +
 							' title="Rename it: its name in formulas (the formulas that use it follow) and the name shown' +
-							' on the KPI cards, in the report and in the bottom bar">Rename&hellip;</button>' +
+							' on the KPI cards, in the report and in the bottom bar">Rename</button>' +
 					'</div>' +
 				'</div>' +
 				'<label class="calc-check">' +
