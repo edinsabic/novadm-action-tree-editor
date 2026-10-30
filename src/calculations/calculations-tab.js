@@ -1276,7 +1276,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		}
 		if (total > MAX_SAMPLE_SIZE) {
 			return 'The tree has ' + Render.scenarioSizeText(total) + ' scenarios, too many to list (at most ' +
-				formatCount(MAX_SAMPLE_SIZE) + ')';
+				formatCount(MAX_SAMPLE_SIZE) + '): click to sample ' + formatCount(MAX_SAMPLE_SIZE) + ' of them instead';
 		}
 		return 'List all ' + formatCount(total) + ' scenarios of the tree';
 	}
@@ -1321,9 +1321,13 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function sampleFullSpace() {
 		var total = Model.scenarioSpaceSize();
 		if (total > MAX_SAMPLE_SIZE) {
-			alert('The scenario space has ' + Render.scenarioSizeText(total) + ' scenarios, too many to list' +
-				' (at most ' + formatCount(MAX_SAMPLE_SIZE) + '). Sample up to ' + formatCount(MAX_SAMPLE_SIZE) +
-				' of them instead, with your own number of scenarios.');
+			if (!confirm('The scenario space has ' + Render.scenarioSizeText(total) + ' scenarios, too many to list' +
+				' (at most ' + formatCount(MAX_SAMPLE_SIZE) + '). Sample ' + formatCount(MAX_SAMPLE_SIZE) +
+				' random scenarios instead?')) {
+				return;
+			}
+			sampleSizeInput.value = formatCount(MAX_SAMPLE_SIZE);
+			sampleNow(MAX_SAMPLE_SIZE);
 			return;
 		}
 		listFullSpace(newSeed(), total, spaceKey());

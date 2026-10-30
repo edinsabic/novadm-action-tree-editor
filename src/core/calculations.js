@@ -438,12 +438,17 @@ NovaDM.Calculations = (function (Util) {
 
 	function putNumber(data, label, attribute, option, number) {
 		var byAttribute = own(data.values, label) ? data.values[label] : Util.setOwn(data.values, label, {});
-		if (option === '') {
+		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
+		var isTable = !!stored && typeof stored === 'object';
+		if (option === '' && !isTable) {
 			Util.setOwn(byAttribute, attribute, number);
 			return;
 		}
-		var stored = own(byAttribute, attribute) ? byAttribute[attribute] : null;
-		if (!stored || typeof stored !== 'object') stored = Util.setOwn(byAttribute, attribute, {});
+		if (!isTable) {
+			var plain = stored;
+			stored = Util.setOwn(byAttribute, attribute, {});
+			if (typeof plain === 'number') Util.setOwn(stored, '', plain);
+		}
 		Util.setOwn(stored, option, number);
 	}
 

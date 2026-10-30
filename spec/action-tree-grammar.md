@@ -403,7 +403,9 @@ The tab works on `{ attributes, units, values, derived }`:
   one of those rows turns it into one number per option, and the other
   options keep the plain number. A node without options that shares its
   label with a node that has numbers per option stores its number under
-  the option `''`, so neither node loses its numbers. Labels, options,
+  the option `''`, so neither node loses its numbers; writing the file,
+  merges and number corrections keep it there too
+  (`Calculations.putNumber`). Labels, options,
   attributes and units are written as own keys (`Util.setOwn`), so a
   name such as `__proto__` from a file works like any other.
 - `derived` – the calculated values, `{ name, formula, displayName?,
@@ -649,8 +651,10 @@ text never breaks.
 
 - **Limits**: at most 3,000 scenarios (`MAX_SAMPLE_SIZE`). Your own
   number must be a whole number from 1 to 3,000. "Full scenario space"
-  refuses a space of more than 3,000 with an alert; its tooltip gives the
-  count. Asking for more scenarios than the space has, with 30 or your
+  on a space of more than 3,000 asks whether to sample 3,000 random
+  scenarios instead (a `confirm`); OK takes that sample and puts "3,000"
+  in your own number's box, Cancel changes nothing. Its tooltip gives
+  the count. Asking for more scenarios than the space has, with 30 or your
   own number, shows an alert and lists the full space instead; your own
   number's box then shows the size of the space.
 - **Counting**: the size shown is `Model.scenarioSpaceSize()`, and the
