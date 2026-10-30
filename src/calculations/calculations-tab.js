@@ -14,6 +14,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var MAX_SAMPLE_SIZE = 3000;
 	var SLOW_REDRAW_MS = 50;
 	var BAR_SLICE_MS = 12;
+	var MAX_SHOWN_NAME_LENGTH = 60;
 	var SEED_RANGE = 4294967296;
 	var LABEL_WIDTH = 370;
 	var INDENT = 16;
@@ -734,6 +735,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			' style="' + boxStyle(node) + '" title="' + escapeHtml(title) + '">' +
 			'<div class="calc-node-head">' +
 			'<span class="calc-derived-name">' + escapeHtml(node.name) + '</span>' +
+			constantHtml(node.name) +
 			'<span class="calc-derived-value">' + valueHtml(values[node.name], derived.unit) + '</span>' +
 			'</div>' +
 			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div></div>';
@@ -891,12 +893,30 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'</div>';
 	}
 
+	function isConstant(name) {
+		var item = analysis.byName[name];
+		var ast = item && !item.error ? item.ast : null;
+		return !!ast && (ast.type === 'number' || (ast.type === 'negate' && ast.operand.type === 'number'));
+	}
+
+	function constantHtml(name) {
+		return isConstant(name)
+			? '<span class="calc-constant" title="Its formula is a single number">constant</span>'
+			: '';
+	}
+
 	function derivedFormHtml(derived) {
 		return '<div class="editor-form">' +
 			'<div class="calc-editor-head">' +
 				'<div class="field">' +
 					'<label>Calculated value</label>' +
-					'<div class="calc-editor-title">' + escapeHtml(derived.name) + '</div>' +
+					'<div class="calc-editor-name-row">' +
+						'<span class="calc-editor-title">' + escapeHtml(derived.name) + '</span>' +
+						'<span id="calc-editor-constant">' + constantHtml(derived.name) + '</span>' +
+						'<button class="btn calc-rename-btn" type="button" data-calc-action="rename-derived"' +
+							' title="Rename it: its name in formulas (the formulas that use it follow) and the name shown' +
+							' on the KPI cards, in the report and in the bottom bar">Rename&hellip;</button>' +
+					'</div>' +
 				'</div>' +
 				'<label class="calc-check">' +
 					'<input id="calc-kpi" type="checkbox"' + (derived.kpi ? ' checked' : '') + ' /> KPI' +
@@ -987,8 +1007,12 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		return '<div class="field">' +
 			'<label>Units</label>' +
 			'<div class="calc-units">' + attributes.map(function (a) {
+				var title = 'Remove ' + a + ' from this version: its numbers in every node and its unit';
 				return '<div class="calc-unit-row"><span class="calc-unit-name">' + escapeHtml(a) + '</span>' +
-					unitFieldHtml('a:' + a, a) + '</div>';
+					unitFieldHtml('a:' + a, a) +
+					'<button type="button" class="calc-remove-attribute" data-calc-remove-attribute="' + escapeHtml(a) + '"' +
+						' aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">' + Render.trashIconHtml() +
+						'</button></div>';
 			}).join('') + '</div>' +
 			'<div class="note">A unit applies to the attribute in every node, and is only a label: changing it' +
 				' doesn&rsquo;t convert the numbers.</div>' +
@@ -1004,6 +1028,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		errorEl.hidden = !errorEl.textContent;
 		noteEl.textContent = item && !item.error ? formulaNote(item, numberedAttributes()) : '';
 		noteEl.hidden = !noteEl.textContent;
+		document.getElementById('calc-editor-constant').innerHTML = constantHtml(selected.name);
 		document.getElementById('calc-editor-value').innerHTML =
 			valueHtml(currentResults()[selected.name], unitOf('d:' + selected.name));
 	}
@@ -1099,7 +1124,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	function addDerived() {
 		var name = askName('Name of the new calculated value (e.g. total_energy):', 'derived');
 		if (!name) return;
-		data.derived.push({ name: name, formula: '0' });
+		data.derived.push({ name: name, displayName: Calculations.displayNameOf(name), formula: '0' });
 		selected = { kind: 'derived', name: name };
 		dataChanged();
 		renderEditor();
@@ -1127,6 +1152,71 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		if (!confirm('Delete the calculated value "' + name + '"?' + warning)) return;
 		data.derived = data.derived.filter(function (d) { return d.name !== name; });
 		selected = null;
+		dataChanged();
+		renderEditor();
+	}
+
+	function namesList(names) {
+		return names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+	}
+
+	function renameSelectedDerived() {
+		var from = selected.name;
+		var oldShown = Calculations.shownName(findDerived(from));
+		var to = prompt('Name of "' + from + '" in formulas (letters, digits and _; the formulas that use it follow):',
+			from);
+		if (to === null) return;
+		to = to.trim();
+		var problem = to === from ? null : nameProblem(to, 'derived');
+		if (problem) {
+			alert(problem);
+			return;
+		}
+		var guess = to === from ? oldShown : Calculations.suggestedDisplayName(from, oldShown, to);
+		var shown = prompt('Name shown on the KPI cards, in the report and in the bottom bar (any text):', guess);
+		if (shown === null) return;
+		shown = shown.trim() || guess;
+		if (shown.length > MAX_SHOWN_NAME_LENGTH) {
+			alert('The name shown can be at most ' + MAX_SHOWN_NAME_LENGTH + ' characters long.');
+			return;
+		}
+		if (to === from && shown === oldShown) return;
+		var result = Calculations.renameDerived(data, from, to, shown);
+		data = result.data;
+		selected = { kind: 'derived', name: to };
+		dataChanged();
+		renderEditor();
+		revealSelected();
+		if (result.skipped.length) {
+			alert('The formula' + (result.skipped.length === 1 ? ' of ' : 's of ') + namesList(result.skipped) +
+				' can\'t be read because of an error, so it wasn\'t changed. If it uses "' + from + '", change it by hand.');
+		}
+	}
+
+	function attributeUsers(name) {
+		return analysis.items.filter(function (item) {
+			return item.refs && (item.refs.totals.indexOf(name) !== -1 ||
+				item.refs.lookups.some(function (l) { return l.attribute === name; }));
+		}).map(function (item) { return item.name; });
+	}
+
+	function removeAttributeAsked(name) {
+		var count = Object.keys(Calculations.entries({ values: data.values })).filter(function (key) {
+			var parts = JSON.parse(key);
+			return parts[0] === 'v' && parts[2] === name;
+		}).length;
+		var unit = attributeUnit(name);
+		var users = attributeUsers(name);
+		var question = 'Remove the attribute "' + name + '" from this version?\n\n' +
+			(count ? 'Its ' + Util.plural(count, 'number') + (unit ? ' and its unit (' + unit + ')' : '') +
+				(count === 1 && !unit ? ' goes' : ' go') + ' with it.'
+				: 'It has no numbers' + (unit ? '; its unit (' + unit + ') goes with it.' : '.')) +
+			(users.length ? '\n\nThe formula' + (users.length === 1 ? ' of ' : 's of ') + namesList(users) +
+				(users.length === 1 ? ' uses' : ' use') + ' it, and will show an error until you change ' +
+				(users.length === 1 ? 'it.' : 'them.') : '') +
+			'\n\nOther versions keep it. You can undo this.';
+		if (!confirm(question)) return;
+		data = Calculations.removeAttribute(data, name);
 		dataChanged();
 		renderEditor();
 	}
@@ -1167,11 +1257,17 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	});
 
 	editorHost.addEventListener('click', function (e) {
+		var remove = e.target.closest('[data-calc-remove-attribute]');
+		if (remove) {
+			removeAttributeAsked(remove.getAttribute('data-calc-remove-attribute'));
+			return;
+		}
 		var btn = e.target.closest('[data-calc-action]');
 		if (!btn || !selected) return;
-		var node = selectedNode();
-		if (btn.getAttribute('data-calc-action') === 'delete-derived') deleteDerived(selected.name);
-		else if (node) addAttribute();
+		var action = btn.getAttribute('data-calc-action');
+		if (action === 'delete-derived') deleteDerived(selected.name);
+		else if (action === 'rename-derived') renameSelectedDerived();
+		else if (action === 'add-attribute' && selectedNode()) addAttribute();
 	});
 
 	/* ---------- Report ---------- */
@@ -1233,7 +1329,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	}
 
 	function summaryTitle(d, stats) {
-		var name = d.displayName || d.name;
+		var name = Calculations.shownName(d);
 		if (barJob) return name + ' is being calculated again for the changed tree.';
 		if (stats) {
 			return name + ': ' + (sample.full ? 'exact mean of ' : 'mean of ') + sampleText() + ' (min ' +
@@ -1262,7 +1358,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			var value = !stats ? '&ndash;' : sample.full ? mean : '&asymp; ' + mean;
 			return '<span class="metric' + (stats && !barJob ? '' : ' muted') + '"' +
 				' title="' + escapeHtml(summaryTitle(d, stats)) + '">' +
-				'<span class="metric-label">' + escapeHtml(d.displayName || d.name) + '</span>' +
+				'<span class="metric-label">' + escapeHtml(Calculations.shownName(d)) + '</span>' +
 				'<span class="metric-value">' + value + '</span></span>';
 		}).join('');
 	}

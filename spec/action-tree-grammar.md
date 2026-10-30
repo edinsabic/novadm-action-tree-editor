@@ -409,8 +409,14 @@ The tab works on `{ attributes, units, values, derived }`:
   attributes and units are written as own keys (`Util.setOwn`), so a
   name such as `__proto__` from a file works like any other.
 - `derived` – the calculated values, `{ name, formula, displayName?,
-  unit?, kpi? }`. `displayName` is the name in the Action tree tab's
-  bottom bar, and `kpi: true` makes it a KPI.
+  unit?, kpi? }`. `displayName` is the name people see: on the KPI cards, in the
+  report's table, in the CSV and PDF headings and in the Action tree
+  tab's bottom bar (`Calculations.shownName`). It is set with Rename…
+  (below); a new calculated value gets its name with a capital first
+  letter (`Calculations.displayNameOf`), and a value without one shows its
+  name that way. The starter data has "Cost" and "GWP". Formulas, the
+  graph, the editor panel and the PNG's file name use `name`. `kpi: true`
+  makes it a KPI.
 
 Where the data comes from:
 
@@ -480,6 +486,17 @@ stays one undo step.
   at the same place to a name that wasn't in the list before, its numbers
   move within the label, by the same rules. Adding, removing or
   reordering options moves nothing.
+- **Formulas follow a renamed label** (`Calculations.renameLabel`, with
+  `renameInFormulas`): when the old label goes from the tree (not when
+  another node still has it, so its numbers are only copied), every
+  formula that uses it as a label (a plain name that is no calculated
+  value, the name in `selected()`, the part before a dot) gets the new
+  one, rebuilt from the copy taken on focus like the numbers, so renaming
+  back restores them and the whole rename stays one undo step. Only
+  while the new label is a name a formula can use (no `-`, no space, no
+  keyword) and no calculated value has it. Texts in quotes are never
+  changed, so a renamed option compared as text
+  (`roof_replacement = 'replace'`) stays as it is.
 - Picking another subject in the Subject menu moves nothing: it is a
   different subject. Formulas are not rewritten; one that names the old
   label shows the "Not in the tree" note.
@@ -532,6 +549,17 @@ primary = number | text | name [ "." name ]
 - When no node in the tree has a number for `total()`'s attribute, the
   total is 0 and has no arrows; the editor panel and the tooltip say so
   ("No node in the tree has a number for price yet …").
+- **Renaming a name in formulas** (`Calculations.renameInFormulas(derived,
+  kind, from, to)`, kind `'derived'` or `'label'`): the parser records
+  where each name starts (`at` on a name, a `lookup`'s label, a
+  function's argument), and a rename replaces exactly those places where
+  the formula uses the name as that kind: a calculated value is a plain
+  name; a label is a plain name, the name in `selected()` and the part
+  before a dot. So a text in quotes, a keyword, the attribute in
+  `total()` or after a dot, and a longer name that only starts the same
+  (`cost_extra` when renaming `cost`) never change, and spacing stays as
+  typed. A formula that doesn't parse stays as it is; the rename lists it
+  when it contains the old name.
 
 ### The graph
 
@@ -563,7 +591,10 @@ the Action tree tab (`Render.renderTree()` calls
   furthest-right input, and in column 1 at least once its formula refers
   to anything, even before it has an arrow. A column is stacked from the
   top in the order of its inputs' height. Each shows its value and its
-  formula.
+  formula. A **constant**, a calculated value whose formula is a single
+  number (`facade_area = 450`, also `-5`), has a small grey "constant"
+  label after its name, in the graph and in the editor panel; it is
+  worked out from the formula, so nothing is saved for it.
 - **Arrows** run into a calculated value from every box and calculated
   value it uses: `label.attribute` from that attribute's row (or the
   box's head), `selected(label)` and a plain label from the head, and
@@ -595,12 +626,39 @@ the Action tree tab (`Render.renderTree()` calls
   text that isn't a number is ignored and put back. Under the table come the **Units** list (one
   drop-down per attribute) and "+ Attribute", which adds an attribute at
   the end of the list.
-- **A calculated value**: its name, a KPI box, the formula box
+- **Removing an attribute**: a trash icon at the far right of each row in
+  the Units list (styled like a profile's delete button; its tooltip
+  reads "Remove price from this version: its numbers in every node and
+  its unit") asks first: "Remove the attribute "co2" from this
+  version? Its 19 numbers and its unit (kg CO₂e) go with it. The formula
+  of gwp uses it, and will show an error until you change it. Other
+  versions keep it. You can undo this." OK removes it from `attributes`,
+  its unit and every number (`Calculations.removeAttribute`; a label left
+  with no numbers goes too), in the version on screen only, in one undo
+  step. Formulas are not rewritten: one that uses it shows "Unknown name".
+- **A calculated value**: its name with **Rename…** (and "constant" for
+  a constant, updated on every keystroke in the formula), a KPI box, the formula box
   (evaluated again on every keystroke; an error shows in red below it,
   the notes in grey), its **Unit**, its value in the scenario on screen
   and Delete. Before deleting, the confirm names the calculated values
   whose formulas use it, as those then read its name as a label that
   isn't in the tree. "+ Calculated value" in the toolbar adds one.
+- **Rename…** asks for the new name (native `prompt`, the same rules as
+  "+ Calculated value": a valid name, no other calculated value, no
+  label) and renames it and every formula that uses it
+  (`Calculations.renameDerived`), in one undo step; it stays selected,
+  with its unit and KPI box. Then it asks for the name shown on the KPI
+  cards, in the report and in the bottom bar (any text, at most 60
+  characters), suggesting one (`Calculations.suggestedDisplayName`): the
+  old shown name's spelling where the old name appears in the new one
+  when that spelling was only a different case (`gwp` "GWP" -> `gwp_total`
+  gives "GWP_total"), otherwise the new name with a capital first letter
+  (`cost` "Cost" -> `total_cost` gives "Total_cost"). Enter takes the
+  suggestion; keeping the formula name changes only the shown name.
+  Cancel at either question changes nothing; both answers are one undo
+  step. Other versions keep the old
+  name, so a merge shows the old one removed and the new one added. A
+  formula that can't be read is left alone and named in an alert.
 - The panel is kept deliberately simple: there is no help on the formula
   language in it yet.
 
@@ -621,7 +679,8 @@ the Action tree tab (`Render.renderTree()` calls
   matching units.
 - A unit follows its number after a no-break space ("52,000 DKK") in the
   graph, the editor panel and the KPI cards; a heading reads
-  "name (unit)" ("cost (DKK)"). n/a and errors get none.
+  "name (unit)" ("price (DKK)"; a calculated value's heading uses its
+  display name, "Cost (DKK)"). n/a and errors get none.
 - **In a CSV file** (see "CSV files") the unit sits in the heading the
   same way, and the cells hold plain numbers, so a spreadsheet can
   calculate with them.
@@ -748,7 +807,7 @@ contradiction warning, then the nodes in the tree
 count the nodes of that class, and **Feature values** adds up the options
 of every Feature node (a Feature with `(keep_current; replace)` counts
 2). Profiles don't change these counts. Then each KPI under its
-`displayName` (or its name), and the link "Go to Calculations →". With no
+display name (or its name), and the link "Go to Calculations →". With no
 KPI it shows "KPIs none yet". The metrics wrap as three groups, each kept
 on one line while it fits: the size with its warning, the four counts,
 and the KPIs; a group breaks inside only when it is wider than the bar.
@@ -853,7 +912,8 @@ saved through `TreeIO.download`:
 
 - **"PNG"** on each KPI card saves that card as it looks on screen (name
   and unit, mean, min/median/max/std dev, histogram, lowest and highest)
-  as `novadm-<kpi>.png`, named after the calculated value
+  as `novadm-<kpi>.png`, named after the calculated value's name, not
+  its display name, so the file name is always safe
   (`novadm-cost.png`), without its PNG button. The graph has no PNG
   button.
 - **How** (`savePng` in `calculations-report.js`, its only user; no library;
