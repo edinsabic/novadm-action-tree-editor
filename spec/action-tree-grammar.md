@@ -500,7 +500,10 @@ stays one undo step.
   one, rebuilt from the copy taken on focus like the numbers, so renaming
   back restores them and the whole rename stays one undo step. Only
   while the new label is a name a formula can use (no `-`, no space, no
-  keyword) and no calculated value has it. Texts in quotes are never
+  keyword) and no calculated value has it. A formula that can't be read
+  (a syntax error, or too long) stays on the old label, and the note
+  under the field names it ("The formula of x can't be read because of
+  an error, so it still uses roof."). Texts in quotes are never
   changed, so a renamed option compared as text
   (`roof_replacement = 'replace'`) stays as it is.
 - Picking another subject in the Subject menu moves nothing: it is a
@@ -555,8 +558,9 @@ primary = number | text | name [ "." name ]
 - When no node in the tree has a number for `total()`'s attribute, the
   total is 0 and has no arrows; the editor panel and the tooltip say so
   ("No node in the tree has a number for price yet …").
-- **Renaming a name in formulas** (`Calculations.renameInFormulas(derived,
-  kind, from, to)`, kind `'derived'` or `'label'`): the parser records
+- **Renaming a name in formulas** (`renameInFormulas(derived, kind, from,
+  to)` inside `calculations.js`, kind `'derived'` or `'label'`, used by
+  `Calculations.renameDerived` and `renameLabel`): the parser records
   where each name starts (`at` on a name, a `lookup`'s label, a
   function's argument), and a rename replaces exactly those places where
   the formula uses the name as that kind: a calculated value is a plain
@@ -600,9 +604,11 @@ the Action tree tab (`Render.renderTree()` calls
   formula. A **constant**, a calculated value whose formula is a single
   number (`facade_area = 450`, also `-5`), has a small grey "constant"
   label after its name, in the graph and in the editor panel; it is
-  worked out from the formula, so nothing is saved for it.
+  worked out from the formula (`Calculations.isConstant`), so nothing is
+  saved for it.
 - **Deleting a calculated value from its box**: a small red trash icon
-  (the tree's, 12 px, `.calc-delete-derived`) in the box's bottom right,
+  (the tree's `.node-delete-btn`, with `.calc-delete-derived` making it
+  12 px and placing it) in the box's bottom right,
   over the end of the formula line, shown only on the selected box and
   the box under the mouse, so the graph stays calm; the formula line then
   ends earlier so the icon never covers text, and it never covers the
@@ -666,11 +672,12 @@ the Action tree tab (`Render.renderTree()` calls
   with its unit and KPI box. Then it asks for the name shown on the KPI
   cards, in the report and in the bottom bar (any text, at most 60
   characters), suggesting one (`Calculations.suggestedDisplayName`): the
-  old shown name's spelling where the old name appears in the new one
-  when that spelling was only a different case (`gwp` "GWP" -> `gwp_total`
+  old shown name's spelling where the old name is a whole part of the
+  new one (between `_`), when that spelling was only a different case (`gwp` "GWP" -> `gwp_total`
   gives "GWP_total"), otherwise the new name with a capital first letter
   (`cost` "Cost" -> `total_cost` gives "Total_cost"). Enter takes the
-  suggestion; keeping the formula name changes only the shown name.
+  suggestion (cut to 60 characters); keeping the formula name changes
+  only the shown name.
   Cancel at either question changes nothing; both answers are one undo
   step. Other versions keep the old
   name, so a merge shows the old one removed and the new one added. A

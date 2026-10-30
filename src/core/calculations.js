@@ -300,6 +300,11 @@ NovaDM.Calculations = (function (Util) {
 		return { items: items, byName: byName, order: order, labels: labels, attributes: attributes };
 	}
 
+	function isConstant(item) {
+		var ast = item && !item.error ? item.ast : null;
+		return !!ast && (ast.type === 'number' || (ast.type === 'negate' && ast.operand.type === 'number'));
+	}
+
 	/* ---------- Data ---------- */
 
 	function starterData() {
@@ -378,14 +383,14 @@ NovaDM.Calculations = (function (Util) {
 		var skipped = [];
 		var renamed = derived.map(function (d) {
 			var text = String(d.formula);
-			var ast;
+			var positions;
 			try {
-				ast = parse(text);
+				positions = namePositions(parse(text), kind, from, plainNames);
 			} catch (err) {
 				if (text.indexOf(from) !== -1) skipped.push(d.name);
 				return d;
 			}
-			var positions = namePositions(ast, kind, from, plainNames).sort(function (a, b) { return b - a; });
+			positions.sort(function (a, b) { return b - a; });
 			if (!positions.length) return d;
 			positions.forEach(function (at) { text = text.slice(0, at - 1) + to + text.slice(at - 1 + from.length); });
 			var copy = Util.clone(d);
@@ -399,8 +404,14 @@ NovaDM.Calculations = (function (Util) {
 
 	function shownName(derived) { return derived.displayName || displayNameOf(derived.name); }
 
+	function namePartAt(name, part) {
+		var parts = name.split('_');
+		var index = parts.indexOf(part);
+		return index === -1 ? -1 : parts.slice(0, index).join('_').length + (index ? 1 : 0);
+	}
+
 	function suggestedDisplayName(from, shown, to) {
-		var at = to.indexOf(from);
+		var at = namePartAt(to, from);
 		var spelling = shown.toLowerCase() === from.toLowerCase() && shown !== displayNameOf(from);
 		if (!spelling || at === -1) return displayNameOf(to);
 		return displayNameOf(to.slice(0, at) + shown + to.slice(at + from.length));
@@ -435,22 +446,26 @@ NovaDM.Calculations = (function (Util) {
 	function renameLabel(data, from, to, keep) {
 		var out = Util.clone(data);
 		var isDerivedName = (out.derived || []).some(function (d) { return d.name === to; });
+		var skipped = [];
 		if (from && from !== to && !keep && isName(to) && !isDerivedName) {
-			out.derived = renameInFormulas(out.derived || [], 'label', from, to).derived;
+			var formulas = renameInFormulas(out.derived || [], 'label', from, to);
+			out.derived = formulas.derived;
+			skipped = formulas.skipped;
 		}
 		var values = out.values || {};
 		if (!from || !to || from === to || !own(values, from) || !hasNumbers(values[from])) {
-			return { data: out, blocked: [] };
+			return { data: out, blocked: [], skipped: skipped };
 		}
 		var target = own(values, to) ? values[to] : {};
 		var clash = labelClash(values[from], target);
 		if (clash) {
-			return { data: out, blocked: [{ from: from, to: to, attribute: clash.attribute, option: clash.option }] };
+			return { data: out, blocked: [{ from: from, to: to, attribute: clash.attribute, option: clash.option }],
+				skipped: skipped };
 		}
 		mergeLabel(values[from], target);
 		Util.setOwn(values, to, target);
 		if (!keep) delete values[from];
-		return { data: out, blocked: [] };
+		return { data: out, blocked: [], skipped: skipped };
 	}
 
 	function renameOptions(data, label, renames) {
@@ -813,6 +828,7 @@ NovaDM.Calculations = (function (Util) {
 		NAME_RULE: NAME_RULE,
 		isName: isName,
 		analyze: analyze,
+		isConstant: isConstant,
 		starterData: starterData,
 		renameLabel: renameLabel,
 		renameDerived: renameDerived,
@@ -820,7 +836,6 @@ NovaDM.Calculations = (function (Util) {
 		suggestedDisplayName: suggestedDisplayName,
 		shownName: shownName,
 		removeAttribute: removeAttribute,
-		renameInFormulas: renameInFormulas,
 		renameOptions: renameOptions,
 		entryKey: entryKey,
 		entries: entries,

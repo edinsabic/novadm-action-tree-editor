@@ -207,12 +207,15 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	function applyRename(result) {
 		NovaDM.CalculationsTab.setState(result.data);
+		var skipped = result.skipped || [];
 		var note = document.getElementById('f-rename-note');
-		note.hidden = result.blocked.length === 0;
+		note.hidden = result.blocked.length === 0 && skipped.length === 0;
 		note.textContent = result.blocked.map(function (b) {
 			return b.to + ' already has a different ' + b.attribute + (b.option ? ' for ' + b.option : '') +
 				', so the numbers of ' + b.from + ' stay where they are.';
-		}).join(' ');
+		}).concat(skipped.length ? ['The formula' + (skipped.length === 1 ? ' of ' : 's of ') + skipped.join(', ') +
+			' can\'t be read because of an error, so ' + (skipped.length === 1 ? 'it' : 'they') + ' still use' +
+			(skipped.length === 1 ? 's ' : ' ') + rename.label + '.'] : []).join(' ');
 	}
 
 	function followLabel(node) {

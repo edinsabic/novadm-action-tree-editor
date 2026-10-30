@@ -245,20 +245,15 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			performance.now() - start);
 	}
 
-	function fullListing(seed, sizeIfTooMany, key) {
+	function fullListing(seed, sizeIfNone, key) {
 		var start = performance.now();
 		var applied = Model.applyMarks();
 		var total = applied.size;
-		if (total > MAX_SAMPLE_SIZE) {
-			var record = randomSample(sizeIfTooMany, seed, key);
-			record.tooMany = true;
-			return record;
-		}
 		var scenarios = total > 0 ? Calculations.enumerate(rootNode(), applied.allowed) : [];
 		return {
 			full: true,
 			tooMany: false,
-			size: total || sizeIfTooMany,
+			size: total || sizeIfNone,
 			seed: seed,
 			spaceKey: key,
 			total: total,
@@ -274,14 +269,21 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		markShown(null);
 	}
 
-	function listFullSpace(seed, sizeIfTooMany, key) {
-		sample = fullListing(seed, sizeIfTooMany, key);
+	function listFullSpace(seed, sizeIfNone, key) {
+		sample = fullListing(seed, sizeIfNone, key);
 		markShown(null);
 	}
 
+	function redrawPlan(base, total) {
+		var wantsAll = base.full || base.tooMany;
+		return { listAll: wantsAll && total <= MAX_SAMPLE_SIZE, tooMany: wantsAll && total > MAX_SAMPLE_SIZE };
+	}
+
 	function drawAgain(key) {
-		if (sample.full || sample.tooMany) listFullSpace(sample.seed, sample.size, key);
-		else takeSample(sample.size, sample.seed, key);
+		var plan = redrawPlan(sample, Model.applyMarks().size);
+		sample = plan.listAll ? fullListing(sample.seed, sample.size, key) : randomSample(sample.size, sample.seed, key);
+		sample.tooMany = plan.tooMany;
+		markShown(null);
 	}
 
 	function evaluateAll() {
@@ -349,12 +351,13 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	 * a newer change drops it. It ends with the same scenarios and numbers as a calculation in one go.
 	 */
 	function startBarJob() {
-		var job = {};
-		var base = sample;
 		var key = spaceKey();
+		var job = { key: key };
+		var base = sample;
 		var applied = Model.applyMarks();
 		var redraw = base.spaceKey !== key;
-		var listAll = redraw && (base.full || base.tooMany) && applied.size <= MAX_SAMPLE_SIZE;
+		var plan = redraw ? redrawPlan(base, applied.size) : null;
+		var listAll = !!plan && plan.listAll;
 		var random = Calculations.seededRandom(base.seed);
 		var drawn = [];
 		var distinct = Object.create(null);
@@ -380,7 +383,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			} else {
 				next = randomSampleRecord(drawn, Object.keys(distinct).length, base.size, base.seed, key, applied,
 					drawMs);
-				next.tooMany = base.full || base.tooMany;
+				next.tooMany = plan.tooMany;
 			}
 			scenarios = next.scenarios;
 		}
@@ -431,7 +434,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			dropStaleSelection();
 			evaluateAll();
 			renderTab();
-		} else if (!isVisible() && sample) {
+		} else if (!isVisible() && sample && spaceKey() !== (barJob ? barJob.key : evaluatedSpaceKey)) {
 			updateBar();
 		}
 		renderSize();
@@ -740,7 +743,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'<span class="calc-derived-value">' + valueHtml(values[node.name], derived.unit) + '</span>' +
 			'</div>' +
 			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div>' +
-			'<button type="button" class="calc-delete-derived" data-calc-delete-derived="' + escapeHtml(node.name) + '"' +
+			'<button type="button" class="node-delete-btn calc-delete-derived" data-calc-delete-derived="' + escapeHtml(node.name) + '"' +
 				' aria-label="' + escapeHtml('Delete calculated value ' + node.name) + '"' +
 				' title="' + escapeHtml('Delete calculated value ' + node.name) + '">' + Render.trashIconHtml() + '</button>' +
 			'</div>';
@@ -903,14 +906,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			'</div>';
 	}
 
-	function isConstant(name) {
-		var item = analysis.byName[name];
-		var ast = item && !item.error ? item.ast : null;
-		return !!ast && (ast.type === 'number' || (ast.type === 'negate' && ast.operand.type === 'number'));
-	}
-
 	function constantHtml(name) {
-		return isConstant(name)
+		return Calculations.isConstant(analysis.byName[name])
 			? '<span class="calc-constant" title="Its formula is a single number">constant</span>'
 			: '';
 	}
@@ -1154,11 +1151,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var users = analysis.items.filter(function (item) {
 			return item.name !== name && item.inputs.indexOf(name) !== -1;
 		}).map(function (item) { return item.name; });
-		var warning = !users.length ? '' : users.length === 1
-			? '\n\nThe formula of ' + users[0] + ' uses it. Once it is deleted, that formula reads "' + name +
-				'" as a label that isn\'t in the tree, which counts as not chosen.'
-			: '\n\nThe formulas of ' + users.join(', ') + ' use it. Once it is deleted, those formulas read "' +
-				name + '" as a label that isn\'t in the tree, which counts as not chosen.';
+		var one = users.length === 1;
+		var warning = !users.length ? '' : '\n\n' + formulasOf(users) + (one ? ' uses' : ' use') +
+			' it. Once it is deleted, ' + (one ? 'that formula reads "' : 'those formulas read "') + name +
+			'" as a label that isn\'t in the tree, which counts as not chosen.';
 		if (!confirm('Delete the calculated value "' + name + '"?' + warning)) return;
 		data.derived = data.derived.filter(function (d) { return d.name !== name; });
 		dropStaleSelection();
@@ -1166,8 +1162,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		renderEditor();
 	}
 
-	function namesList(names) {
-		return names.length === 1 ? names[0] : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+	function formulasOf(names) {
+		return names.length === 1 ? 'The formula of ' + names[0]
+			: 'The formulas of ' + names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
 	}
 
 	function renameSelectedDerived() {
@@ -1182,7 +1179,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			alert(problem);
 			return;
 		}
-		var guess = to === from ? oldShown : Calculations.suggestedDisplayName(from, oldShown, to);
+		var guess = (to === from ? oldShown : Calculations.suggestedDisplayName(from, oldShown, to))
+			.slice(0, MAX_SHOWN_NAME_LENGTH);
 		var shown = prompt('Name shown on the KPI cards, in the report and in the bottom bar (any text):', guess);
 		if (shown === null) return;
 		shown = shown.trim() || guess;
@@ -1198,8 +1196,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		renderEditor();
 		revealSelected();
 		if (result.skipped.length) {
-			alert('The formula' + (result.skipped.length === 1 ? ' of ' : 's of ') + namesList(result.skipped) +
-				' can\'t be read because of an error, so it wasn\'t changed. If it uses "' + from + '", change it by hand.');
+			var one = result.skipped.length === 1;
+			alert(formulasOf(result.skipped) + ' can\'t be read because of an error, so ' +
+				(one ? 'it wasn\'t changed. If it uses "' : 'they weren\'t changed. If they use "') + from +
+				'", change ' + (one ? 'it' : 'them') + ' by hand.');
 		}
 	}
 
@@ -1221,9 +1221,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 			(count ? 'Its ' + Util.plural(count, 'number') + (unit ? ' and its unit (' + unit + ')' : '') +
 				(count === 1 && !unit ? ' goes' : ' go') + ' with it.'
 				: 'It has no numbers' + (unit ? '; its unit (' + unit + ') goes with it.' : '.')) +
-			(users.length ? '\n\nThe formula' + (users.length === 1 ? ' of ' : 's of ') + namesList(users) +
-				(users.length === 1 ? ' uses' : ' use') + ' it, and will show an error until you change ' +
-				(users.length === 1 ? 'it.' : 'them.') : '') +
+			(users.length ? '\n\n' + formulasOf(users) + (users.length === 1
+				? ' uses it, and will show an error until you change it.'
+				: ' use it, and will show an error until you change them.') : '') +
 			'\n\nOther versions keep it. You can undo this.';
 		if (!confirm(question)) return;
 		data = Calculations.removeAttribute(data, name);

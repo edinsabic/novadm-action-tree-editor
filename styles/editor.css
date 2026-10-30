@@ -1644,26 +1644,14 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 	position: absolute;
 	right: 3px;
 	bottom: 2px;
-	display: none;
-	align-items: center;
-	justify-content: center;
 	width: 18px;
 	height: 18px;
-	padding: 0;
-	border: 1px solid transparent;
-	border-radius: var(--radius-sm);
 	background-color: var(--color-surface);
-	color: var(--color-danger);
 }
 
 .calc-delete-derived svg {
 	width: 12px;
 	height: 12px;
-}
-
-.calc-delete-derived:hover {
-	border-color: var(--color-danger-border);
-	background-color: var(--color-danger-light);
 }
 
 .calc-derived-node:hover .calc-delete-derived,
