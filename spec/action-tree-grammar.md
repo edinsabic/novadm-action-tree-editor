@@ -414,7 +414,7 @@ The tab works on `{ attributes, units, values, derived }`:
   tab's bottom bar (`Calculations.shownName`). It is set with Rename…
   (below); a new calculated value gets its name with a capital first
   letter (`Calculations.displayNameOf`), and a value without one shows its
-  name that way. The starter data has "Cost" and "GWP". Formulas, the
+  name that way. The starter data has "Cost", "GWP" and "U-value". Formulas, the
   graph, the editor panel and the PNG's file name use `name`. `kpi: true`
   makes it a KPI.
 
@@ -425,13 +425,19 @@ Where the data comes from:
   constant `facade_area`, the brick replacement's cost and CO₂, and the
   KPIs `cost` ("Cost", `total(price) + brick_replacement_cost`, in DKK)
   and `gwp` ("GWP", global warming potential, `total(co2) +
-  brick_replacement_co2`, in kg CO₂e). The editor opens with it, and
-  "Load example" and "Load example tree" load it again.
+  brick_replacement_co2`, in kg CO₂e), plus the U-value set-up of the
+  starter data with made-up R values (insulation on facade 3.0, roof 5.0
+  and ground floor 2.5 m²K/W; windows double 0.35, triple 0.7). The
+  editor opens with it, and "Load example" and "Load example tree" load
+  it again.
 - **Starter data** (`Calculations.starterData()`), for Clear tree and for
   every version of a file older than version 6: the attributes `price`
-  (DKK) and `co2` (kg CO₂e), no numbers, and the KPIs `cost =
-  total(price)` ("Cost") and `gwp = total(co2)` ("GWP"). Typing prices
-  for a few options is then enough to get a Cost. Older files call this
+  (DKK), `co2` (kg CO₂e) and `r_value` (m²K/W), no numbers, the KPIs
+  `cost = total(price)` ("Cost") and `gwp = total(co2)` ("GWP"), and the
+  U-value set-up (see "U-value" below): the constants `rsi = 0.13` and
+  `rse = 0.04`, `rt = rsi + total(r_value) + rse` (all m²K/W) and the KPI
+  `u_value` ("U-value", W/m²K). Typing prices for a few options is then
+  enough to get a Cost. Older files call this
   KPI `sum` ("Sum") and keep it on import.
 - **A file** (Import file, on either tab): each version's own data; the
   tab shows the current version's.
@@ -678,7 +684,7 @@ the Action tree tab (`Render.renderTree()` calls
   each calculated value has its own (`unit`). No unit is an empty or
   missing value.
 - The drop-down offers No unit; Currency: DKK, EUR, USD; Climate:
-  kg CO₂e, t CO₂e; Other: m², kWh, years; then "Custom unit…", which
+  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit…", which
   shows a text box for any unit of up to 20 characters, like the custom
   subject in the Action tree tab. Currencies use their ISO 4217 codes:
   "kr." and "$" are shared by several currencies, and the codes are
@@ -694,6 +700,44 @@ the Action tree tab (`Render.renderTree()` calls
 - **In a CSV file** (see "CSV files") the unit sits in the heading the
   same way, and the cells hold plain numbers, so a spreadsheet can
   calculate with them.
+
+### U-value
+
+Every new document (and every example, in every version) has a U-value
+KPI, after the supervisor's formula: an element's total thermal
+resistance is Rt = Rsi + R1 + R2 + … + Rn + Rse, and its U-value is
+1 / Rt.
+
+- `r_value` (m²K/W) is the thermal resistance of an option, typed like a
+  price, only for the options that have one (e.g. an insulation option).
+  Options without one count as 0.
+- `rsi = 0.13` and `rse = 0.04` (m²K/W) are the inside and outside
+  surface resistances, the usual values for walls in EN ISO 6946;
+  constants, changed like `facade_area`.
+- `rt = rsi + total(r_value) + rse`.
+- `u_value = if total(r_value) = 0 then 1 / 0 else 1 / rt` ("U-value",
+  W/m²K, a KPI): while no chosen option has an R value it is n/a (a
+  division by zero), not 1 / (0.13 + 0.04) ≈ 5.9, which would look like a
+  real result. The bar then shows "–" for it.
+
+**Limitation**: `total(r_value)` adds the R values of every element in the
+scenario. That is right when the R values describe the layers of one
+element (one wall build-up), and too high when several elements (wall,
+roof, floor) have them: a building's U-value is an area-weighted mean,
+U = Σ(A·U) / ΣA, which needs an area and a formula per element. Kept
+simple for now (supervisor); to be checked with Ali.
+
+**As a worked example** (for the thesis and the tutorial), on a new
+document with a wall's insulation as a node `wall_insulation` with the
+options `none; mineral_wool`:
+
+1. Calculations tab: click the `wall_insulation` box, and in its table
+   type 4 in the `r_value (m²K/W)` column for `mineral_wool`.
+2. Pick `mineral_wool` in the box's option picker: `rt` shows
+   0.13 + 4 + 0.04 = 4.17 m²K/W and `u_value` 1 / 4.17 = 0.24 W/m²K.
+3. Pick `none`: no chosen option has an R value, so U-value is n/a.
+4. Sample the scenario space: the report's U-value card and the Action
+   tree tab's bottom bar show its mean over the sample.
 
 ### Sampling
 
@@ -1107,7 +1151,7 @@ importing.
 
 | Version | What it introduced | On import |
 |---|---|---|
-| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost and GWP, no numbers); a `calculations` without `attributes` takes them from `values`. |
+| 6 | Each snapshot holds its own profiles and the Calculations data (`{ id, created, profile, tree, calculations }`); the global `profile` section is gone. | Read as is. A snapshot without `profile` has no profiles; one without `calculations` gets the starter data (Cost, GWP and U-value, no numbers); a `calculations` without `attributes` takes them from `values`. |
 | 5 | Each snapshot's `tree` holds a single explicit root node. Editors before the XOR-root change always wrote an AND root; the root may now be AND or XOR. | The global profiles are copied into every snapshot, pruned to its tree; every snapshot gets the starter data. |
 | 4 | Profiles also hold per-value constraints (`currentValues`, `valueConstraints`). | As version 5. No explicit root node: an AND root is added above the top-level nodes (with the same new id in every snapshot), the user is told, and the scenario space is unchanged. |
 | 3 | The `versionControl` / `profile` / `actionTree` sections. | As version 4; there is no `currentValues`, so only node constraints load. |

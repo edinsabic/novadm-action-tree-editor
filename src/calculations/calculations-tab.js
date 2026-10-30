@@ -39,6 +39,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 	var UNIT_GROUPS = [
 		{ name: 'Currency', units: ['DKK', 'EUR', 'USD'] },
 		{ name: 'Climate', units: ['kg CO₂e', 't CO₂e'] },
+		{ name: 'Thermal', units: ['W/m²K', 'm²K/W'] },
 		{ name: 'Other', units: ['m²', 'kWh', 'years'] }
 	];
 	var CUSTOM_UNIT = '*custom*';

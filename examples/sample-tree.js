@@ -194,8 +194,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2"],
-				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"attributes": ["price", "co2", "r_value"],
+				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
 				"values": {
 					"outer_doors_replacement": {
 						"price": { "keep_current": 0, "replace": 9000 },
@@ -211,7 +211,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"facade_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 68000 },
-						"co2": { "keep_current": 0, "add_insulation": 5200 }
+						"co2": { "keep_current": 0, "add_insulation": 5200 },
+						"r_value": { "add_insulation": 3 }
 					},
 					"replace_brick_facade": { "price": 210000, "co2": 38000 },
 					"roof_replacement": {
@@ -220,7 +221,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"roof_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 36000 },
-						"co2": { "keep_current": 0, "add_insulation": 2700 }
+						"co2": { "keep_current": 0, "add_insulation": 2700 },
+						"r_value": { "add_insulation": 5 }
 					},
 					"ground_floor_replacement": {
 						"price": { "keep_current": 0, "replace": 60000 },
@@ -228,7 +230,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"ground_floor_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 22000 },
-						"co2": { "keep_current": 0, "add_insulation": 1600 }
+						"co2": { "keep_current": 0, "add_insulation": 1600 },
+						"r_value": { "add_insulation": 2.5 }
 					}
 				},
 				"derived": [
@@ -255,6 +258,16 @@ var NOVADM_SAMPLE_DOCUMENT = {
 						"displayName": "GWP",
 						"formula": "total(co2) + brick_replacement_co2",
 						"unit": "kg CO₂e",
+						"kpi": true
+					},
+					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
+					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
+					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
+					{
+						"name": "u_value",
+						"displayName": "U-value",
+						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
+						"unit": "W/m²K",
 						"kpi": true
 					}
 				]
@@ -453,12 +466,13 @@ var NOVADM_SAMPLE_DOCUMENT = {
 				}
 			],
 			"calculations": {
-				"attributes": ["price", "co2"],
-				"units": { "price": "DKK", "co2": "kg CO₂e" },
+				"attributes": ["price", "co2", "r_value"],
+				"units": { "price": "DKK", "co2": "kg CO₂e", "r_value": "m²K/W" },
 				"values": {
 					"windows_glazing": {
 						"price": { "keep_double": 0, "replace_triple": 52000 },
-						"co2": { "keep_double": 0, "replace_triple": 3900 }
+						"co2": { "keep_double": 0, "replace_triple": 3900 },
+						"r_value": { "keep_double": 0.35, "replace_triple": 0.7 }
 					},
 					"outer_doors_replacement": {
 						"price": { "keep_current": 0, "replace": 9000 },
@@ -474,7 +488,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"facade_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 68000 },
-						"co2": { "keep_current": 0, "add_insulation": 5200 }
+						"co2": { "keep_current": 0, "add_insulation": 5200 },
+						"r_value": { "add_insulation": 3 }
 					},
 					"replace_brick_facade": { "price": 210000, "co2": 38000 },
 					"roof_replacement": {
@@ -483,7 +498,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"roof_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 36000 },
-						"co2": { "keep_current": 0, "add_insulation": 2700 }
+						"co2": { "keep_current": 0, "add_insulation": 2700 },
+						"r_value": { "add_insulation": 5 }
 					},
 					"ground_floor_replacement": {
 						"price": { "keep_current": 0, "replace": 60000 },
@@ -491,7 +507,8 @@ var NOVADM_SAMPLE_DOCUMENT = {
 					},
 					"ground_floor_insulation": {
 						"price": { "keep_current": 0, "add_insulation": 22000 },
-						"co2": { "keep_current": 0, "add_insulation": 1600 }
+						"co2": { "keep_current": 0, "add_insulation": 1600 },
+						"r_value": { "add_insulation": 2.5 }
 					}
 				},
 				"derived": [
@@ -518,6 +535,16 @@ var NOVADM_SAMPLE_DOCUMENT = {
 						"displayName": "GWP",
 						"formula": "total(co2) + brick_replacement_co2",
 						"unit": "kg CO₂e",
+						"kpi": true
+					},
+					{ "name": "rsi", "displayName": "Rsi", "formula": "0.13", "unit": "m²K/W" },
+					{ "name": "rse", "displayName": "Rse", "formula": "0.04", "unit": "m²K/W" },
+					{ "name": "rt", "displayName": "Rt", "formula": "rsi + total(r_value) + rse", "unit": "m²K/W" },
+					{
+						"name": "u_value",
+						"displayName": "U-value",
+						"formula": "if total(r_value) = 0 then 1 / 0 else 1 / rt",
+						"unit": "W/m²K",
 						"kpi": true
 					}
 				]
