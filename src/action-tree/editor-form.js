@@ -263,7 +263,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	function subjectListToggleHtml() {
 		var active = Subjects.getActiveList();
-		return '<div class="toggle-group subject-list-toggle" role="group" aria-label="Subject list">' +
+		return '<span class="note">Subject list</span>' +
+			'<div class="toggle-group subject-list-toggle" role="group" aria-label="Subject list">' +
 			Subjects.lists().map(function (list) {
 				var isActive = list.key === active;
 				return '<button type="button" class="toggle-btn' + (isActive ? ' active' : '') + '"' +
@@ -290,9 +291,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 				'<ul class="subject-menu-list subject-submenu" role="menu">' + items + '</ul>' +
 				'</li>';
 		}).join('');
-		return '<div class="subject-menu-lists">' +
-			'<span class="note">Subject list</span>' + subjectListToggleHtml() +
-			'</div>' +
+		return '<div class="subject-menu-lists">' + subjectListToggleHtml() + '</div>' +
 			'<ul class="subject-menu-list">' + categoriesHtml +
 			'<li class="popover-divider" role="separator"></li>' +
 			'<li><button type="button" class="subject-menu-item" role="menuitem" data-custom-subject="true">' +
@@ -368,11 +367,17 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 		if (key === Subjects.getActiveList()) return;
 		Subjects.setActiveList(key);
 		var node = selectedNode();
+		var scrollTop = formHost.scrollTop;
 		renderEditorForm();
 		var picker = document.getElementById('f-subject');
 		if (!node || !picker) return;
-		openSubjectMenu(picker, node);
-		subjectMenu.querySelector('[data-subject-list="' + key + '"]').focus();
+		var reopen = function () {
+			if (!document.body.contains(picker) || selectedNode() !== node) return;
+			openSubjectMenu(picker, node);
+			subjectMenu.querySelector('[data-subject-list="' + key + '"]').focus();
+		};
+		if (formHost.scrollTop === scrollTop) reopen();
+		else formHost.addEventListener('scroll', reopen, { once: true });
 	}
 
 	function chooseCustomSubject() {

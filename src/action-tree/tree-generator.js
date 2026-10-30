@@ -70,9 +70,7 @@ window.NovaDM = window.NovaDM || {};
 			checkedList = Subjects.getActiveList();
 		}
 		body.innerHTML =
-			'<div class="gen-row">' +
-			'<span class="note">Subject list</span>' + EditorForm.subjectListToggleHtml() +
-			'</div>' +
+			'<div class="gen-row">' + EditorForm.subjectListToggleHtml() + '</div>' +
 			'<div class="gen-row" role="radiogroup" aria-label="Renovation depth">' +
 			'<span class="note">Renovation depth</span>' + depthsHtml() +
 			'</div>' +
@@ -169,7 +167,8 @@ window.NovaDM = window.NovaDM || {};
 	});
 
 	document.addEventListener('click', function (e) {
-		if (!panel.hidden && !panel.contains(e.target) && !openBtn.contains(e.target)) closePanel();
+		if (panel.hidden || panel.contains(e.target) || openBtn.contains(e.target)) return;
+		if (!e.target.closest('[data-click-for="' + openBtn.id + '"]')) closePanel();
 	}, true);
 
 	document.addEventListener('keydown', function (e) {

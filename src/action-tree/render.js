@@ -130,7 +130,7 @@ NovaDM.Render = (function (Model, Util) {
 			'<ol class="empty-start-tiles">' +
 			startTileHtml('1. Drag a node',
 				'Drag an AND or XOR node from the editor panel onto this area to create the root node.',
-				'<div class="root-drop-zone empty-start-drop" data-root-drop="true"' +
+				'<div class="root-drop-zone" data-root-drop="true"' +
 				' title="Drop an AND or XOR node here to create the root node">Drop here</div>') +
 			startTileHtml('2. Start from a file', 'Open the example tree, or a .json file you saved before.',
 				'<div class="empty-start-actions">' + startButtonHtml('load-example-btn', 'Load example tree') +

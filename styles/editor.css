@@ -939,6 +939,11 @@ main {
 	white-space: nowrap;
 }
 
+.subject-list-toggle .toggle-btn {
+	padding: 4px 10px;
+	font-size: 0.78rem;
+}
+
 .subject-menu-list {
 	margin: 0;
 	padding: 0;
@@ -1018,11 +1023,6 @@ main {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 6px 16px;
-}
-
-.subject-list-toggle .toggle-btn {
-	padding: 4px 10px;
-	font-size: 0.78rem;
 }
 
 .gen-depth,
@@ -1328,16 +1328,9 @@ button.value-chip:hover { border-color: var(--color-ink-muted); }
 }
 
 .root-drop-zone {
-	min-height: 2px;
-	margin: 0 0 2px;
-	border-radius: var(--radius-sm);
-}
-
-.empty-start-drop {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin: 0;
 	padding: 10px;
 	border: 2px dashed var(--color-border);
 	border-radius: var(--radius-sm);
