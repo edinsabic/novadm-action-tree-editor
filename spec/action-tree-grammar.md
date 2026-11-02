@@ -287,6 +287,78 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
 
+## Tutorial
+
+- The **Tutorial** button sits at the top right of the page, in the
+  title's row. It opens the tutorial in the place of the two tabs: the
+  button shows pressed and neither tab is highlighted. "Back to the
+  editor" or the button again goes back to the tab that was open; a tab
+  goes to that tab.
+- The tutorial has a **contents list** on the left and the text on the
+  right, in sections without numbers (`<section id="tutorial-…">`,
+  reached by plain `#` links, so links between sections need no code).
+  The list has two groups: **Basics** (What the tool is for, Tips,
+  Glossary) and **Topics** (Action trees, Starting a tree, Editing,
+  Profiles, Versions, Files, The Calculations tab, Formulas), and the
+  text follows that order. It marks the section at the top of the text,
+  the last one once the text is scrolled to the end, and a link just
+  clicked. The text is plain HTML in `index.html`, so it works from
+  `file://` and the browser's own find (Ctrl+F) searches it.
+- **Search the tutorial**, a box in the tutorial's head between its title
+  and "Back to the editor", finds a text in the tutorial's text only (not
+  the contents list): ignoring case, with any run of spaces and line
+  breaks counted as one space, within one stretch of text (a phrase
+  across bold text or a link isn't found). Every match is highlighted,
+  the current one in a stronger colour, and scrolled into view; the box
+  shows "1 of 19", or "No matches". Enter goes to the next match,
+  Shift+Enter back, both wrapping round. The highlights use the CSS
+  Custom Highlight API (`CSS.highlights`, no change to the page's HTML);
+  a browser without it still counts and scrolls, without highlights.
+- **The text** is written for renovation practitioners who don't know
+  NovaDM. Each section explains in plain words and, where it helps, ends
+  in a "Try it" box with a few steps on the example the editor opens
+  with. What the tool is for takes NovaDM's definition and its six core
+  concepts word for word from the NovaDM literature; the Glossary uses the
+  same words for those concepts. Formulas is the full reference, for
+  super users. The text names every control as it reads on screen.
+- **Figures** sit where they help, numbered in order ("Figure 2:") with
+  a caption and an alt text, at most 320 pixels tall so they don't take
+  over the page, and open at full size in a new tab when clicked. They
+  are plain files in `tutorial/`:
+  - `novadm-concepts.svg` (Figure 1, What the tool is for): NovaDM's six
+    concepts as a UML diagram, redrawn by hand as SVG from Figure 5 of
+    Schultz and Kamari (2025), the tutorial's reference [1];
+  - screenshots of the editor on the example it opens with, taken in
+    headless Chrome at 1,280 CSS pixels wide and twice the pixel density
+    (PNG): `action-tree-tab.png` (the List layout with `windows_glazing`
+    selected), `diagram-layout.png` (only the facade's part of the tree,
+    in the Diagram layout fitted to a 1,920-pixel window),
+    `profile-marks.png` ("Energy upgrade" loaded), `version-history.png`
+    ("Initial version" selected), `calculations-tab.png` (`cost`
+    selected) and `report.png` (the KPI cards of a 30-scenario sample).
+
+  A change to the look of those screens means taking them again.
+- **Citations** are numbered as in LaTeX, "[1, 2]", each number a link to
+  its entry in a "References" list at the end of the section that cites
+  it. The numbers run through the whole tutorial, so a source keeps its
+  number wherever it is cited.
+- **The "Try it" steps quote the example's numbers**: 2,560 scenarios,
+  3,840 with a third glazing option, 32 with the "Energy upgrade"
+  profile, 1,280 with the roof never replaced, +36,000 DKK of `cost` for
+  roof insulation, and the U-values 1.49, 1.36 and 0.29 W/m²K of
+  `sample-tree-with-u-value.json`. Check them when the example, a
+  control's name or the formula language changes.
+- A first visit shows the **invite** "New here? Start with the tutorial"
+  with a ×, left of the button. It goes for good after × or the first
+  opening: the browser remembers it in `localStorage`
+  (`novadm-tutorial-invite-hidden` = `1`). Without `localStorage`
+  (blocked or a private window) the invite shows on every start.
+- Opening the tutorial changes nothing in the document: it is not an
+  undo step and not saved, and the tree, the sample, the report and an
+  open profile or version flyout stay as they were. Ctrl+Z and Ctrl+Y do
+  nothing while it is open, so they never change a document that isn't
+  on screen.
+
 ## Screen sizes and scaling
 
 The page has no zoom of its own and no "Fit to screen". It never reads

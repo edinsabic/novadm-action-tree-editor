@@ -470,8 +470,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	}
 
 	function placeBelow() {
-		if (openFlyoutName === null) return;
 		var pill = openedFrom === 'calc' ? calcProfileBtn : profileBtn;
+		if (openFlyoutName === null || pill.offsetParent === null) return;
 		var top = pill.offsetTop + pill.offsetHeight + FLYOUT_GAP;
 		[profileFlyout, versionFlyout].forEach(function (flyout) {
 			flyout.style.top = top + 'px';
@@ -549,6 +549,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	return {
 		renderFlyout: renderFlyout,
 		updatePillLabels: updatePillLabels,
-		resetVersionView: resetVersionView
+		resetVersionView: resetVersionView,
+		placeFlyouts: placeBelow
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.VersionGraph, NovaDM.Render, NovaDM.EditorForm, NovaDM.Util);
