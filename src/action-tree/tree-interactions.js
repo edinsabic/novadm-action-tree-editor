@@ -109,7 +109,7 @@ window.NovaDM = window.NovaDM || {};
 		clearDropMarks(rootZone);
 		var dropEl = row || rootZone || treeContent;
 
-		var targetNode = row ? nodeFor(row, 'data-id') : Model.root;
+		var targetNode = row ? nodeFor(row, 'data-id') : Model.root.children[0] || Model.root;
 		if (!targetNode) return;
 
 		var newKind = e.dataTransfer.getData('application/x-new-node');

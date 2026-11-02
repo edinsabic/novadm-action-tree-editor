@@ -112,7 +112,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	function exportFile() {
 		if (History.isDirty() && !History.canUpdateHead()) {
 			alert('"' + History.getHead() + '" has unsaved changes, but other versions are based on it, so it' +
-				' cannot store them. Save them as a new version first (Version history → Save as new version…).');
+				' cannot store them. Save them as a new version first (Version history → Save as new version).');
 			return;
 		}
 		var others = History.snapshotCount() > 1 ? ' (the other versions are kept as they are)' : '';

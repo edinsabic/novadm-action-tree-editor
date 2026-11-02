@@ -267,6 +267,17 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   (a field with a `data-typing-key` counts as one field). Loading the
   example, clearing the tree and importing a file also replace the
   Calculations data, in the same single step.
+- **Drag and drop** (`tree-interactions.js`): an AND or XOR node from the
+  editor panel, or a node of the tree, dropped onto a node becomes that
+  node's last child. Dropped on an empty part of the tree area, it
+  becomes the root node's last child (the end of the top level), so a
+  drop never misses; on an empty tree it becomes the root node. A drop
+  the sibling rule doesn't allow (an AND among XOR siblings) flashes
+  red and changes nothing. The root node itself can't be moved.
+- **Tooltips** (`title`) have no full stop at the end; a tooltip of two
+  parts joins them with a semicolon or a colon. Messages that also
+  serve as alerts or notes keep their full stop there and lose it as a
+  tooltip (`Util.tooltipText`).
 - The **selected node** shows a red delete icon in both layouts; it runs
   the same `EditorForm.deleteNode()` as the editor's delete button.
 - The two layouts are called **List** (an indented list, like a file
@@ -417,7 +428,7 @@ file format is unchanged.
 
 - **Editor panel** – for a Subject node, the Label and Value fields are
   replaced by a cascading menu (category › subject). Its last entry,
-  "+ Custom subject…", shows the Label and Value fields again for free
+  "+ Custom subject", shows the Label and Value fields again for free
   text. A Subject node from the other list keeps its name, with a note
   saying which list it is from. One that is in neither list (e.g. from
   an older file) shows as a custom subject.
@@ -761,7 +772,7 @@ the Action tree tab (`Render.renderTree()` calls
   each calculated value has its own (`unit`). No unit is an empty or
   missing value.
 - The drop-down offers No unit; Currency: DKK, EUR, USD; Climate:
-  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit…", which
+  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit", which
   shows a text box for any unit of up to 20 characters, like the custom
   subject in the Action tree tab. Currencies use their ISO 4217 codes:
   "kr." and "$" are shared by several currencies, and the codes are

@@ -20,8 +20,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var GONE_PROFILE_TITLE = 'None of its nodes are in this version\'s tree, so it\'s safe to delete';
 	var EMPTY_PROFILE_TITLE = 'It marks no nodes as always or never, so it\'s safe to delete';
 	var SAVE_PROFILE_TITLE = 'Save the always/never marks in the tree as a named profile in this version';
-	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile.' +
-		' Saved profiles stay as they are.';
+	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile;' +
+		' saved profiles stay as they are';
 
 	var escapeHtml = Util.escapeHtml;
 	var plural = Util.plural;
@@ -171,7 +171,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'Re-center</button>' +
 			'<button type="button" class="btn" data-vg="save"' +
 			' title="Save the tree and numbers on screen as a new version">' +
-			'Save as new version…</button>' +
+			'Save as new version</button>' +
 			'</div>' +
 			'<div class="vg-box" id="vg-box"></div>' +
 			'<div class="vg-details" id="vg-details"></div>';
@@ -243,7 +243,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	function buttonHtml(action, label, title, disabled, extraClass) {
 		return '<button type="button" class="btn' + (extraClass ? ' ' + extraClass : '') + '"' +
 			(action ? ' data-vg="' + action + '"' : '') +
-			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(title) + '">' + label + '</button>';
+			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(Util.tooltipText(title)) + '">' + label +
+			'</button>';
 	}
 
 	function deleteButtonHtml(d) {
@@ -255,7 +256,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		var canUpdate = History.canUpdateHead();
 		return buttonHtml('update', 'Update this version', canUpdate
 			? 'Overwrite this version with the tree and numbers on screen'
-			: 'Other versions are based on this one, so it cannot be changed. Save as a new version instead.',
+			: 'Other versions are based on this one, so it cannot be changed; save as a new version instead',
 			!canUpdate);
 	}
 

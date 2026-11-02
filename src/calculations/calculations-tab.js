@@ -281,7 +281,9 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 
 	function drawAgain(key) {
 		var plan = redrawPlan(sample, Model.applyMarks().size);
-		sample = plan.listAll ? fullListing(sample.seed, sample.size, key) : randomSample(sample.size, sample.seed, key);
+		sample = plan.listAll
+			? fullListing(sample.seed, sample.size, key)
+			: randomSample(sample.size, sample.seed, key);
 		sample.tooMany = plan.tooMany;
 		markShown(null);
 	}
@@ -736,16 +738,18 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		var note = item.error ? '' : formulaNote(item, numbered);
 		var title = item.error || node.name + ' = ' + derived.formula + (note ? '\n' + note : '');
 		return '<div class="' + cls + '" data-calc-derived="' + escapeHtml(node.name) + '"' +
-			' style="' + boxStyle(node) + '" title="' + escapeHtml(title) + '">' +
+			' style="' + boxStyle(node) + '" title="' + escapeHtml(Util.tooltipText(title)) + '">' +
 			'<div class="calc-node-head">' +
 			'<span class="calc-derived-name">' + escapeHtml(node.name) + '</span>' +
 			constantHtml(node.name) +
 			'<span class="calc-derived-value">' + valueHtml(values[node.name], derived.unit) + '</span>' +
 			'</div>' +
 			'<div class="calc-formula-line">' + escapeHtml(derived.formula) + '</div>' +
-			'<button type="button" class="node-delete-btn calc-delete-derived" data-calc-delete-derived="' + escapeHtml(node.name) + '"' +
+			'<button type="button" class="node-delete-btn calc-delete-derived"' +
+				' data-calc-delete-derived="' + escapeHtml(node.name) + '"' +
 				' aria-label="' + escapeHtml('Delete calculated value ' + node.name) + '"' +
-				' title="' + escapeHtml('Delete calculated value ' + node.name) + '">' + Render.trashIconHtml() + '</button>' +
+				' title="' + escapeHtml('Delete calculated value ' + node.name) + '">' + Render.trashIconHtml() +
+				'</button>' +
 			'</div>';
 	}
 
@@ -894,7 +898,7 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 					return '<optgroup label="' + escapeHtml(group.name) + '">' +
 						group.units.map(function (u) { return option(u, u); }).join('') + '</optgroup>';
 				}).join('') +
-				option(CUSTOM_UNIT, 'Custom unit\u2026') +
+				option(CUSTOM_UNIT, 'Custom unit') +
 			'</select>' +
 			(custom
 				? '<input type="text" class="calc-unit-custom" maxlength="' + MAX_UNIT_LENGTH + '"' +
@@ -921,8 +925,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 						'<span class="calc-editor-title">' + escapeHtml(derived.name) + '</span>' +
 						'<span id="calc-editor-constant">' + constantHtml(derived.name) + '</span>' +
 						'<button class="btn calc-rename-btn" type="button" data-calc-action="rename-derived"' +
-							' title="Rename it: its name in formulas (the formulas that use it follow) and the name shown' +
-							' on the KPI cards, in the report and in the bottom bar">Rename</button>' +
+							' title="Rename it: its name in formulas (the formulas that use it follow) and the name' +
+							' shown on the KPI cards, in the report and in the bottom bar">Rename</button>' +
 					'</div>' +
 				'</div>' +
 				'<label class="calc-check">' +
@@ -1017,9 +1021,10 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 				var title = 'Remove ' + a + ' from this version: its numbers in every node and its unit';
 				return '<div class="calc-unit-row"><span class="calc-unit-name">' + escapeHtml(a) + '</span>' +
 					unitFieldHtml('a:' + a, a) +
-					'<button type="button" class="calc-remove-attribute" data-calc-remove-attribute="' + escapeHtml(a) + '"' +
-						' aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">' + Render.trashIconHtml() +
-						'</button></div>';
+					'<button type="button" class="calc-remove-attribute"' +
+						' data-calc-remove-attribute="' + escapeHtml(a) + '"' +
+						' aria-label="' + escapeHtml(title) + '" title="' + escapeHtml(title) + '">' +
+						Render.trashIconHtml() + '</button></div>';
 			}).join('') + '</div>' +
 			'<div class="note">A unit applies to the attribute in every node, and is only a label: changing it' +
 				' doesn&rsquo;t convert the numbers.</div>' +
@@ -1330,28 +1335,28 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		if (!sampleHasScenarios()) return '';
 		var title = sample.full
 			? 'Exact mean: each KPI\'s mean over ' + sampleText() + ' of the space ("Full scenario space" in the' +
-				' Calculations tab).'
-			: 'Estimated: each KPI\'s mean over ' + sampleText() + ', an estimate of its mean over all of them.' +
-				' A larger sample gives a closer estimate; "Full scenario space" in the Calculations tab gives the' +
-				' exact mean.';
+				' Calculations tab)'
+			: 'Estimated: each KPI\'s mean over ' + sampleText() + ', an estimate of its mean over all of them;' +
+				' a larger sample gives a closer estimate, and "Full scenario space" in the Calculations tab gives' +
+				' the exact mean';
 		return '<span class="metric-caption" title="' + escapeHtml(title) + '">' +
 			(sample.full ? 'Exact mean' : 'Estimated') + '</span>';
 	}
 
 	function summaryTitle(d, stats) {
 		var name = Calculations.shownName(d);
-		if (barJob) return name + ' is being calculated again for the changed tree.';
+		if (barJob) return name + ' is being calculated again for the changed tree';
 		if (stats) {
 			return name + ': ' + (sample.full ? 'exact mean of ' : 'mean of ') + sampleText() + ' (min ' +
 				withUnit(formatNumber(stats.min), d.unit) + ', max ' + withUnit(formatNumber(stats.max), d.unit) +
-				'). Exact numbers per scenario are in the Calculations tab.';
+				'); the exact numbers per scenario are in the Calculations tab';
 		}
-		if (sampleHasScenarios()) return name + ' has no number: every sampled scenario gives n/a or an error.';
+		if (sampleHasScenarios()) return name + ' has no number: every sampled scenario gives n/a or an error';
 		if (sample) {
 			return (sample.contradictory ? 'The always/never marks are contradictory' : 'The tree is empty') +
-				', so there is no scenario to estimate ' + name + ' from.';
+				', so there is no scenario to estimate ' + name + ' from';
 		}
-		return 'Sample the scenario space in the Calculations tab to estimate ' + name + '.';
+		return 'Sample the scenario space in the Calculations tab to estimate ' + name;
 	}
 
 	function renderSummary() {
@@ -1382,7 +1387,8 @@ NovaDM.CalculationsTab = (function (Model, Calculations, Render, CalculationsRep
 		}
 		if (total > MAX_SAMPLE_SIZE) {
 			return 'The tree has ' + Render.scenarioSizeText(total) + ' scenarios, too many to list (at most ' +
-				formatCount(MAX_SAMPLE_SIZE) + '): click to sample ' + formatCount(MAX_SAMPLE_SIZE) + ' of them instead';
+				formatCount(MAX_SAMPLE_SIZE) + '): click to sample ' + formatCount(MAX_SAMPLE_SIZE) +
+				' of them instead';
 		}
 		return 'List all ' + formatCount(total) + ' scenarios of the tree';
 	}

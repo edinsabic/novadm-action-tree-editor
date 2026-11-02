@@ -77,10 +77,10 @@
 						</div>
 						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="load-example-btn" class="btn" type="button"
-								title="Load the example tree. It also replaces the numbers in the Calculations tab.">
+								title="Load the example tree, which also replaces the numbers in the Calculations tab">
 								Load example tree</button>
 							<button id="clear-tree-btn" class="btn" type="button"
-								title="Remove the whole tree and start over. The Calculations tab starts over too.">
+								title="Remove the whole tree and start over; the Calculations tab starts over too">
 								Clear tree</button>
 							<button id="import-file-btn" class="btn" type="button" data-file-action="import">
 								Import file</button>
@@ -262,7 +262,7 @@
 						</div>
 						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="calc-load-example-btn" class="btn" type="button"
-								title="Load the example. It also replaces the tree in the Action tree tab.">
+								title="Load the example, which also replaces the tree in the Action tree tab">
 								Load example</button>
 							<button class="btn" type="button" data-file-action="import">Import file</button>
 							<button class="btn" type="button" data-file-action="export">Export file</button>
@@ -321,7 +321,7 @@
 			<div class="tutorial-search">
 				<input id="tutorial-search" type="search" placeholder="Search the tutorial"
 					aria-label="Search the tutorial"
-					title="Type a word to find it in the tutorial. Enter goes to the next match, Shift+Enter back." />
+					title="Type a word to find it in the tutorial; Enter goes to the next match, Shift+Enter back" />
 				<span id="tutorial-search-count" class="tutorial-search-count" aria-live="polite"></span>
 			</div>
 			<button id="tutorial-close" class="btn" type="button">Back to the editor</button>
@@ -642,14 +642,16 @@
 					<p>
 						A <strong>Subject</strong> node is picked from a menu instead (category &rsaquo; subject),
 						with the same Subject list switch as Generate tree at its top. Its last entry,
-						<strong>+ Custom subject&hellip;</strong>, lets you type your own label and value.
+						<strong>+ Custom subject</strong>, lets you type your own label and value.
 					</p>
 					<ul>
 						<li><strong>Add a child:</strong> <strong>+ AND child</strong> or <strong>&minus; XOR
 							child</strong> in the editor panel, or drag AND node or XOR node from the editor
-							panel onto a node.</li>
+							panel onto a node. Dropped on an empty part of the tree area, it goes to the end of the
+							top level, under the root node, and you can move it from there.</li>
 						<li><strong>Move a node:</strong> drag it onto its new parent; it becomes that node's last
-							child. A short red flash means the move isn't allowed, for example an AND among XOR
+							child. Dropped on an empty part of the tree area, it goes to the end of the top level. A
+							short red flash means the move isn't allowed, for example an AND among XOR
 							siblings.</li>
 						<li><strong>Delete a node:</strong> click the red trash icon on the selected node, or the
 							delete button in the editor panel. Its children go with it.</li>
@@ -749,7 +751,7 @@
 							its details and buttons below.</figcaption>
 					</figure>
 					<ul>
-						<li><strong>Save as new version&hellip;</strong> saves what is on screen as a new version
+						<li><strong>Save as new version</strong> saves what is on screen as a new version
 							on top of the current one, with a name and an optional comment;</li>
 						<li><strong>Update this version</strong> stores the changes in the current version. Once
 							other versions are based on it, its tree can't change any more (save a new version

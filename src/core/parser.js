@@ -241,12 +241,15 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 6, /* 6: each snapshot holds its own profiles and the Calculations data; no global `profile`.
-					** 5: the tree is a single AND root node (older files get one added on import).
-					** 4: profiles also hold per-value constraints (currentValues / valueConstraints).
-					** 3: versionControl / profile / actionTree sections. 
-					** 2: single `tree`, value is an array of strings. 
-					** 1: text values. Older files still import. */
+		/*
+		 * 6: each snapshot holds its own profiles and the Calculations data; no global `profile`.
+		 * 5: the tree is a single AND root node (older files get one added on import).
+		 * 4: profiles also hold per-value constraints (currentValues / valueConstraints).
+		 * 3: versionControl / profile / actionTree sections.
+		 * 2: single `tree`, value is an array of strings.
+		 * 1: text values. Older files still import.
+		 */
+		version: 6,
 		extension: '.json',
 		mimeType: 'application/json',
 		defaultName: 'novadm-action-tree',

@@ -395,7 +395,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 			'<span class="calc-scale-legend">lowest' +
 			'<span class="calc-scale-bar" aria-hidden="true"></span>highest</span>' +
 			'<button class="btn" type="button" data-calc-report="csv" title="Save every scenario of the table, in' +
-				' its current order, as a CSV file.">Export table as CSV</button>' +
+				' its current order, as a CSV file">Export table as CSV</button>' +
 			'</div>' +
 			scenarioTableHtml(columns.list) +
 			'</section>';
