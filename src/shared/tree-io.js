@@ -15,6 +15,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var importBtns = document.querySelectorAll('[data-file-action="import"]');
 	var importInput = document.getElementById('import-file-input');
+	var textInFile = null;
 
 	function nothingToLose() {
 		return Model.root.children.length === 0 && CalculationsTab.isUntouched() &&
@@ -44,6 +45,17 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
+	function documentText() {
+		var tree = Model.treeSpecs();
+		return FORMAT.serialize({
+			tree: tree,
+			profile: Model.getProfileState([tree]),
+			calculations: CalculationsTab.getState(),
+			history: History.getState(),
+			source: Model.getSource()
+		});
+	}
+
 	function newDocument(specs, source, history, name) {
 		Model.replaceTree(specs);
 		Model.setSource(source);
@@ -58,6 +70,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			History.reset();
 		}
 		refreshAll();
+		textInFile = documentText();
 	}
 
 	function loadExample(onStart) {
@@ -120,16 +133,41 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			' them as that version' + others + '.\n\nExport anyway?')) {
 			return;
 		}
-		var tree = Model.treeSpecs();
-		var text = FORMAT.serialize({
-			tree: tree,
-			profile: Model.getProfileState([tree]),
-			calculations: CalculationsTab.getState(),
-			history: History.getState(),
-			source: Model.getSource()
-		});
-		download(text, (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension, FORMAT.mimeType);
+		saveDocument(documentText(), (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension);
 	}
+
+	function saveDocument(text, fileName) {
+		function downloadInstead() {
+			download(text, fileName, FORMAT.mimeType);
+			textInFile = text;
+		}
+		if (!window.showSaveFilePicker) {
+			downloadInstead();
+			return;
+		}
+		var accept = {};
+		accept[FORMAT.mimeType] = [FORMAT.extension];
+		window.showSaveFilePicker({
+			suggestedName: fileName,
+			types: [{ description: 'NovaDM action tree', accept: accept }]
+		}).then(function (handle) {
+			return handle.createWritable();
+		}).then(function (file) {
+			return file.write(text).then(function () { return file.close(); });
+		}).then(function () {
+			textInFile = text;
+		}).catch(function (err) {
+			if (err.name !== 'AbortError') downloadInstead();
+		});
+	}
+
+	/* ---------- Leaving the page ---------- */
+
+	window.addEventListener('beforeunload', function (e) {
+		if (documentText() === textInFile) return;
+		e.preventDefault();
+		e.returnValue = '';
+	});
 
 	exportBtns.forEach(function (btn) {
 		btn.title = 'Save the tree, its versions, profiles and numbers as a ' + FORMAT.extension + ' file';

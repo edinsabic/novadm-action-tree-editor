@@ -428,6 +428,15 @@ main {
 	font-weight: 600;
 }
 
+.tutorial-marks { width: auto; }
+
+.tutorial-marks td { font-family: var(--font-mono); }
+
+.tutorial-marks .constraint-dot {
+	display: inline-block;
+	pointer-events: none;
+}
+
 .tutorial-glossary {
 	display: grid;
 	grid-template-columns: max-content 1fr;

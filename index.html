@@ -350,9 +350,9 @@
 				<section id="tutorial-purpose">
 					<h3>What the tool is for</h3>
 					<p>
-						<strong>NovaDM</strong>, the Renovation Domain Model, provides a structured, computational
-						environment explicitly designed for formalising building renovation decision support
-						[<a href="#tutorial-ref-1">1</a>]. NovaDM defines six core
+						Renovating a building means choosing between a great many options. The <strong>Renovation
+						Domain Model (NovaDM)</strong> is a formal modelling framework for supporting renovation
+						design and decision-making [<a href="#tutorial-ref-1">1</a>]. NovaDM defines six core
 						concepts (they are also in the <a href="#tutorial-glossary">Glossary</a>):
 					</p>
 					<ul>
@@ -430,16 +430,15 @@
 					<ul>
 						<li><strong>Tooltips:</strong> rest the pointer on a button, pill, label or box for about a
 							second to see what it does.</li>
-						<li><strong>Keyboard:</strong> Ctrl+Z undoes and Ctrl+Y redoes (not while typing in a
-							field, where they undo the typing, and not in this tutorial). Esc closes an open
-							list, menu or panel.</li>
-						<li><strong>More on screen:</strong> Ctrl and minus (Ctrl &minus;) makes the whole page
-							smaller, Ctrl and plus larger, and Ctrl+0 resets it.</li>
+						<li><strong>Keyboard:</strong> Ctrl+Z undoes and Ctrl+Y redoes. Esc closes an open list, menu
+							or panel.</li>
+						<li><strong>More on screen:</strong> Ctrl and minus makes the whole page smaller, Ctrl and
+							plus larger, and Ctrl+0 resets it.</li>
 						<li><strong>Search:</strong> type in <strong>Search the tutorial</strong> at the top of this
-							page (Enter goes to the next match, Shift+Enter back), or press Ctrl+F to use the
-							browser's own search.</li>
+							page, or press Ctrl+F to use the browser's own search.</li>
 						<li><strong>Save often:</strong> nothing is saved by itself, so use <strong>Export
-							file</strong> before closing or reloading the page.</li>
+							file</strong> before closing or reloading the page. If you forget, the browser asks
+							before it leaves the page.</li>
 						<li><strong>Large trees:</strong> fold the parts you aren't working on, or use the
 							Diagram layout, which opens zoomed to fit the whole tree.</li>
 					</ul>
@@ -609,7 +608,8 @@
 					<p>
 						<strong>Generate tree</strong> opens a panel with a <strong>Subject list</strong> switch and
 						the renovation depth. The two subject lists are the <strong>Danish Energy Agency</strong>'s
-						renovation measures and the 32 renovation alternatives of the <strong>NovaDM</strong> paper.
+						renovation measures [<a href="#tutorial-ref-2">2</a>] and the 32 renovation alternatives of
+						the <strong>NovaDM</strong> paper [<a href="#tutorial-ref-3">3</a>, Tables 1 and 2].
 						The depth, <strong>Minor</strong>, <strong>Moderate</strong>, <strong>Deep</strong> or
 						<strong>Whole building</strong>, decides which subjects can be ticked: each depth also
 						allows the subjects of the depths before it. <strong>Select all</strong> and
@@ -630,6 +630,22 @@
 							<li>Click the undo button (&#8630;) in the toolbar to get the example back.</li>
 						</ol>
 					</div>
+					<div class="tutorial-references">
+						<h4>References</h4>
+						<ol start="2">
+							<li id="tutorial-ref-2">Danish Energy Agency, &ldquo;Spar energi med boligens
+								energim&aelig;rke,&rdquo; sparenergi.dk.
+								<a href="https://sparenergi.dk/privat/spar-energi-med-boligens-energimaerke"
+									target="_blank" rel="noopener noreferrer">
+									sparenergi.dk/privat/spar-energi-med-boligens-energimaerke</a>,
+								accessed 4 November 2026.</li>
+							<li id="tutorial-ref-3">A. Kamari, C. Schultz and P. H. Kirkegaard, &ldquo;Constraint-based
+								renovation design support through the renovation domain model,&rdquo; <em>Automation
+								in Construction</em>, vol. 104, pp. 265&ndash;280, 2019.
+								<a href="https://doi.org/10.1016/j.autcon.2019.04.023" target="_blank"
+									rel="noopener noreferrer">doi:10.1016/j.autcon.2019.04.023</a></li>
+						</ol>
+					</div>
 				</section>
 				<section id="tutorial-editing">
 					<h3>Editing</h3>
@@ -647,8 +663,7 @@
 					<ul>
 						<li><strong>Add a child:</strong> <strong>+ AND child</strong> or <strong>&minus; XOR
 							child</strong> in the editor panel, or drag AND node or XOR node from the editor
-							panel onto a node. Dropped on an empty part of the tree area, it goes to the end of the
-							top level, under the root node, and you can move it from there.</li>
+							panel onto a node.</li>
 						<li><strong>Move a node:</strong> drag it onto its new parent; it becomes that node's last
 							child. Dropped on an empty part of the tree area, it goes to the end of the top level. A
 							short red flash means the move isn't allowed, for example an AND among XOR
@@ -681,6 +696,25 @@
 						<li>a node with at most one option has a small <strong>dot</strong> in front of it;</li>
 						<li>a node with several options has a <strong>chip</strong> per option instead.</li>
 					</ul>
+					<table class="tutorial-table tutorial-marks">
+						<thead>
+							<tr><th></th><th>Open</th><th>Always</th><th>Never</th></tr>
+						</thead>
+						<tbody>
+							<tr>
+								<th scope="row">Dot</th>
+								<td><span class="constraint-dot" role="img" aria-label="An open dot"></span></td>
+								<td><span class="constraint-dot always" role="img" aria-label="A green dot"></span></td>
+								<td><span class="constraint-dot never" role="img" aria-label="A red dot"></span></td>
+							</tr>
+							<tr>
+								<th scope="row">Chip</th>
+								<td><span class="value-chip">replace</span></td>
+								<td><span class="value-chip always">replace</span></td>
+								<td><span class="value-chip never">replace</span></td>
+							</tr>
+						</tbody>
+					</table>
 					<p>
 						Click a dot or chip to go from open (white) to <strong>always</strong> (green) to
 						<strong>never</strong> (red) and back to open. An always mark keeps only the scenarios
@@ -694,11 +728,14 @@
 							title="Open the image at full size">
 							<img src="tutorial/profile-marks.png" width="600" height="584"
 								alt="The example tree with the Energy upgrade profile: the dot of replace_brick_facade
-									and four option chips are green (always)." />
+									and four option chips are green (always), and the chip replace of roof_replacement
+									is red and struck through (never)." />
 						</a>
 						<figcaption><strong>Figure 4:</strong> The example with the profile &ldquo;Energy
 							upgrade&rdquo; loaded: a green dot (<code>replace_brick_facade</code>) and four green
-							chips mark choices that every scenario makes.</figcaption>
+							chips mark choices that every scenario makes. One more mark is added by hand: the red
+							chip <code>replace</code> of <code>roof_replacement</code>, a choice that no scenario
+							makes.</figcaption>
 					</figure>
 					<p>
 						A <strong>profile</strong> is a named set of marks, such as "Low budget". The
@@ -716,7 +753,9 @@
 						<h4>Try it</h4>
 						<ol>
 							<li>Click the <strong>Profiles: none</strong> pill, then <strong>Energy
-								upgrade</strong>. The size drops from 2,560 to 32.</li>
+								upgrade</strong>. The size drops from 2,560 to 32, and its marks are green: always.</li>
+							<li>Click <strong>Low budget</strong>. The size is now 256, and its marks are red: the
+								brick facade, doors, roof and ground floor are never replaced.</li>
 							<li>Click <strong>Clear marks / Deselect profile</strong>, then click anywhere outside
 								the list to close it.</li>
 							<li>Click the chip <code>replace</code> after <code>roof_replacement</code> twice, so it
@@ -857,7 +896,7 @@
 							EUR converts nothing.</li>
 						<li><strong>+ Calculated value</strong> adds a value worked out by a
 							<a href="#tutorial-formulas">formula</a>. Tick <strong>KPI</strong> to make it a key
-							performance indicator, shown in the report and in the bottom bar.
+							performance indicator, shown in the report and in the Action tree tab's bottom bar.
 							<strong>Rename</strong> asks for its name in formulas, then for the name shown in
 							the report. A value whose formula is a single number is marked
 							<em>constant</em>. The trash icon on its box deletes it.</li>
@@ -907,6 +946,10 @@
 				</section>
 				<section id="tutorial-formulas">
 					<h3>Formulas (for super users)</h3>
+					<p>
+						Feel free to experiment: if a formula goes wrong, undo (&#8630;) and redo (&#8631;) in the
+						toolbar bring back what you had.
+					</p>
 					<p>
 						A calculated value is worked out by its formula, typed in the editor panel. The value is
 						worked out again on every keystroke; an error shows in red under the formula, and notes in
@@ -990,8 +1033,8 @@ gwp (KPI, kg CO&#8322;e)     = total(co2) + brick_replacement_co2</pre>
 					</ul>
 					<h4>Names and renaming</h4>
 					<ul>
-						<li>Names use letters (from any alphabet, so <code>vægge</code> works), digits and
-							<code>_</code>, don't start with a digit and aren't keywords. No hyphens or spaces:
+						<li>Names use letters from any alphabet, digits and <code>_</code>, don't start with a digit and
+							aren't keywords. No hyphens or spaces:
 							<code>U-value</code> would read as <code>U</code> minus <code>value</code>. The name
 							shown in the report, set with <strong>Rename</strong>, can be any text.</li>
 						<li>Renaming a calculated value changes it in every formula that uses it.</li>
@@ -1011,24 +1054,23 @@ primary = number | text | name [ "." name ]
 					<div class="tutorial-try">
 						<h4>Try it: a U-value as a KPI</h4>
 						<p>
-							The file <code>sample-tree-with-u-value.json</code> adds the building's U-value to the
-							example. Each element (wall, roof, ground floor) gets
-							<code>1 / (Rsi + R_existing + total(r_&hellip;) + Rse)</code>, the windows a U-value of
-							their own, and the KPI <code>u_value</code> is the mean of the elements weighted by
-							their areas.
+							A KPI can be anything you can write as a formula. To see one being built, open the example
+							you already know with one more KPI added: the building's U-value, which says how easily
+							heat escapes through the building. The lower, the better.
 						</p>
 						<ol>
 							<li>Click <strong>Import file</strong> and open
 								<code>examples/sample-tree-with-u-value.json</code>.</li>
-							<li>In the Calculations tab, leave every box on <code>keep_current</code> or
-								<code>keep_double</code>: <code>wall_u</code> reads 1.49, from
-								<code>1 / (0.13 + 0.5 + 0.04)</code>, and <code>u_value</code> 1.36 W/m&sup2;K, the
-								existing building.</li>
-							<li>Pick <code>add_insulation</code> for the facade, roof and ground floor insulation,
-								and <code>replace_triple</code> for the glazing: <code>u_value</code> drops to
-								0.29 W/m&sup2;K.</li>
-							<li>Click <strong>30 scenarios</strong>: the U-value card shows values between those
-								two.</li>
+							<li>Go to the Calculations tab and leave the boxes as they are. This is the building
+								today, and <code>u_value</code> reads 1.36 W/m&sup2;K.</li>
+							<li>Click <code>wall_u</code> to read its formula in the editor panel. It works out the
+								wall's U-value, 1.49 W/m&sup2;K, and <code>u_value</code> combines the walls, roof,
+								floor and windows.</li>
+							<li>Now insulate the building: pick <code>add_insulation</code> for the facade, roof and
+								ground floor insulation, and <code>replace_triple</code> for the glazing.
+								<code>u_value</code> drops to 0.29 W/m&sup2;K.</li>
+							<li>Click <strong>30 scenarios</strong>: the U-value card shows values between those two.
+								<strong>Load example</strong> takes you back to the usual example.</li>
 						</ol>
 					</div>
 				</section>

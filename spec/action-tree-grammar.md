@@ -274,6 +274,24 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   drop never misses; on an empty tree it becomes the root node. A drop
   the sibling rule doesn't allow (an AND among XOR siblings) flashes
   red and changes nothing. The root node itself can't be moved.
+- **Leaving the page** (closing the tab, reloading): the browser's own
+  "Leave site?" box appears when the document differs from what is in a
+  file. `tree-io.js` keeps the text of the last Export file, Import file,
+  Load example or Clear tree (`textInFile`) and compares it with the
+  document written out the same way, so a saved version or a profile that
+  was never exported counts, and undoing back to the file's state doesn't.
+  What the box says is the browser's: pages can't set its text, and the
+  page can't read or remove the checkbox some browsers add to it from the
+  second box on ("Prevent this page from creating additional dialogs").
+  Browsers show the box only after a click or key press on the page.
+- **Export file** (`saveDocument`) uses the browser's Save picker
+  (`showSaveFilePicker`, Chrome and Edge, also from `file://`), which
+  tells the page when it is cancelled: a cancelled save exports nothing
+  and the warning stays. Any other failure, such as the browser refusing
+  the picker because too long has passed since the click, falls back to a
+  plain download. Firefox and Safari have no picker and always use the
+  download, where the page can't tell a cancelled Save dialog, so it
+  counts as exported. The CSV and PNG exports always use the download.
 - **Tooltips** (`title`) have no full stop at the end; a tooltip of two
   parts joins them with a semicolon or a colon. Messages that also
   serve as alerts or notes keep their full stop there and lose it as a
@@ -328,9 +346,12 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - **The text** is written for renovation practitioners who don't know
   NovaDM. Each section explains in plain words and, where it helps, ends
   in a "Try it" box with a few steps on the example the editor opens
-  with. What the tool is for takes NovaDM's definition and its six core
-  concepts word for word from the NovaDM literature; the Glossary uses the
-  same words for those concepts. Formulas is the full reference, for
+  with. What the tool is for opens in plain words and takes NovaDM's six
+  core concepts word for word from the NovaDM literature; the Glossary
+  uses the same words for those concepts. Profiles shows the dot and the
+  chip in their three states as a small table drawn with the editor's own
+  styles (`.tutorial-marks`), so it can't go out of date. Formulas is the
+  full reference, for
   super users. The text names every control as it reads on screen.
 - **Figures** sit where they help, numbered in order ("Figure 2:") with
   a caption and an alt text, at most 320 pixels tall so they don't take
@@ -344,7 +365,8 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
     (PNG): `action-tree-tab.png` (the List layout with `windows_glazing`
     selected), `diagram-layout.png` (only the facade's part of the tree,
     in the Diagram layout fitted to a 1,920-pixel window),
-    `profile-marks.png` ("Energy upgrade" loaded), `version-history.png`
+    `profile-marks.png` ("Energy upgrade" loaded, plus `replace` of
+    `roof_replacement` marked never by hand), `version-history.png`
     ("Initial version" selected), `calculations-tab.png` (`cost`
     selected) and `report.png` (the KPI cards of a 30-scenario sample).
 
@@ -352,10 +374,11 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - **Citations** are numbered as in LaTeX, "[1, 2]", each number a link to
   its entry in a "References" list at the end of the section that cites
   it. The numbers run through the whole tutorial, so a source keeps its
-  number wherever it is cited.
+  number wherever it is cited: [1] Schultz and Kamari (2025), [2] the
+  Danish Energy Agency's page and [3] Kamari et al. (2019), Tables 1 and 2.
 - **The "Try it" steps quote the example's numbers**: 2,560 scenarios,
   3,840 with a third glazing option, 32 with the "Energy upgrade"
-  profile, 1,280 with the roof never replaced, +36,000 DKK of `cost` for
+  profile, 256 with "Low budget", 1,280 with the roof never replaced, +36,000 DKK of `cost` for
   roof insulation, and the U-values 1.49, 1.36 and 0.29 W/m²K of
   `sample-tree-with-u-value.json`. Check them when the example, a
   control's name or the formula language changes.
