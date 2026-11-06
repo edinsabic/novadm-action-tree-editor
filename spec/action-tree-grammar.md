@@ -351,8 +351,8 @@ reviewer arriving from the PROBONO dashboard. The **Documentation** is
 the detailed reference, for looking things up.
 
 - **Two buttons**, "Quick start" and "Documentation", sit at the top
-  right of the page, in the PROBONO logo's row. Each opens only its own guide in
-  the place of the two tabs (`data-guide` holds the panel's id:
+  right of the page, level with the RENATA logo. Each opens only its own
+  guide in the place of the two tabs (`data-guide` holds the panel's id:
   `#quick-start`, `#tutorial`; the Documentation's id and the `tutorial-`
   classes keep the feature's first name). The button shows pressed and
   neither tab is highlighted. "Back to the editor" or the button again
@@ -367,7 +367,7 @@ the detailed reference, for looking things up.
 - **Tab labels:** every Quick start part and every Documentation topic
   has a small grey label beside its heading saying which tab it is about
   ("Action tree tab", "Calculations tab", "Both tabs"; `.tutorial-where`).
-  What the tool is for, Tips and Glossary have none.
+  What RENATA is for, Tips and Glossary have none.
 - Both guides' text is plain HTML in `index.html`, so it works from
   `file://` and the browser's own find (Ctrl+F) searches it. It names
   every control as it reads on screen; note that the same button can read
@@ -377,7 +377,7 @@ the detailed reference, for looking things up.
 
 - **The model** is the SEEDS booklet, in logic rather than in form: an
   objective in the user's words, task-oriented steps, one sentence per
-  idea, very visual. It opens with three cards (Why this tool, Who it is
+  idea, very visual. It opens with three cards (Why RENATA, Who it is
   for, How to start) and the objective as a quote, followed by four
   parts: Build the tree, Watch the scenario space, Add numbers, read the
   KPIs, and Keep your work.
@@ -388,8 +388,7 @@ the detailed reference, for looking things up.
 - **The story** starts from Clear tree and types everything itself, two
   minor subjects of the NovaDM list (Windows and Solar shading) with made-up
   numbers, so it needs no local file and also works once the tool is
-  hosted. It names no product title ("the tool"), as the title will
-  change. Save as new version comes before Export file on purpose, so
+  hosted. Save as new version comes before Export file on purpose, so
   Export file asks nothing; Clear tree and Load example tree do ask, hence
   "then OK".
 - **The steps quote these numbers**: a scenario space size of 1, 2, 6
@@ -416,7 +415,7 @@ the detailed reference, for looking things up.
 - It has a **contents list** on the left and the text on the right, in
   sections without numbers (`<section id="tutorial-…">`, reached by plain
   `#` links, so links between sections need no code). The list has two
-  groups: **Basics** (What the tool is for, Tips, Glossary) and **Topics**
+  groups: **Basics** (What RENATA is for, Tips, Glossary) and **Topics**
   (Action trees, Starting a tree, Editing, Profiles, Versions, Files, The
   Calculations tab, Formulas), and the text follows that order. It marks
   the section at the top of the text, the last one once the text is
@@ -443,7 +442,7 @@ the detailed reference, for looking things up.
   NovaDM. Each topic explains in plain words and, where it helps, ends in
   a "Try it" box (nine in all) with a few steps on the example the editor
   opens with; the first says that Load example tree brings it back. What
-  the tool is for opens in plain words, says that the tool builds on
+  RENATA is for opens in plain words, says that RENATA builds on
   NovaDM, and takes NovaDM's six core concepts word for word from the
   NovaDM literature; the Glossary uses the same words for those concepts.
   Profiles shows the dot and the chip in their three states as a small
@@ -454,7 +453,7 @@ the detailed reference, for looking things up.
   over the page, and open at full size in a new tab when clicked. They
   are plain files in `resources/tutorial/` (`resources/` holds the site's
   images; the logos are in `resources/logos/`):
-  - `novadm-concepts.svg` (Figure 1, What the tool is for): NovaDM's six
+  - `novadm-concepts.svg` (Figure 1, What RENATA is for): NovaDM's six
     concepts as a UML diagram, redrawn by hand as SVG from Figure 5 of
     Schultz and Kamari (2025), the Documentation's reference [1];
   - screenshots of the editor on the example it opens with, taken in
@@ -484,9 +483,10 @@ the detailed reference, for looking things up.
 
 ## Page header
 
-- The page header is a grid that holds the logos and the tabs. The
-  **PROBONO logo** sits in the upper left corner, 12 px from the top
-  (`resources/logos/probono-logo.avif`, 48 px high), with the tabs
+- The page header is a grid that holds the logos, the tabs and the
+  guides' buttons. The **PROBONO logo** sits in the upper left corner,
+  12 px from the top (`resources/logos/probono-logo.avif`, 48 px high),
+  with the tabs
   10 px below it. The **RENATA logo** (`resources/logos/renata-logo.svg`,
   80 px high, inside the page's `<h1>`) is centred horizontally and spans
   both rows instead of taking a row of its own; vertically it is centred
@@ -494,11 +494,18 @@ the detailed reference, for looking things up.
   margin cancels the page's 12 px top padding). The logo SVGs are
   outlined (their letters are paths), so they need no font and no
   internet connection. The header is hidden in the report's PDF.
+- **The guides' buttons** sit at the right and span both rows with the
+  same top margin as the RENATA logo, so the two are centred on one line.
+  They reach into the tab bar's row, so they come after the tabs in the
+  HTML: the later element sits on top and takes the clicks.
 - **Zoomed in** (a page narrower than 820 CSS pixels, e.g. 300 % on a
   1,920 px wide screen), the RENATA logo would run into the tabs, so it
   moves up into the PROBONO logo's row, 48 px high and centred in the
-  space beside it, and the tabs keep their own row. It shrinks further
-  when even that row is too narrow (500 % on a 1,366 px screen). The rest
+  space beside it, and the tabs keep their own row, with the guides'
+  buttons at its right. On a page narrower than 560 CSS pixels (from about
+  400 % on a 1,920 px screen) the buttons get a row of their own above the
+  tabs, so they never cover them. The logo shrinks further when even its
+  row is too narrow (500 % on a 1,366 px screen). The rest
   of the page is only laid out for the sizes below; at such zoom levels
   it may scroll sideways.
 - The **tab icon** is the tree icon, cropped close so it reads at 16 px

@@ -1,8 +1,8 @@
-# NovaDM action tree editor
+# RENATA – RENovation Action Tree Authoring
 
-Renovating a building means choosing between a great many options. This editor builds on the Renovation Domain Model (NovaDM), a formal modelling framework for supporting renovation design and decision-making. Lay out the options as an action tree, see how many scenarios they add up to, and compare those scenarios on cost, CO₂ and any other KPI.
+Renovating a building means choosing between a great many options. RENATA builds on the Renovation Domain Model (NovaDM), a formal modelling framework for supporting renovation design and decision-making. Lay out the options as an action tree, see how many scenarios they add up to, and compare those scenarios on cost, CO₂ and any other KPI.
 
-The editor was built as part of an MSc thesis at Aarhus University on visual authoring tools for renovation.
+RENATA was built as part of a joint MSc thesis at Aarhus University on visual authoring tools for renovation.
 
 ## Getting started
 
@@ -10,7 +10,7 @@ The editor was built as part of an MSc thesis at Aarhus University on visual aut
 2. Unzip the file.
 3. Open `index.html` in your browser.
 
-The editor opens with an example tree that uses made-up numbers. For a short walk-through, click **Quick start** at the top right of the page. **Documentation**, next to it, covers everything in detail.
+RENATA opens with an example tree that uses made-up numbers. For a short walk-through, click **Quick start** at the top right of the page. **Documentation**, next to it, covers everything in detail.
 
 Your work stays on your computer. Use **Export file** to save it as a `.json` file, and **Import file** to open it again.
 
@@ -43,7 +43,7 @@ spec/             Data model and file format
 
 ## Motivation
 
-This tool is inspired by a lack of NovaDM tangible tools and solves a specific problem: visualising and editing action trees. It is not a general-purpose tree editor, and it does not aim to be one.
+RENATA is inspired by a lack of NovaDM tangible tools and solves a specific problem: visualising and editing action trees. It is not a general-purpose tree editor, and it does not aim to be one.
 
 ## License
 

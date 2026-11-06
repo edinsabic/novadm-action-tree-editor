@@ -18,20 +18,20 @@
 		<img class="page-logo" src="resources/logos/renata-logo.svg" width="554" height="188"
 			alt="RENATA – Renovation action tree authoring" />
 	</h1>
-	<div class="tutorial-start">
-		<button id="quick-start-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="quick-start"
-			title="See what the tool does in a few minutes, step by step">Quick start</button>
-		<button id="documentation-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="tutorial"
-			title="Look up the details: action trees, profiles, versions, files, calculations and formulas">
-			Documentation
-		</button>
-	</div>
 	<nav class="tabs" role="tablist" aria-label="Editor sections">
 		<button class="tab active" type="button" role="tab" aria-selected="true"
 			data-tab="action-tree">Action tree</button>
 		<button class="tab" type="button" role="tab" aria-selected="false"
 			data-tab="calculations">Calculations</button>
 	</nav>
+	<div class="tutorial-start">
+		<button id="quick-start-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="quick-start"
+			title="See what RENATA does in a few minutes, step by step">Quick start</button>
+		<button id="documentation-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="tutorial"
+			title="Look up the details: action trees, profiles, versions, files, calculations and formulas">
+			Documentation
+		</button>
+	</div>
 </header>
 
 <main>
@@ -329,11 +329,11 @@
 		<div class="tutorial-body">
 			<div id="quick-start-text" class="tutorial-text quick-text">
 				<section>
-					<p class="quick-lead">See what the tool does in a few minutes.</p>
+					<p class="quick-lead">See what RENATA does in a few minutes.</p>
 					<div class="quick-cards">
 						<div class="quick-card">
-							<h3>Why this tool</h3>
-							<p>A building can be renovated in a great many ways. This tool lays them out, counts them
+							<h3>Why RENATA</h3>
+							<p>A building can be renovated in a great many ways. RENATA lays them out, counts them
 								and compares them.</p>
 						</div>
 						<div class="quick-card">
@@ -592,7 +592,7 @@
 						</a>
 					</div>
 					<p>
-						That's the tool. Every detail is in the
+						That's RENATA. Every detail is in the
 						<a id="quick-start-to-documentation" href="#tutorial">Documentation</a>.
 					</p>
 				</section>
@@ -615,7 +615,7 @@
 			<nav class="tutorial-contents" aria-label="Contents">
 				<p id="tutorial-basics-label" class="tutorial-contents-label">Basics</p>
 				<ol aria-labelledby="tutorial-basics-label">
-					<li><a href="#tutorial-purpose">What the tool is for</a></li>
+					<li><a href="#tutorial-purpose">What RENATA is for</a></li>
 					<li><a href="#tutorial-tips">Tips</a></li>
 					<li><a href="#tutorial-glossary">Glossary</a></li>
 				</ol>
@@ -633,9 +633,10 @@
 			</nav>
 			<div id="tutorial-text" class="tutorial-text">
 				<section id="tutorial-purpose">
-					<h3>What the tool is for</h3>
+					<h3>What RENATA is for</h3>
 					<p>
-						Renovating a building means choosing between a great many options. This tool builds on the
+						Renovating a building means choosing between a great many options.
+						<strong>RENATA</strong> (RENovation Action Tree Authoring) builds on the
 						<strong>Renovation Domain Model (NovaDM)</strong>, a formal modelling framework for supporting
 						renovation design and decision-making [<a href="#tutorial-ref-1">1</a>]. NovaDM defines six
 						core concepts (they are also in the <a href="#tutorial-glossary">Glossary</a>):
@@ -670,7 +671,7 @@
 						</figcaption>
 					</figure>
 					<p>
-						In this editor, the scenarios are described by an <a href="#tutorial-action-trees">action
+						In RENATA, the scenarios are described by an <a href="#tutorial-action-trees">action
 						tree</a>. All the scenarios together are the <strong>scenario space</strong>. Because the
 						choices multiply, it grows very fast: a handful of subjects gives thousands of scenarios,
 						and a real building easily more than 10<sup>34</sup>.
@@ -759,7 +760,7 @@
 						<dd>A calculated value whose formula is a single number, such as an area.</dd>
 						<dt>Feature</dt>
 						<dd>A parameter of the subject being targeted (e.g. Insulation Thickness, Glazing Type).
-							In this editor, a Feature node has a choice of options.</dd>
+							In RENATA, a Feature node has a choice of options.</dd>
 						<dt>KPI</dt>
 						<dd>Key performance indicator: a calculated value used to compare scenarios, such as
 							Cost or GWP (global warming potential, in CO&#8322; equivalents).</dd>
@@ -815,7 +816,7 @@
 					<figure class="tutorial-figure">
 						<a href="resources/tutorial/action-tree-tab.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="resources/tutorial/action-tree-tab.png" width="1216" height="844"
+							<img src="resources/tutorial/action-tree-tab.png" width="1216" height="846"
 								alt="The Action tree tab: the example tree as an indented list, one node per line, with
 									windows_glazing selected and shown in the editor panel on the right." />
 						</a>
@@ -959,6 +960,10 @@
 						<li><strong>Add a child:</strong> <strong>+ AND child</strong> or <strong>&minus; XOR
 							child</strong> in the editor panel, or drag AND node or XOR node from the editor
 							panel onto a node.</li>
+						<li><strong>Add a parent:</strong> <strong>+ AND parent</strong> or <strong>&minus; XOR
+							parent</strong> in the editor panel puts a new, empty node above the selected node.
+							The new node joins the selected node's siblings and must be the same kind, so only
+							one of the two buttons may be available.</li>
 						<li><strong>Move a node:</strong> drag it onto its new parent; it becomes that node's last
 							child. Dropped on an empty part of the tree area, it goes to the end of the top level. A
 							short red flash means the move isn't allowed, for example an AND among XOR
