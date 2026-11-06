@@ -74,10 +74,10 @@
 						</div>
 						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="load-example-btn" class="btn" type="button"
-								title="Load the example tree, which also replaces the numbers in the Calculations tab">
+								title="Load the example tree, which also replaces the versions, profiles and numbers">
 								Load example tree</button>
 							<button id="clear-tree-btn" class="btn" type="button"
-								title="Remove the whole tree and start over; the Calculations tab starts over too">
+								title="Remove the tree with its versions and profiles; the Calculations tab starts over too">
 								Clear tree</button>
 							<button id="import-file-btn" class="btn" type="button" data-file-action="import">
 								Import file</button>
@@ -259,7 +259,7 @@
 						</div>
 						<div class="toolbar-group" role="group" aria-label="File">
 							<button id="calc-load-example-btn" class="btn" type="button"
-								title="Load the example, which also replaces the tree in the Action tree tab">
+								title="Load the example, which also replaces the tree, its versions and profiles">
 								Load example</button>
 							<button class="btn" type="button" data-file-action="import">Import file</button>
 							<button class="btn" type="button" data-file-action="export">Export file</button>
@@ -896,13 +896,13 @@
 						The depth, <strong>Minor</strong>, <strong>Moderate</strong>, <strong>Deep</strong> or
 						<strong>Whole building</strong>, decides which subjects can be ticked: each depth also
 						allows the subjects of the depths before it. <strong>Select all</strong> and
-						<strong>Clear</strong> tick or untick every subject. The panel's own <strong>Generate
+						<strong>Clear</strong> tick or untick every subject the depth allows. The panel's own <strong>Generate
 						tree</strong> button replaces the tree with an AND root node holding one Subject node per
 						ticked subject; your profiles and versions stay, and you can undo it.
 					</p>
 					<p>
-						<strong>Clear tree</strong> removes the whole tree, and the Calculations tab starts over
-						too. Load example tree, Clear tree and Import file ask first when you would lose work.
+						<strong>Clear tree</strong> removes the whole tree with its versions and profiles, and the
+						Calculations tab starts over too. Load example tree, Clear tree and Import file ask first when you would lose work.
 					</p>
 					<div class="tutorial-try">
 						<h4>Try it</h4>
@@ -957,7 +957,8 @@
 						<li><strong>Delete a node:</strong> click the red trash icon on the selected node, or the
 							delete button in the editor panel. Its children go with it.</li>
 						<li><strong>Rename:</strong> when you change a label or an option, its numbers in the
-							Calculations tab move with it, and so do the formulas that use the label.</li>
+							Calculations tab move with it, and in most cases so do the formulas that use the label
+							(<a href="#tutorial-formulas">Formulas</a>).</li>
 						<li><strong>Undo and redo:</strong> the arrow buttons (&#8630; &#8631;) in the toolbar, or
 							Ctrl+Z and Ctrl+Y. They cover every change: the tree, profiles, versions and the
 							numbers, up to 100 steps.</li>
@@ -1321,7 +1322,8 @@ gwp (KPI, kg CO&#8322;e)     = total(co2) + brick_replacement_co2</pre>
 					<p>
 						A name that is neither a calculated value nor a label in the tree is not an error: it
 						counts as not chosen, and a grey note says &ldquo;Not in the tree: &hellip;&rdquo;. So the example's
-						formulas keep working on any tree, but a misspelt label gives n/a without a red error.
+						formulas keep working on any tree, but a misspelt label gives n/a without a red error. A
+						label you deleted from the tree also gives n/a, without the note, as its numbers are kept.
 					</p>
 					<h4>Errors</h4>
 					<p>An error shows in red, and the value, and every value that uses it, reads &ldquo;error&rdquo;:</p>
@@ -1341,9 +1343,10 @@ gwp (KPI, kg CO&#8322;e)     = total(co2) + brick_replacement_co2</pre>
 							<code>U-value</code> would read as <code>U</code> minus <code>value</code>. The name
 							shown in the report, set with <strong>Rename</strong>, can be any text.</li>
 						<li>Renaming a calculated value changes it in every formula that uses it.</li>
-						<li>Renaming a label in the Action tree tab changes it in the formulas too, but a text in
-							quotes, such as <code>'replace'</code>, is never changed. Picking another subject in
-							the Subject menu changes no formula.</li>
+						<li>Renaming a label in the Action tree tab changes it in the formulas too, unless the new
+							label isn't a valid name, a calculated value has that name, or another node still uses
+							the old label. A text in quotes, such as <code>'replace'</code>, is never changed.
+							Picking another subject in the Subject menu changes no formula.</li>
 					</ul>
 					<h4>The precise rules</h4>
 					<p>For the curious, the complete grammar of a formula:</p>

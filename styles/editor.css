@@ -355,15 +355,19 @@ main {
 
 .tutorial-figure { margin: 14px 0 18px; }
 
-.tutorial-figure img {
+.tutorial-figure img,
+.quick-row img {
 	display: block;
 	width: auto;
 	max-width: 100%;
 	height: auto;
-	max-height: 320px;
 	border: 1px solid var(--color-border-soft);
 	border-radius: var(--radius-sm);
 }
+
+.tutorial-figure img { max-height: 320px; }
+
+.quick-row img { max-height: 330px; }
 
 .tutorial-figure figcaption {
 	margin-top: 6px;
@@ -433,10 +437,14 @@ main {
 
 .tutorial-text .tutorial-section-head h3 { margin: 0; }
 
-.tutorial-where {
-	padding: 2px 10px;
+.tutorial-where,
+.quick-text .quick-result {
 	border-radius: 999px;
 	background-color: var(--color-border-soft);
+}
+
+.tutorial-where {
+	padding: 2px 10px;
 	color: var(--color-ink);
 	font-size: 0.75rem;
 	font-weight: 500;
@@ -524,8 +532,6 @@ main {
 	display: inline-block;
 	margin: 0 4px 4px 0;
 	padding: 3px 10px;
-	border-radius: 999px;
-	background-color: var(--color-border-soft);
 	font-size: 0.82rem;
 	line-height: 1.4;
 }
@@ -536,15 +542,6 @@ main {
 	font-size: 0.86rem;
 }
 
-.quick-row img {
-	display: block;
-	width: auto;
-	max-width: 100%;
-	height: auto;
-	max-height: 330px;
-	border: 1px solid var(--color-border-soft);
-	border-radius: var(--radius-sm);
-}
 
 /* ---------- Control row ---------- */
 

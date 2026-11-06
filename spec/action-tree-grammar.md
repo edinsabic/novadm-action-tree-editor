@@ -291,11 +291,14 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   the picker because too long has passed since the click, falls back to a
   plain download. Firefox and Safari have no picker and always use the
   download, where the page can't tell a cancelled Save dialog, so it
-  counts as exported. The CSV and PNG exports always use the download.
+  counts as exported. A second click while the picker is open does
+  nothing, and the name picked in it becomes the document's name, for the
+  next Export file and the PDF's header. The CSV and PNG exports always
+  use the download.
 - **Tooltips** (`title`) have no full stop at the end; a tooltip of two
   parts joins them with a semicolon or a colon. Messages that also
   serve as alerts or notes keep their full stop there and lose it as a
-  tooltip (`Util.tooltipText`).
+  tooltip (`Util.tooltipText`); a full stop inside such a message stays.
 - The **selected node** shows a red delete icon in both layouts; it runs
   the same `EditorForm.deleteNode()` as the editor's delete button.
 - The two layouts are called **List** (an indented list, like a file
@@ -336,7 +339,7 @@ the detailed reference, for looking things up.
   step and not saved, and the tree, the sample, the report and an open
   profile or version flyout stay as they were. Ctrl+Z and Ctrl+Y do
   nothing while a guide is open, so they never change a document that
-  isn't on screen.
+  isn't on screen, and Esc leaves an open flyout alone.
 - **Tab labels:** every Quick start part and every Documentation topic
   has a small grey label beside its heading saying which tab it is about
   ("Action tree tab", "Calculations tab", "Both tabs"; `.tutorial-where`).
@@ -1129,7 +1132,7 @@ panel labels.
 
 The caption's tooltip explains the estimate; each KPI's tooltip names the
 sample ("Cost: mean of a random sample of 30 of the 2,560 scenarios (min
-…, max …). Exact numbers per scenario are in the Calculations tab.").
+…, max …); the exact numbers per scenario are in the Calculations tab").
 The exact KPIs of one picked scenario are not shown here: they couldn't
 follow changes to the tree or the profile.
 

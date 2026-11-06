@@ -470,8 +470,12 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		});
 	}
 
+	function openedPill() {
+		return openedFrom === 'calc' ? calcProfileBtn : profileBtn;
+	}
+
 	function placeBelow() {
-		var pill = openedFrom === 'calc' ? calcProfileBtn : profileBtn;
+		var pill = openedPill();
 		if (openFlyoutName === null || pill.offsetParent === null) return;
 		var top = pill.offsetTop + pill.offsetHeight + FLYOUT_GAP;
 		[profileFlyout, versionFlyout].forEach(function (flyout) {
@@ -542,7 +546,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	});
 
 	document.addEventListener('keydown', function (e) {
-		if (e.key === 'Escape' && openFlyoutName !== null) closeFlyouts();
+		if (e.key === 'Escape' && openFlyoutName !== null && openedPill().offsetParent !== null) closeFlyouts();
 	});
 
 	window.addEventListener('resize', placeBelow);

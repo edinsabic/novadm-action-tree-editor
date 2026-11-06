@@ -112,7 +112,7 @@ window.NovaDM = window.NovaDM || {};
 		markLink(clickedLink);
 	});
 
-	/* ---------- Tutorial search ---------- */
+	/* ---------- Documentation search ---------- */
 
 	var searchBox = document.getElementById('tutorial-search');
 	var searchCount = document.getElementById('tutorial-search-count');
