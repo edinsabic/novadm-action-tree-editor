@@ -316,43 +316,112 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
 
-## Tutorial
+## Quick start and Documentation
 
-- The **Tutorial** button sits at the top right of the page, in the
-  title's row. It opens the tutorial in the place of the two tabs: the
-  button shows pressed and neither tab is highlighted. "Back to the
-  editor" or the button again goes back to the tab that was open; a tab
-  goes to that tab.
-- The tutorial has a **contents list** on the left and the text on the
-  right, in sections without numbers (`<section id="tutorial-…">`,
-  reached by plain `#` links, so links between sections need no code).
-  The list has two groups: **Basics** (What the tool is for, Tips,
-  Glossary) and **Topics** (Action trees, Starting a tree, Editing,
-  Profiles, Versions, Files, The Calculations tab, Formulas), and the
-  text follows that order. It marks the section at the top of the text,
-  the last one once the text is scrolled to the end, and a link just
-  clicked. The text is plain HTML in `index.html`, so it works from
-  `file://` and the browser's own find (Ctrl+F) searches it.
-- **Search the tutorial**, a box in the tutorial's head between its title
-  and "Back to the editor", finds a text in the tutorial's text only (not
-  the contents list): ignoring case, with any run of spaces and line
-  breaks counted as one space, within one stretch of text (a phrase
-  across bold text or a link isn't found). Every match is highlighted,
-  the current one in a stronger colour, and scrolled into view; the box
-  shows "1 of 19", or "No matches". Enter goes to the next match,
-  Shift+Enter back, both wrapping round. The highlights use the CSS
-  Custom Highlight API (`CSS.highlights`, no change to the page's HTML);
-  a browser without it still counts and scrolls, without highlights.
+The page has two guides for two readers. The **Quick start** is for
+someone who has never seen the tool and has a few minutes, such as a
+reviewer arriving from the PROBONO dashboard. The **Documentation** is
+the detailed reference, for looking things up.
+
+- **Two buttons**, "Quick start" and "Documentation", sit at the top
+  right of the page, in the title's row. Each opens only its own guide in
+  the place of the two tabs (`data-guide` holds the panel's id:
+  `#quick-start`, `#tutorial`; the Documentation's id and the `tutorial-`
+  classes keep the feature's first name). The button shows pressed and
+  neither tab is highlighted. "Back to the editor" or the button again
+  goes back to the tab that was open; a tab goes to that tab. A guide
+  keeps its scroll position, so a reader can flip between the steps and
+  the editor.
+- **Opening a guide changes nothing in the document:** it is not an undo
+  step and not saved, and the tree, the sample, the report and an open
+  profile or version flyout stay as they were. Ctrl+Z and Ctrl+Y do
+  nothing while a guide is open, so they never change a document that
+  isn't on screen.
+- **Tab labels:** every Quick start part and every Documentation topic
+  has a small grey label beside its heading saying which tab it is about
+  ("Action tree tab", "Calculations tab", "Both tabs"; `.tutorial-where`).
+  What the tool is for, Tips and Glossary have none.
+- Both guides' text is plain HTML in `index.html`, so it works from
+  `file://` and the browser's own find (Ctrl+F) searches it. It names
+  every control as it reads on screen; note that the same button can read
+  differently per tab ("Load example tree", "Load example").
+
+### Quick start
+
+- **The model** is the SEEDS booklet, in logic rather than in form: an
+  objective in the user's words, task-oriented steps, one sentence per
+  idea, very visual. It opens with three cards (Why this tool, Who it is
+  for, How to start) and the objective as a quote, followed by four
+  parts: Build the tree, Watch the scenario space, Add numbers, read the
+  KPIs, and Keep your work.
+- **At most 25 steps, a hard limit.** The numbers run on through all the
+  parts, and the marks in the pictures match them. A new step means
+  merging or dropping another. The text says "in a few minutes", not a
+  measured time.
+- **The story** starts from Clear tree and types everything itself, two
+  minor subjects of the NovaDM list (Windows and Solar shading) with made-up
+  numbers, so it needs no local file and also works once the tool is
+  hosted. It names no product title ("the tool"), as the title will
+  change. Save as new version comes before Export file on purpose, so
+  Export file asks nothing; Clear tree and Load example tree do ask, hence
+  "then OK".
+- **The steps quote these numbers**: a scenario space size of 1, 2, 6
+  (2 ways × 3 ways), then 2 (`shutters` always), 4 (never) and 6 again;
+  `cost` 82,000 DKK and `gwp` 5,400 kg CO₂e for `replace_triple` and
+  `shutters`; over all 6 scenarios a mean Cost of 42,000 DKK and a mean GWP
+  of 2,750 kg CO₂e; and 2,560 for the example at the end. Check them when a
+  control's name, the starter data or the example changes.
+- **Pictures** are `resources/tutorial/quick-start-1.png` to `-13.png`:
+  screenshots of the story at each step, taken in headless Chrome at 1,280
+  CSS pixels wide and twice the pixel density, with the marks burnt in
+  (a dashed blue frame, a numbered circle, an arrow). They are cropped
+  below the page's header, so a new title or logo doesn't make them stale,
+  and shown beside their steps, at most 330 pixels tall, opening at full
+  size when clicked. A picture shows the state its number describes:
+  the chip marked 12 is green, because step 12 makes it green. A change to
+  the look of those screens means taking them again.
+- **Layout:** text left, picture right (`.quick-row`), in a column up to
+  1,120 pixels wide. There is no contents list and no search box, as it is
+  short enough to read from the top.
+
+### Documentation
+
+- It has a **contents list** on the left and the text on the right, in
+  sections without numbers (`<section id="tutorial-…">`, reached by plain
+  `#` links, so links between sections need no code). The list has two
+  groups: **Basics** (What the tool is for, Tips, Glossary) and **Topics**
+  (Action trees, Starting a tree, Editing, Profiles, Versions, Files, The
+  Calculations tab, Formulas), and the text follows that order. It marks
+  the section at the top of the text, the last one once the text is
+  scrolled to the end, and a link just clicked.
+- **Search the documentation**, a box in the head between the title and
+  "Back to the editor", finds a text in the Documentation's text only (not
+  the contents list or the Quick start). It works much like Ctrl+F:
+  - a phrase may run through bold text, code and links, but not from one
+    paragraph, list item or table cell into the next. The text of the
+    whole Documentation is read once, on the first search, as it never
+    changes while the page is open;
+  - it ignores case and treats any run of spaces and line breaks as one
+    space, and look-alike characters as the same: `CO2` finds CO₂, `m2K`
+    finds m²K, straight quotes find curly ones, a hyphen finds a minus sign
+    or a dash, and a plain letter finds its accented form.
+
+  Every match is highlighted, the current one in a stronger colour, and
+  scrolled into view; the box shows "1 of 19", or "No matches". Enter goes
+  to the next match, Shift+Enter back, both wrapping round. The highlights
+  use the CSS Custom Highlight API (`CSS.highlights`, no change to the
+  page's HTML); a browser without it still counts and scrolls, without
+  highlights.
 - **The text** is written for renovation practitioners who don't know
-  NovaDM. Each section explains in plain words and, where it helps, ends
-  in a "Try it" box with a few steps on the example the editor opens
-  with. What the tool is for opens in plain words and takes NovaDM's six
-  core concepts word for word from the NovaDM literature; the Glossary
-  uses the same words for those concepts. Profiles shows the dot and the
-  chip in their three states as a small table drawn with the editor's own
-  styles (`.tutorial-marks`), so it can't go out of date. Formulas is the
-  full reference, for
-  super users. The text names every control as it reads on screen.
+  NovaDM. Each topic explains in plain words and, where it helps, ends in
+  a "Try it" box (nine in all) with a few steps on the example the editor
+  opens with; the first says that Load example tree brings it back. What
+  the tool is for opens in plain words, says that the tool builds on
+  NovaDM, and takes NovaDM's six core concepts word for word from the
+  NovaDM literature; the Glossary uses the same words for those concepts.
+  Profiles shows the dot and the chip in their three states as a small
+  table drawn with the editor's own styles (`.tutorial-marks`), so it
+  can't go out of date. Formulas is the full reference, for super users.
 - **Figures** sit where they help, numbered in order ("Figure 2:") with
   a caption and an alt text, at most 320 pixels tall so they don't take
   over the page, and open at full size in a new tab when clicked. They
@@ -360,7 +429,7 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   images; the logos will go in `resources/logos/`):
   - `novadm-concepts.svg` (Figure 1, What the tool is for): NovaDM's six
     concepts as a UML diagram, redrawn by hand as SVG from Figure 5 of
-    Schultz and Kamari (2025), the tutorial's reference [1];
+    Schultz and Kamari (2025), the Documentation's reference [1];
   - screenshots of the editor on the example it opens with, taken in
     headless Chrome at 1,280 CSS pixels wide and twice the pixel density
     (PNG): `action-tree-tab.png` (the List layout with `windows_glazing`
@@ -374,25 +443,17 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   A change to the look of those screens means taking them again.
 - **Citations** are numbered as in LaTeX, "[1, 2]", each number a link to
   its entry in a "References" list at the end of the section that cites
-  it. The numbers run through the whole tutorial, so a source keeps its
-  number wherever it is cited: [1] Schultz and Kamari (2025), [2] the
+  it. The numbers run through the whole Documentation, so a source keeps
+  its number wherever it is cited: [1] Schultz and Kamari (2025), [2] the
   Danish Energy Agency's page and [3] Kamari et al. (2019), Tables 1 and 2.
 - **The "Try it" steps quote the example's numbers**: 2,560 scenarios,
   3,840 with a third glazing option, 32 with the "Energy upgrade"
-  profile, 256 with "Low budget", 1,280 with the roof never replaced, +36,000 DKK of `cost` for
-  roof insulation, and the U-values 1.49, 1.36 and 0.29 W/m²K of
-  `sample-tree-with-u-value.json`. Check them when the example, a
-  control's name or the formula language changes.
-- A first visit shows the **invite** "New here? Start with the tutorial"
-  with a ×, left of the button. It goes for good after × or the first
-  opening: the browser remembers it in `localStorage`
-  (`novadm-tutorial-invite-hidden` = `1`). Without `localStorage`
-  (blocked or a private window) the invite shows on every start.
-- Opening the tutorial changes nothing in the document: it is not an
-  undo step and not saved, and the tree, the sample, the report and an
-  open profile or version flyout stay as they were. Ctrl+Z and Ctrl+Y do
-  nothing while it is open, so they never change a document that isn't
-  on screen.
+  profile, 256 with "Low budget", 1,280 with the roof never replaced,
+  +36,000 DKK of `cost` for roof insulation, and the U-values 1.49, 1.36
+  and 0.29 W/m²K of `sample-tree-with-u-value.json`. Check them when the
+  example, a control's name or the formula language changes.
+- Starting a tree, Files and Formulas point to the local `examples`
+  folder, which a hosted copy won't have; the release has to deal with it.
 
 ## Screen sizes and scaling
 
@@ -903,7 +964,7 @@ direction, and how should ground floors be handled? Should windows and
 doors be included through U_w, and with what areas? Can thermal bridges
 be ignored for now?
 
-**As a worked example** (for the thesis and the tutorial), after
+**As a worked example** (for the thesis and the Documentation), after
 importing `sample-tree-with-u-value.json`:
 
 1. Calculations tab, every picker on `keep_current` / `keep_double`:
