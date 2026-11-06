@@ -119,33 +119,62 @@ window.NovaDM = window.NovaDM || {};
 	var canHighlight = typeof Highlight === 'function' && !!(window.CSS && CSS.highlights);
 	var matches = [];
 	var matchIndex = 0;
+	var searchableText = null;
 
-	function folded(text) {
-		var chars = '';
-		var at = [];
+	function foldedChar(ch) {
+		return ch.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase()
+			.replace(/[‘’]/g, '\'')
+			.replace(/[“”]/g, '"')
+			.replace(/[‐-―−]/g, '-');
+	}
+
+	function addFolded(out, text, node) {
 		for (var i = 0; i < text.length; i++) {
 			var space = /\s/.test(text[i]);
-			if (space && i > 0 && /\s/.test(text[i - 1])) continue;
-			chars += space ? ' ' : text[i].toLowerCase();
-			at.push(i);
+			if (space && out.chars.charAt(out.chars.length - 1) === ' ') continue;
+			var piece = space ? ' ' : foldedChar(text[i]);
+			for (var j = 0; j < piece.length; j++) out.at.push({ node: node, offset: i });
+			out.chars += piece;
 		}
-		return { chars: chars, at: at };
+		return out;
+	}
+
+	function blockOf(node) {
+		var el = node.parentElement;
+		while (el !== tutorialText && getComputedStyle(el).display === 'inline') el = el.parentElement;
+		return el;
+	}
+
+	function documentationText() {
+		if (searchableText) return searchableText;
+		var out = { chars: '', at: [] };
+		var block = null;
+		var walker = document.createTreeWalker(tutorialText, NodeFilter.SHOW_TEXT);
+		while (walker.nextNode()) {
+			var here = blockOf(walker.currentNode);
+			if (here !== block) {
+				out.chars += '\n';
+				out.at.push(null);
+				block = here;
+			}
+			addFolded(out, walker.currentNode.textContent, walker.currentNode);
+		}
+		searchableText = out;
+		return out;
 	}
 
 	function findMatches(query) {
-		var needle = folded(query.trim()).chars;
+		var needle = addFolded({ chars: '', at: [] }, query.trim()).chars;
 		var found = [];
 		if (!needle) return found;
-		var walker = document.createTreeWalker(tutorialText, NodeFilter.SHOW_TEXT);
-		while (walker.nextNode()) {
-			var node = walker.currentNode;
-			var text = folded(node.textContent);
-			for (var i = text.chars.indexOf(needle); i !== -1; i = text.chars.indexOf(needle, i + needle.length)) {
-				var range = document.createRange();
-				range.setStart(node, text.at[i]);
-				range.setEnd(node, text.at[i + needle.length - 1] + 1);
-				found.push(range);
-			}
+		var text = documentationText();
+		for (var i = text.chars.indexOf(needle); i !== -1; i = text.chars.indexOf(needle, i + needle.length)) {
+			var first = text.at[i];
+			var last = text.at[i + needle.length - 1];
+			var range = document.createRange();
+			range.setStart(first.node, first.offset);
+			range.setEnd(last.node, last.offset + 1);
+			found.push(range);
 		}
 		return found;
 	}

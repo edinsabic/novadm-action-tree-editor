@@ -329,11 +329,11 @@
 						</div>
 						<div class="quick-card">
 							<h3>Who it is for</h3>
-							<p>Designers and project teams, early in a renovation project.</p>
+							<p>Architects, designers and other renovation experts, early in a project.</p>
 						</div>
 						<div class="quick-card">
 							<h3>How to start</h3>
-							<p>Nothing to install. Start on the <strong>Action tree</strong> tab, and flip with
+							<p>Start on the <strong>Action tree</strong> tab, and flip with
 								<strong>Back to the editor</strong> and <strong>Quick start</strong>.</p>
 						</div>
 					</div>
@@ -454,7 +454,7 @@
 						<a href="resources/tutorial/quick-start-6.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
 							<img src="resources/tutorial/quick-start-6.png" width="612" height="175"
-								alt="The tree with the chip shutters marked 12, red and struck through." />
+								alt="The tree with the chip shutters marked 12, green." />
 						</a>
 					</div>
 				</section>
@@ -597,8 +597,7 @@
 			<div class="tutorial-search">
 				<input id="tutorial-search" type="search" placeholder="Search the documentation"
 					aria-label="Search the documentation"
-					title="Type a word to find it in the documentation; Enter goes to the next match,
-						Shift+Enter back" />
+					title="Type a word to find it; Enter goes to the next match, Shift+Enter back" />
 				<span id="tutorial-search-count" class="tutorial-search-count" aria-live="polite"></span>
 			</div>
 			<button class="btn" type="button" data-guide-close>Back to the editor</button>
@@ -627,17 +626,17 @@
 				<section id="tutorial-purpose">
 					<h3>What the tool is for</h3>
 					<p>
-						Renovating a building means choosing between a great many options. The <strong>Renovation
-						Domain Model (NovaDM)</strong> is a formal modelling framework for supporting renovation
-						design and decision-making [<a href="#tutorial-ref-1">1</a>]. NovaDM defines six core
-						concepts (they are also in the <a href="#tutorial-glossary">Glossary</a>):
+						Renovating a building means choosing between a great many options. This tool builds on the
+						<strong>Renovation Domain Model (NovaDM)</strong>, a formal modelling framework for supporting
+						renovation design and decision-making [<a href="#tutorial-ref-1">1</a>]. NovaDM defines six
+						core concepts (they are also in the <a href="#tutorial-glossary">Glossary</a>):
 					</p>
 					<ul>
-						<li><strong>Subject:</strong> A physical building element being targeted for intervention
-							(e.g., Facade, Roof, Windows).</li>
-						<li><strong>Approach:</strong> A renovation strategy applied to a given subject (e.g.,
+						<li><strong>Subject:</strong> a physical building element being targeted for intervention
+							(e.g. Facade, Roof, Windows).</li>
+						<li><strong>Approach:</strong> a renovation strategy applied to a given subject (e.g.
 							Maintain, Refurbish, Replace).</li>
-						<li><strong>Feature:</strong> A parameter of the subject being targeted (e.g., Insulation
+						<li><strong>Feature:</strong> a parameter of the subject being targeted (e.g. Insulation
 							Thickness, Glazing Type).</li>
 					</ul>
 					<p>Collectively, subjects, approaches and features are <em>aspects</em> of an action.</p>
@@ -646,7 +645,7 @@
 							approach and feature, e.g. &ldquo;replacing (approach) the opening mechanism (feature)
 							of a door (subject) with a hinged mechanism (feature value)&rdquo;.</li>
 						<li><strong>Alternative:</strong> a set of mutually exclusive actions for the same subject
-							(i.e. alternative design choices for a given subject)</li>
+							(i.e. alternative design choices for a given subject).</li>
 						<li><strong>Scenario:</strong> a set of mutually consistent actions.</li>
 					</ul>
 					<figure class="tutorial-figure">
@@ -684,8 +683,9 @@
 					<div class="tutorial-try">
 						<h4>Try it</h4>
 						<ol>
-							<li>Click <strong>Back to the editor</strong>. The editor opens with an example: a small
-								house with five subjects (windows, outer doors, facade, roof and ground floor).</li>
+							<li>Click <strong>Back to the editor</strong>. The editor opens with an example, a small
+								house with five subjects (windows, outer doors, facade, roof and ground floor), and
+								<strong>Load example tree</strong> brings it back at any time.</li>
 							<li>Look at the bar at the bottom, <strong>Calculations (live)</strong>:
 								<strong>Scenario space size</strong> reads 2,560. These five subjects can be
 								renovated in 2,560 different ways.</li>
@@ -736,7 +736,7 @@
 						<dt>AND node (+)</dt>
 						<dd>A node whose children are all part of the scenario.</dd>
 						<dt>Approach</dt>
-						<dd>A renovation strategy applied to a given subject (e.g., Maintain, Refurbish,
+						<dd>A renovation strategy applied to a given subject (e.g. Maintain, Refurbish,
 							Replace).</dd>
 						<dt>Aspect</dt>
 						<dd>Subjects, approaches and features, collectively: the aspects of an action.</dd>
@@ -749,7 +749,7 @@
 						<dt>Constant</dt>
 						<dd>A calculated value whose formula is a single number, such as an area.</dd>
 						<dt>Feature</dt>
-						<dd>A parameter of the subject being targeted (e.g., Insulation Thickness, Glazing Type).
+						<dd>A parameter of the subject being targeted (e.g. Insulation Thickness, Glazing Type).
 							In this editor, a Feature node has a choice of options.</dd>
 						<dt>KPI</dt>
 						<dd>Key performance indicator: a calculated value used to compare scenarios, such as
@@ -775,7 +775,7 @@
 						<dt>Scenario space</dt>
 						<dd>All possible scenarios; its size is shown in the bottom bar.</dd>
 						<dt>Subject</dt>
-						<dd>A physical building element being targeted for intervention (e.g., Facade, Roof,
+						<dd>A physical building element being targeted for intervention (e.g. Facade, Roof,
 							Windows).</dd>
 						<dt>Version</dt>
 						<dd>A saved snapshot of the tree, its profiles and its numbers.</dd>
@@ -791,12 +791,12 @@
 					<p>
 						An action tree is made of <strong>nodes</strong>. In the editor, every line of the tree in
 						the <strong>List</strong> layout is one node (Figure 2), such as
-						<code>Feature : windows_glazing = (keep_double; replace_triple)</code>. In the
+						<code>Feature&nbsp;: windows_glazing = (keep_double; replace_triple)</code>. In the
 						<strong>Diagram</strong> layout, every name with the lines going to it is one (Figure 3).
 						Click a node to select it: it gets a blue frame, and the editor panel on the right shows it.
 					</p>
 					<p>
-						The nodes directly below a node, one step further in in the List layout or joined to it by a
+						The nodes directly below a node, indented one step in the List layout or joined to it by a
 						line in the Diagram layout, are its <strong>children</strong>, and it is their
 						<strong>parent</strong>. The node at the very top, which has no parent, is the
 						<strong>root node</strong>. In Figure 3, the Subject node
@@ -864,7 +864,7 @@
 						<ol>
 							<li>Next to <strong>Select the tree layout</strong>, click <strong>Diagram</strong>,
 								then <strong>List</strong> again.</li>
-							<li>Click the triangle in front of <code>Subject : structural_element = facade</code> to
+							<li>Click the triangle in front of <code>Subject&nbsp;: structural_element = facade</code> to
 								fold it, and again to unfold it.</li>
 							<li>Find the XOR node under the facade. Its two children are Approaches, so each
 								scenario either replaces the brick facade or keeps it.</li>
@@ -882,10 +882,10 @@
 							node</strong> from <strong>Drag onto the tree</strong> in the editor panel onto the
 							empty tree. It becomes the <strong>root node</strong>, the node at the top. A full
 							tree has an AND root node; an XOR root node lets you explore one part on its own.</li>
-						<li><strong>Open a tree.</strong> <strong>Load example tree</strong> opens the example
+						<li><strong>Start from a file.</strong> <strong>Load example tree</strong> opens the example
 							again. <strong>Import file</strong> opens a <code>.json</code> file: one you saved,
 							or one from the <code>examples</code> folder (<a href="#tutorial-files">Files</a>).</li>
-						<li><strong>Generate tree.</strong> Pick subjects from a checklist and get one Subject
+						<li><strong>Generate a tree.</strong> Pick subjects from a checklist and get one Subject
 							node for each in one go.</li>
 					</ol>
 					<p>
@@ -965,7 +965,7 @@
 					<div class="tutorial-try">
 						<h4>Try it</h4>
 						<ol>
-							<li>Click the node <code>Feature : windows_glazing</code>.</li>
+							<li>Click the node <code>Feature&nbsp;: windows_glazing</code>.</li>
 							<li>In <strong>Value / options</strong>, add <code>; replace_double</code> at the end.
 								The scenario space size grows from 2,560 to 3,840.</li>
 							<li>Click outside the field, then click undo (&#8630;).</li>
@@ -1010,7 +1010,7 @@
 						with that choice, a never mark only those without it, and the scenario space size shrinks
 						to match. A never mark under an AND leaves that part out. Marks that can't all hold, such
 						as two always marks under one XOR, give a size of 0 and the warning
-						<em>"the applied constraints are contradictory"</em>.
+						<em>&ldquo;the applied constraints are contradictory&rdquo;</em>.
 					</p>
 					<figure class="tutorial-figure">
 						<a href="resources/tutorial/profile-marks.png" target="_blank" rel="noopener"
@@ -1027,15 +1027,15 @@
 							makes.</figcaption>
 					</figure>
 					<p>
-						A <strong>profile</strong> is a named set of marks, such as "Low budget". The
-						<strong>Profiles</strong> pill at the top right ("Profiles: none" when no profile is
+						A <strong>profile</strong> is a named set of marks, such as &ldquo;Low budget&rdquo;. The
+						<strong>Profiles</strong> pill at the top right (&ldquo;Profiles: none&rdquo; when no profile is
 						loaded) opens the list: <strong>Save profile</strong> saves the marks on screen, a
 						profile's name loads it, its trash icon deletes it, and <strong>Clear marks / Deselect
 						profile</strong> removes every mark from the screen (saved profiles stay).
 					</p>
 					<p>
 						Profiles belong to the <a href="#tutorial-versions">version</a> on screen and are kept in
-						it at once, without making it "unsaved". The Calculations tab uses the marks on screen as
+						it at once, without making it &ldquo;unsaved&rdquo;. The Calculations tab uses the marks on screen as
 						well and shows them, but marks are set on the Action tree tab only.
 					</p>
 					<div class="tutorial-try">
@@ -1062,7 +1062,7 @@
 						its numbers in the Calculations tab. Versions let you try something without losing what
 						you had, much like saving a copy of a drawing before changing it. The
 						<strong>Version</strong> pill at the top right names the version on screen and adds
-						"&middot; unsaved" when the tree or the numbers have changed since it was saved.
+						&ldquo;&middot; unsaved&rdquo; when the tree or the numbers have changed since it was saved.
 					</p>
 					<p>
 						The pill opens the <strong>version history</strong>: a small graph, with a line from each
@@ -1102,10 +1102,10 @@
 						<h4>Try it</h4>
 						<ol>
 							<li>Click the <strong>Version: Add windows</strong> pill. The example has two
-								versions: "Initial version" and "Add windows".</li>
-							<li>Click "Initial version" in the graph, then <strong>Open</strong>. The windows
+								versions: &ldquo;Initial version&rdquo; and &ldquo;Add windows&rdquo;.</li>
+							<li>Click &ldquo;Initial version&rdquo; in the graph, then <strong>Open</strong>. The windows
 								are gone from the tree.</li>
-							<li>Click "Add windows", then <strong>Open</strong> to get them back.</li>
+							<li>Click &ldquo;Add windows&rdquo;, then <strong>Open</strong> to get them back.</li>
 						</ol>
 					</div>
 				</section>
@@ -1118,7 +1118,9 @@
 						<strong>Export file</strong> saves the whole document as a <code>.json</code> file: every
 						version with its tree, profiles and numbers. <strong>Import file</strong> opens such a
 						file and replaces what is on screen. Both buttons are on both tabs. If the version on
-						screen has unsaved changes, Export file asks first and stores them in that version.
+						screen has unsaved changes, Export file asks first and stores them in that version. If that
+						version can't store them (<a href="#tutorial-versions">Versions</a>), it asks you to save a
+						new version first.
 					</p>
 					<p>
 						A <code>.json</code> file is plain text, so you can open it in a text editor such as
@@ -1203,15 +1205,15 @@
 						<strong>Explore the scenario space</strong>, below the graph, works out the KPIs for many
 						scenarios at once. Under <strong>Sample</strong>, choose <strong>30 scenarios</strong>,
 						<strong>Full scenario space</strong> (every scenario, up to 3,000) or your own number. The
-						<strong>report</strong> then shows a card per KPI, with its mean, lowest, median and
-						highest value, the spread and a chart of how the values are spread, and a table of the
+						<strong>report</strong> then shows a card per KPI, with its mean, minimum, median, maximum
+						and standard deviation and a chart of how the values are spread, and a table of the
 						scenarios, 100 per page. Click the <strong>#</strong> heading or a KPI's heading to sort,
 						and a scenario's number to show it in the graph. The &times; closes the report.
 					</p>
 					<p>
 						The report can be saved: <strong>Export table as CSV</strong> for a spreadsheet,
 						<strong>PNG</strong> on each card for an image, and <strong>Save report as PDF</strong>
-						(in the print dialog, choose "Save as PDF").
+						(in the print dialog, choose &ldquo;Save as PDF&rdquo;).
 					</p>
 					<figure class="tutorial-figure">
 						<a href="resources/tutorial/report.png" target="_blank" rel="noopener"
@@ -1226,7 +1228,7 @@
 					<p>
 						Back on the Action tree tab, the bottom bar shows each KPI's mean over the sample:
 						<strong>Estimated</strong> after a random sample, <strong>Exact mean</strong> after the
-						full scenario space, and "&ndash;" before any sample. It follows every change to the tree.
+						full scenario space, and &ldquo;&ndash;&rdquo; before any sample. It follows every change to the tree.
 						The numbers belong to the <a href="#tutorial-versions">version</a> on screen.
 					</p>
 					<div class="tutorial-try">
@@ -1318,11 +1320,11 @@ gwp (KPI, kg CO&#8322;e)     = total(co2) + brick_replacement_co2</pre>
 					</p>
 					<p>
 						A name that is neither a calculated value nor a label in the tree is not an error: it
-						counts as not chosen, and a grey note says "Not in the tree: &hellip;". So the example's
+						counts as not chosen, and a grey note says &ldquo;Not in the tree: &hellip;&rdquo;. So the example's
 						formulas keep working on any tree, but a misspelt label gives n/a without a red error.
 					</p>
 					<h4>Errors</h4>
-					<p>An error shows in red, and the value, and every value that uses it, reads "error":</p>
+					<p>An error shows in red, and the value, and every value that uses it, reads &ldquo;error&rdquo;:</p>
 					<ul>
 						<li>a mistake in the writing, with its position in the formula;</li>
 						<li>a loop, such as <code>a</code> using <code>b</code> while <code>b</code> uses
@@ -1370,9 +1372,13 @@ primary = number | text | name [ "." name ]
 							<li>Now insulate the building: pick <code>add_insulation</code> for the facade, roof and
 								ground floor insulation, and <code>replace_triple</code> for the glazing.
 								<code>u_value</code> drops to 0.29 W/m&sup2;K.</li>
-							<li>Click <strong>30 scenarios</strong>: the U-value card shows values between those two.
-								<strong>Load example</strong> takes you back to the usual example.</li>
+							<li>Click <strong>30 scenarios</strong>: the U-value card shows values between those two.</li>
 						</ol>
+						<p>
+							Feel free to extend this logic by adding more envelope elements, such as the outer doors: give
+							them an area and a U-value as calculated values, and add both to the formula of
+							<code>u_value</code>. <strong>Load example</strong> takes you back to the usual example.
+						</p>
 					</div>
 				</section>
 			</div>

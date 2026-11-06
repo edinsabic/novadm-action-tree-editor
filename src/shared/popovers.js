@@ -83,7 +83,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'<div class="popover-divider"></div>';
 
 		if (profiles.length === 0) {
-			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
+			html += '<div class="editor-empty">No profiles saved yet – click the dot on a node or an option' +
 				' (chip) in the Action tree tab\'s Workspace panel to mark it as always/never, then Save profile.' +
 				'</div>';
 		} else {
@@ -116,7 +116,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	function saveProfile() {
 		if (!Model.hasNodeConstraints()) {
-			alert('Mark at least one leaf (click its dot) or option (click its chip) in the Action tree tab' +
+			alert('Mark at least one node (click its dot) or option (click its chip) in the Action tree tab' +
 				' before saving a profile.');
 			return;
 		}
