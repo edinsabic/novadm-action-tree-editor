@@ -7,7 +7,7 @@ window.NovaDM = window.NovaDM || {};
  * version history (see parser.js and history.js). `download` also saves the
  * report's CSV file and PNG images.
  */
-NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser, Undo) {
+NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, CalculationsTab, Parser) {
 	'use strict';
 
 	var FORMAT = Parser.TREE_FILE_FORMAT;
@@ -58,7 +58,6 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			History.reset();
 		}
 		refreshAll();
-		Undo.markKept();
 	}
 
 	function loadExample(onStart) {
@@ -130,7 +129,6 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			source: Model.getSource()
 		});
 		download(text, (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension, FORMAT.mimeType);
-		Undo.markKept();
 	}
 
 	exportBtns.forEach(function (btn) {
@@ -194,4 +192,4 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		download: download
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab,
-	NovaDM.Parser, NovaDM.Undo);
+	NovaDM.Parser);

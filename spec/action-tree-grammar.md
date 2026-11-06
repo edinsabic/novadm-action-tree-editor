@@ -37,7 +37,10 @@ node joins the selected node's siblings, so by Rule 1 it takes their
 kind and only the matching button is enabled; a node without siblings
 can get either. A parent added to the root node becomes the new root
 node, so the old root node can then take always/never marks. A new
-parent with one child leaves the scenario space size as it was.
+parent with one child leaves the scenario space size as it was, unless
+the marks rule that child out: an AND with nothing left to pick still
+counts as one scenario, so the size can grow when that AND sits below an
+XOR or is the new root node.
 
 ## Profiles: always/never node constraints
 
@@ -302,12 +305,12 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
 
-## Page header and the project link
+## Page header
 
 - The page header is a grid that holds the logos and the tabs. The
   **PROBONO logo** sits in the upper left corner, 12 px from the top
-  (`resources/probono-logo/probono-logo.avif`, 48 px high), with the tabs
-  10 px below it. The **RENATA logo** (`resources/logo/renata-logo.svg`,
+  (`resources/logos/probono-logo.avif`, 48 px high), with the tabs
+  10 px below it. The **RENATA logo** (`resources/logos/renata-logo.svg`,
   80 px high, inside the page's `<h1>`) is centred horizontally and spans
   both rows instead of taking a row of its own; vertically it is centred
   between the top of the page and the tabs' bottom line (its `-12px` top
@@ -321,18 +324,11 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   when even that row is too narrow (500 % on a 1,366 px screen). The rest
   of the page is only laid out for the sizes below; at such zoom levels
   it may scroll sideways.
-- The **tab icon** is the tree icon, cropped closer than
-  `renata-icon.svg` so it reads at 16 px (`renata-favicon.svg`).
-- The PROBONO logo is a link back to the project's **dashboard**, in the
-  same tab: `https://probono.ebosrndportal.com/` (the `href` of
-  `#project-link` in `index.html`).
-- The page holds the only copy of the open document, so leaving it loses
-  what was not exported. `Undo` remembers the document as it was **last
-  opened or exported** (`Undo.markKept()`, called by `tree-io.js` after
-  loading the example, clearing the tree, importing and exporting); when
-  the document differs from it (`Undo.changedSinceKept()`), the link asks
-  for confirmation first. Undoing back to that state counts as no change.
-  Closing the tab or typing another address does not ask.
+- The **tab icon** is the tree icon, cropped close so it reads at 16 px
+  (`resources/logos/renata-favicon.svg`).
+- The PROBONO logo is a placeholder for a link back to the project's
+  **dashboard**: an `<a>` without an `href`, so clicking it does nothing.
+  The `href` goes in when the tool is deployed there.
 
 ## Screen sizes and scaling
 

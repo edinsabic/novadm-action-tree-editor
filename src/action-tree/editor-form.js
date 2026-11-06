@@ -81,15 +81,9 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 			'</div>';
 	}
 
-	function parentLockedKind(node) {
-		var canAnd = Model.canAddParent(node, 'AND');
-		if (canAnd === Model.canAddParent(node, 'XOR')) return null;
-		return canAnd ? 'AND' : 'XOR';
-	}
-
 	function formHtml(node) {
 		var lockedKind = Model.siblingKind(node, null);
-		var lockedParentKind = parentLockedKind(node);
+		var lockedParentKind = Model.lockedParentKind(node);
 		var classOptions = Model.NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' +
 				(c || '(none)') + '</option>';
@@ -127,9 +121,9 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 				: '') +
 			'<div class="editor-add-row">' +
 				'<button class="btn" id="add-and-parent" type="button"' +
-					(Model.canAddParent(node, 'AND') ? '' : ' disabled') + '>+ AND parent</button>' +
+					(lockedParentKind === 'XOR' ? ' disabled' : '') + '>+ AND parent</button>' +
 				'<button class="btn" id="add-xor-parent" type="button"' +
-					(Model.canAddParent(node, 'XOR') ? '' : ' disabled') + '>− XOR parent</button>' +
+					(lockedParentKind === 'AND' ? ' disabled' : '') + '>− XOR parent</button>' +
 			'</div>' +
 			(lockedParentKind
 				? '<div class="note">A new parent is locked to ' + lockedParentKind +
