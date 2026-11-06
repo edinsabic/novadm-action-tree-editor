@@ -11,7 +11,7 @@ RENATA was built as part of a joint MSc thesis at Aarhus University on visual au
 
 ## Getting started
 
-1. Download **Source code (zip)** from the [latest release](https://github.com/edinsabic/novadm-action-tree-editor/releases/latest), under **Assets**.
+1. Download **Source code (zip)** from the [latest release](https://github.com/edinsabic/renata/releases/latest), under **Assets**.
 2. Unzip the file.
 3. Open `index.html` in your browser.
 
