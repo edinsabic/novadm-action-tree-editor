@@ -285,7 +285,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 		/**
 		 * @param {string} text the file's text
 		 * @returns {{tree: Array, history: Object, source: string, addedRoot: boolean}}
-		 * Throws an Error with a readable message if this is not a NovaDM file.
+		 * Throws an Error with a readable message if this is not a RENATA action tree file.
 		 */
 		parse: function (text) {
 			var data = parseJson(text);

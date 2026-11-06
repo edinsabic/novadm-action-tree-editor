@@ -1,7 +1,7 @@
 <h1>
 	<picture>
 		<source media="(prefers-color-scheme: dark)" srcset="resources/logos/renata-logo-dark.svg">
-		<img src="resources/logos/renata-logo.svg" alt="RENATA – RENovation Action Tree Authoring" width="277">
+		<img src="resources/logos/renata-logo.svg" alt="RENATA – Renovation action tree authoring" width="277">
 	</picture>
 </h1>
 

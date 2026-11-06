@@ -495,7 +495,8 @@ the detailed reference, for looking things up.
   outlined (their letters are paths), so they need no font and no
   internet connection. The header is hidden in the report's PDF. The
   README alone uses `renata-logo-dark.svg`, the same logo with colours
-  for GitHub's dark theme.
+  for GitHub's dark theme; only the colours differ, so change the two
+  together.
 - **The guides' buttons** sit at the right and span both rows with the
   same top margin as the RENATA logo, so the two are centred on one line.
   They reach into the tab bar's row, so they come after the tabs in the
@@ -1467,7 +1468,7 @@ it has none (the example, Clear tree, a new document).
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
 `parse()`. `parse()` must throw an `Error` with a readable message if
-the text isn't a NovaDM file. (If the new format is binary, the
+the text isn't a RENATA action tree file. (If the new format is binary, the
 `reader.readAsText` / `new Blob` calls in `tree-io.js`'s import/export
 handlers need to change too.)
 
@@ -1522,6 +1523,8 @@ every version; the others have the starter data in every version.
   K45 versions) carry a `source` line: "This renovation design concept
   was developed by COWI as part of the Horizon 2020 research project
   PROBONO (No. 101037075) funded by the European Union."
-
-These files aren't unified – known and deliberately deferred, not an
-oversight.
+- `examples/k45-full-case.json` holds all nine K45 versions, with `k45g`
+  on screen.
+- `examples/full-tree.json` is a full NovaDM tree in one version: 28
+  Subjects, 142 Approaches and 163 Features, a scenario space of about
+  4.6 × 10^30.
