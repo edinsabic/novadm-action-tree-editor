@@ -220,7 +220,13 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   nearest common ancestor in the version graph (no common ancestor: an
   empty tree). As in git, the current version must not have unsaved
   changes: save or undo them first. Per node:
-  - only theirs added it: added (if its parent is still there);
+  - only theirs added it: added (if its parent is still there). A new
+    root node of theirs is added only if my root node moves below it or
+    is removed; otherwise it is a conflict, so two versions that each
+    added a parent above the root node keep mine. An added node that had
+    children on their side and receives none is left out: each of those
+    children is already a conflict, and an empty parent would add a
+    scenario below an XOR;
   - theirs deleted it, mine did not touch it: removed (only if nothing of
     mine sits below it);
   - theirs edited or moved it, mine did not: updated. If the move can't

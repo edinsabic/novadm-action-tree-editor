@@ -687,10 +687,18 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 
 		var added = 0;
 		var skippedAdd = {};
+		var rootStays = live.length > 0 && !removes[live[0].id] && !updates.some(function (u) {
+			return u.place && u.id === live[0].id;
+		});
 		adds.forEach(function (id) {
 			var t = T.byId[id];
 			if (t.parent !== null && skippedAdd[t.parent]) {
 				skippedAdd[id] = true;
+				return;
+			}
+			if (t.parent === null && rootStays) {
+				skippedAdd[id] = true;
+				conflict(id, t.text, 'a new root node on their side, but your root node stays');
 				return;
 			}
 			if (t.parent !== null && !loc[t.parent]) {
@@ -760,6 +768,12 @@ NovaDM.History = (function (Model, Parser, Calculations, Util) {
 			removed++;
 			var here = loc[id];
 			if (here.parent === null || !removes[here.parent]) here.list.splice(here.list.indexOf(here.spec), 1);
+		});
+
+		adds.slice().reverse().forEach(function (id) {
+			if (skippedAdd[id] || loc[id].spec.children.length > 0 || !(T.byId[id].spec.children || []).length) return;
+			loc[id].list.splice(loc[id].list.indexOf(loc[id].spec), 1);
+			added--;
 		});
 
 		var profiles = mergeProfiles(Model.prunedProfileState(baseSnap ? baseSnap.profile : {}, [live]),
