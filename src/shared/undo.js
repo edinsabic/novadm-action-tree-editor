@@ -20,6 +20,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 	var undoStack = [];
 	var redoStack = [];
 	var current = null;
+	var kept = null;
 	var lastKey = null;
 	var restoring = false;
 
@@ -99,6 +100,14 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 		updateButtons();
 	}
 
+	function markKept() {
+		kept = serialize();
+	}
+
+	function changedSinceKept() {
+		return serialize() !== kept;
+	}
+
 	function undo() {
 		if (undoStack.length === 0) return;
 		redoStack.push(current);
@@ -143,5 +152,9 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 
 	updateButtons();
 
-	return { record: record };
+	return {
+		record: record,
+		markKept: markKept,
+		changedSinceKept: changedSinceKept
+	};
 })(NovaDM.Model, NovaDM.History, NovaDM.Render, NovaDM.EditorForm, NovaDM.Popovers, NovaDM.CalculationsTab);

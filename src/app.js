@@ -5,7 +5,7 @@ window.NovaDM = window.NovaDM || {};
  * and opening the example tree on start. Runs last, after every other
  * src/ module.
  */
-(function (Render, TreeIO, CalculationsTab) {
+(function (Render, TreeIO, CalculationsTab, Undo) {
 	'use strict';
 
 	var ZOOM_STEP = 10;
@@ -65,7 +65,16 @@ window.NovaDM = window.NovaDM || {};
 		Render.setZoom(activeLayout === 'traditional' ? TRADITIONAL_ZOOM : DIRECTORY_ZOOM);
 	});
 
+	/* ---------- Project dashboard link ---------- */
+
+	document.getElementById('project-link').addEventListener('click', function (e) {
+		if (Undo.changedSinceKept() && !confirm('Leave RENATA for the PROBONO dashboard?\n\nChanges made since the' +
+			' file was opened or last exported will be lost. To keep them, cancel and use Export file first.')) {
+			e.preventDefault();
+		}
+	});
+
 	/* ---------- Start ---------- */
 
 	TreeIO.loadExample(true);
-})(NovaDM.Render, NovaDM.TreeIO, NovaDM.CalculationsTab);
+})(NovaDM.Render, NovaDM.TreeIO, NovaDM.CalculationsTab, NovaDM.Undo);

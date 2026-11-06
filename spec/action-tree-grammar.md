@@ -302,6 +302,39 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
 
+## Page header and the project link
+
+- The page header is a grid that holds the logos and the tabs. The
+  **PROBONO logo** sits in the upper left corner, 12 px from the top
+  (`resources/probono-logo/probono-logo.avif`, 48 px high), with the tabs
+  10 px below it. The **RENATA logo** (`resources/logo/renata-logo.svg`,
+  80 px high, inside the page's `<h1>`) is centred horizontally and spans
+  both rows instead of taking a row of its own; vertically it is centred
+  between the top of the page and the tabs' bottom line (its `-12px` top
+  margin cancels the page's 12 px top padding). The logo SVGs are
+  outlined (their letters are paths), so they need no font and no
+  internet connection. The header is hidden in the report's PDF.
+- **Zoomed in** (a page narrower than 820 CSS pixels, e.g. 300 % on a
+  1,920 px wide screen), the RENATA logo would run into the tabs, so it
+  moves up into the PROBONO logo's row, 48 px high and centred in the
+  space beside it, and the tabs keep their own row. It shrinks further
+  when even that row is too narrow (500 % on a 1,366 px screen). The rest
+  of the page is only laid out for the sizes below; at such zoom levels
+  it may scroll sideways.
+- The **tab icon** is the tree icon, cropped closer than
+  `renata-icon.svg` so it reads at 16 px (`renata-favicon.svg`).
+- The PROBONO logo is a link back to the project's **dashboard**, in the
+  same tab. Its address is still a placeholder
+  (`https://probono-dashboard.invalid/`, the `href` of `#project-link` in
+  `index.html`); replace it once the dashboard's address is known.
+- The page holds the only copy of the open document, so leaving it loses
+  what was not exported. `Undo` remembers the document as it was **last
+  opened or exported** (`Undo.markKept()`, called by `tree-io.js` after
+  loading the example, clearing the tree, importing and exporting); when
+  the document differs from it (`Undo.changedSinceKept()`), the link asks
+  for confirmation first. Undoing back to that state counts as no change.
+  Closing the tab or typing another address does not ask.
+
 ## Screen sizes and scaling
 
 The page has no zoom of its own and no "Fit to screen". It never reads
@@ -1105,8 +1138,8 @@ saved through `TreeIO.download`:
   undoing an import also brings the earlier name back.
 - **The PDF's file name**: browsers suggest the page's title, so while
   printing the title is `novadm-report-<name>` (`novadm-report` without
-  a name), and `afterprint` restores "RENATA – NovaDM action tree
-  editor".
+  a name), and `afterprint` restores "RENATA – Renovation action tree
+  authoring".
 - **How**: the button fills the header and the note, marks the columns
   that don't fit and puts the class `calc-printing` on `<html>`; the
   print stylesheet applies only under that class, so printing the page
