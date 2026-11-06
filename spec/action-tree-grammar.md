@@ -24,6 +24,24 @@ holds exactly one node, the explicit **root node**.
   hangs below an AND, which is why an older file without a root node
   gets an AND root added on import (`TOP_LEVEL_KIND` in `model.js`).
 
+Rule 1 is not in the NovaDM papers' definition of an action tree, which
+allows mixed siblings, but every example tree in Schultz & Kamari (2021)
+and Schultz & Kamari (2025) follows it, and so does any tree in the 2021
+paper's *normal form* (every edge joins an And and a Xor node). It stays
+by agreement with the supervisor.
+
+**Adding a parent** (`Model.addParent`, the "+ AND parent" / "− XOR
+parent" buttons in the editor panel) puts a new, empty node in the
+selected node's place, with the selected node as its only child. The new
+node joins the selected node's siblings, so by Rule 1 it takes their
+kind and only the matching button is enabled; a node without siblings
+can get either. A parent added to the root node becomes the new root
+node, so the old root node can then take always/never marks. A new
+parent with one child leaves the scenario space size as it was, unless
+the marks rule that child out: an AND with nothing left to pick still
+counts as one scenario, so the size can grow when that AND sits below an
+XOR or is the new root node.
+
 ## Profiles: always/never node constraints
 
 The action tree itself is treated as fixed; a **profile** is a set of
@@ -202,7 +220,13 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   nearest common ancestor in the version graph (no common ancestor: an
   empty tree). As in git, the current version must not have unsaved
   changes: save or undo them first. Per node:
-  - only theirs added it: added (if its parent is still there);
+  - only theirs added it: added (if its parent is still there). A new
+    root node of theirs is added only if my root node moves below it or
+    is removed; otherwise it is a conflict, so two versions that each
+    added a parent above the root node keep mine. An added node that had
+    children on their side and receives none is left out: each of those
+    children is already a conflict, and an empty parent would add a
+    scenario below an XOR;
   - theirs deleted it, mine did not touch it: removed (only if nothing of
     mine sits below it);
   - theirs edited or moved it, mine did not: updated. If the move can't
@@ -286,6 +310,31 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   exactly the same. The Calculations tab's empty graph reads alike:
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
+
+## Page header
+
+- The page header is a grid that holds the logos and the tabs. The
+  **PROBONO logo** sits in the upper left corner, 12 px from the top
+  (`resources/logos/probono-logo.avif`, 48 px high), with the tabs
+  10 px below it. The **RENATA logo** (`resources/logos/renata-logo.svg`,
+  80 px high, inside the page's `<h1>`) is centred horizontally and spans
+  both rows instead of taking a row of its own; vertically it is centred
+  between the top of the page and the tabs' bottom line (its `-12px` top
+  margin cancels the page's 12 px top padding). The logo SVGs are
+  outlined (their letters are paths), so they need no font and no
+  internet connection. The header is hidden in the report's PDF.
+- **Zoomed in** (a page narrower than 820 CSS pixels, e.g. 300 % on a
+  1,920 px wide screen), the RENATA logo would run into the tabs, so it
+  moves up into the PROBONO logo's row, 48 px high and centred in the
+  space beside it, and the tabs keep their own row. It shrinks further
+  when even that row is too narrow (500 % on a 1,366 px screen). The rest
+  of the page is only laid out for the sizes below; at such zoom levels
+  it may scroll sideways.
+- The **tab icon** is the tree icon, cropped close so it reads at 16 px
+  (`resources/logos/renata-favicon.svg`).
+- The PROBONO logo is a placeholder for a link back to the project's
+  **dashboard**: an `<a>` without an `href`, so clicking it does nothing.
+  The `href` goes in when the tool is deployed there.
 
 ## Screen sizes and scaling
 
@@ -1090,7 +1139,8 @@ saved through `TreeIO.download`:
   undoing an import also brings the earlier name back.
 - **The PDF's file name**: browsers suggest the page's title, so while
   printing the title is `novadm-report-<name>` (`novadm-report` without
-  a name), and `afterprint` restores "NovaDM action tree editor".
+  a name), and `afterprint` restores "RENATA – Renovation action tree
+  authoring".
 - **How**: the button fills the header and the note, marks the columns
   that don't fit and puts the class `calc-printing` on `<html>`; the
   print stylesheet applies only under that class, so printing the page

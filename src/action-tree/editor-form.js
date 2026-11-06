@@ -2,7 +2,7 @@ window.NovaDM = window.NovaDM || {};
 
 /**
  * Editor panel: the form for the selected node (kind, class, label, value,
- * option constraints, add child, delete). A Subject node is picked from the
+ * option constraints, add child or parent, delete). A Subject node is picked from the
  * predefined subjects (subjects.js) in a cascading menu, or typed in as a
  * custom subject. Renaming a label or an option moves its numbers in the
  * Calculations tab along with it.
@@ -83,6 +83,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 
 	function formHtml(node) {
 		var lockedKind = Model.siblingKind(node, null);
+		var lockedParentKind = Model.lockedParentKind(node);
 		var classOptions = Model.NODE_CLASSES.map(function (c) {
 			return '<option value="' + c + '"' + (node.nodeClass === c ? ' selected' : '') + '>' +
 				(c || '(none)') + '</option>';
@@ -117,6 +118,16 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 			'</div>' +
 			(lockedKind
 				? '<div class="note">Children are locked to ' + lockedKind + ' – all siblings must match.</div>'
+				: '') +
+			'<div class="editor-add-row">' +
+				'<button class="btn" id="add-and-parent" type="button"' +
+					(lockedParentKind === 'XOR' ? ' disabled' : '') + '>+ AND parent</button>' +
+				'<button class="btn" id="add-xor-parent" type="button"' +
+					(lockedParentKind === 'AND' ? ' disabled' : '') + '>− XOR parent</button>' +
+			'</div>' +
+			(lockedParentKind
+				? '<div class="note">A new parent is locked to ' + lockedParentKind +
+					' – it must match this node\'s siblings.</div>'
 				: '') +
 			'<div class="editor-actions">' +
 				'<button class="btn danger" id="delete-node" type="button">' +
@@ -181,6 +192,8 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 		}
 		on('add-and-child', 'click', function () { addChildTo(node, 'AND'); });
 		on('add-xor-child', 'click', function () { addChildTo(node, 'XOR'); });
+		on('add-and-parent', 'click', function () { addParentTo(node, 'AND'); });
+		on('add-xor-parent', 'click', function () { addParentTo(node, 'XOR'); });
 		on('delete-node', 'click', function () { deleteNode(node); });
 	}
 
@@ -293,6 +306,14 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 		parentNode.children.push(child);
 		parentNode.expanded = true;
 		Model.setSelectedId(child.id);
+		Render.renderTree();
+		renderEditorForm();
+	}
+
+	function addParentTo(node, kind) {
+		var parent = Model.addParent(node, kind);
+		if (!parent) return;
+		Model.setSelectedId(parent.id);
 		Render.renderTree();
 		renderEditorForm();
 	}
