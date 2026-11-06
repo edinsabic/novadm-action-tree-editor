@@ -24,6 +24,21 @@ holds exactly one node, the explicit **root node**.
   hangs below an AND, which is why an older file without a root node
   gets an AND root added on import (`TOP_LEVEL_KIND` in `model.js`).
 
+Rule 1 is not in the NovaDM papers' definition of an action tree, which
+allows mixed siblings, but every example tree in Schultz & Kamari (2021)
+and Schultz & Kamari (2025) follows it, and so does any tree in the 2021
+paper's *normal form* (every edge joins an And and a Xor node). It stays
+by agreement with the supervisor.
+
+**Adding a parent** (`Model.addParent`, the "+ AND parent" / "− XOR
+parent" buttons in the editor panel) puts a new, empty node in the
+selected node's place, with the selected node as its only child. The new
+node joins the selected node's siblings, so by Rule 1 it takes their
+kind and only the matching button is enabled; a node without siblings
+can get either. A parent added to the root node becomes the new root
+node, so the old root node can then take always/never marks. A new
+parent with one child leaves the scenario space size as it was.
+
 ## Profiles: always/never node constraints
 
 The action tree itself is treated as fixed; a **profile** is a set of
