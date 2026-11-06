@@ -1,4 +1,9 @@
-# RENATA – RENovation Action Tree Authoring
+<h1>
+	<picture>
+		<source media="(prefers-color-scheme: dark)" srcset="resources/logos/renata-logo-dark.svg">
+		<img src="resources/logos/renata-logo.svg" alt="RENATA – RENovation Action Tree Authoring" width="277">
+	</picture>
+</h1>
 
 Renovating a building means choosing between a great many options. RENATA builds on the Renovation Domain Model (NovaDM), a formal modelling framework for supporting renovation design and decision-making. Lay out the options as an action tree, see how many scenarios they add up to, and compare those scenarios on cost, CO₂ and any other KPI.
 

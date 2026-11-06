@@ -493,7 +493,9 @@ the detailed reference, for looking things up.
   between the top of the page and the tabs' bottom line (its `-12px` top
   margin cancels the page's 12 px top padding). The logo SVGs are
   outlined (their letters are paths), so they need no font and no
-  internet connection. The header is hidden in the report's PDF.
+  internet connection. The header is hidden in the report's PDF. The
+  README alone uses `renata-logo-dark.svg`, the same logo with colours
+  for GitHub's dark theme.
 - **The guides' buttons** sit at the right and span both rows with the
   same top margin as the RENATA logo, so the two are centred on one line.
   They reach into the tab bar's row, so they come after the tabs in the
