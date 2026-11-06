@@ -1105,7 +1105,8 @@ saved through `TreeIO.download`:
   undoing an import also brings the earlier name back.
 - **The PDF's file name**: browsers suggest the page's title, so while
   printing the title is `novadm-report-<name>` (`novadm-report` without
-  a name), and `afterprint` restores "NovaDM action tree editor".
+  a name), and `afterprint` restores "RENATA – NovaDM action tree
+  editor".
 - **How**: the button fills the header and the note, marks the columns
   that don't fit and puts the class `calc-printing` on `<html>`; the
   print stylesheet applies only under that class, so printing the page
