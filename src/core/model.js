@@ -112,6 +112,19 @@ NovaDM.Model = (function (Util) {
 		return existing === null || existing === kind;
 	}
 
+	function lockedParentKind(node) {
+		return siblingKind(findParent(root, node.id), node.id);
+	}
+
+	function addParent(node, kind) {
+		var parent = findParent(root, node.id);
+		if (!canAcceptKind(parent, kind, node.id)) return null;
+		var newParent = createNode(kind);
+		newParent.children = [node];
+		parent.children[parent.children.indexOf(node)] = newParent;
+		return newParent;
+	}
+
 	/* ---------- Nodes and specs ---------- */
 
 	function createNode(kind) {
@@ -455,6 +468,8 @@ NovaDM.Model = (function (Util) {
 		removeNode: removeNode,
 		siblingKind: siblingKind,
 		canAcceptKind: canAcceptKind,
+		lockedParentKind: lockedParentKind,
+		addParent: addParent,
 		createNode: createNode,
 		parseValues: parseValues,
 		formatValues: formatValues,
