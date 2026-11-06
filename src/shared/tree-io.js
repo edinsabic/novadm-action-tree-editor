@@ -153,7 +153,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		pickerOpen = true;
 		window.showSaveFilePicker({
 			suggestedName: fileName,
-			types: [{ description: 'NovaDM action tree', accept: accept }]
+			types: [{ description: 'RENATA action tree', accept: accept }]
 		}).then(function (handle) {
 			pickedName = handle.name;
 			return handle.createWritable();

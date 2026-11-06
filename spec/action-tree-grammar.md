@@ -1226,7 +1226,7 @@ are rounded ("27,868"). Counts have no decimals, and shares one
 ### CSV files
 
 "Export table as CSV" saves the report's scenario table as a CSV file for
-a spreadsheet, `novadm-scenarios.csv`, written by `Util.csvText` and
+a spreadsheet, `renata-scenarios.csv`, written by `Util.csvText` and
 saved through `TreeIO.download`:
 
 - **The format**: a comma between cells, a decimal point and no
@@ -1264,9 +1264,9 @@ saved through `TreeIO.download`:
 
 - **"PNG"** on each KPI card saves that card as it looks on screen (name
   and unit, mean, min/median/max/std dev, histogram, lowest and highest)
-  as `novadm-<kpi>.png`, named after the calculated value's name, not
+  as `renata-<kpi>.png`, named after the calculated value's name, not
   its display name, so the file name is always safe
-  (`novadm-cost.png`), without its PNG button. The graph has no PNG
+  (`renata-cost.png`), without its PNG button. The graph has no PNG
   button.
 - **How** (`savePng` in `calculations-report.js`, its only user; no library;
   saved through `TreeIO.download`): the card is cloned with each
@@ -1316,7 +1316,7 @@ saved through `TreeIO.download`:
   "Version: …". It isn't saved in the file; undo and redo keep it, so
   undoing an import also brings the earlier name back.
 - **The PDF's file name**: browsers suggest the page's title, so while
-  printing the title is `novadm-report-<name>` (`novadm-report` without
+  printing the title is `renata-report-<name>` (`renata-report` without
   a name), and `afterprint` restores "RENATA – Renovation action tree
   authoring".
 - **How**: the button fills the header and the note, marks the columns
@@ -1459,7 +1459,7 @@ importing.
 | – | A bare array of nodes (no wrapper object). | As version 2. |
 
 Export file suggests the document's name (the imported file's, e.g.
-`k45-case.json`), or `defaultName` (`novadm-action-tree.json`) when
+`k45-case.json`), or `defaultName` (`renata-action-tree.json`) when
 it has none (the example, Clear tree, a new document).
 
 To switch to a different file type: edit `extension` / `mimeType` /
@@ -1513,22 +1513,6 @@ every version; the others have the starter data in every version.
   existing constructions and formulas (see "A custom KPI: U-value").
   It shows how to add a KPI of your own, and is opened with Import file
   only: it is not loaded on open and has no `.js` copy.
-- `examples/novadm-action-tree.json` is the version-history demo: the
-  same tree with five versions – a main line, a branch, and a merge of
-  the branch that applies the branch's added and deleted nodes. It is
-  also a quick manual test of Open, Restore, Merge and Delete. The root node has
-  the same id (`n0`) in every snapshot, so it never shows up as a change.
-- `examples/version-history-test.json` is a test bed for the whole
-  version history, built on the sample tree with six versions: a main
-  line (Initial version, Windows & doors, Roof, and Merge Facade, the
-  current version), a merged branch (Facade) and an unmerged branch
-  (Ground floor). Merging Ground floor gives one conflict
-  (`windows_glazing` changed on both sides). Its two profiles ("Low
-  budget", "Underfloor heating") were one global list in version 5; each
-  version now holds its own copy, pruned to its tree, so "Low budget"
-  never forbids `n11` in Facade, which deleted that node. Use it to try Open,
-  Restore, Merge, Delete (e.g. deleting Facade or Roof), and the rules
-  for Update this version and Export.
 - `examples/k45-case.json` is the K45 case: nine Subjects (roof,
   skylight, roof_cladding, window_frame, brick_facade, ground_floor,
   original_floor, stripped_terrain, layout) with XOR Features, one
