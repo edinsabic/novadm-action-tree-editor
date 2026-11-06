@@ -1,8 +1,8 @@
 window.NovaDM = window.NovaDM || {};
 
 /**
- * App shell: top-level tab switching, the tutorial and its invite, the
- * layout toggle, the zoom controls, and opening the example tree on start.
+ * App shell: top-level tab switching, the Quick start and the Documentation,
+ * the layout toggle, the zoom controls, and opening the example tree on start.
  * Runs last, after every other src/ module.
  */
 (function (Render, TreeIO, CalculationsTab, Popovers) {
@@ -11,15 +11,14 @@ window.NovaDM = window.NovaDM || {};
 	var ZOOM_STEP = 10;
 	var TRADITIONAL_ZOOM = 50;
 	var DIRECTORY_ZOOM = 100;
-	var TUTORIAL = 'tutorial';
-	var INVITE_HIDDEN_KEY = 'novadm-tutorial-invite-hidden';
+	var DOCUMENTATION = 'tutorial';
 	var SECTION_TOP_SLACK = 24;
 
 	/* ---------- Top-level tabs ---------- */
 
 	var tabs = document.querySelectorAll('.tab');
 	var panels = document.querySelectorAll('.tab-panel');
-	var tutorialBtn = document.getElementById('tutorial-btn');
+	var guideButtons = document.querySelectorAll('[data-guide]');
 	var lastTab = 'action-tree';
 
 	function activateTab(name) {
@@ -29,11 +28,14 @@ window.NovaDM = window.NovaDM || {};
 			tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
 		});
 		panels.forEach(function (panel) { panel.hidden = panel.id !== name; });
-		tutorialBtn.setAttribute('aria-pressed', name === TUTORIAL ? 'true' : 'false');
-		if (name === TUTORIAL) {
-			markCurrentSection();
-			return;
-		}
+		var isGuide = false;
+		guideButtons.forEach(function (btn) {
+			var isOpen = btn.dataset.guide === name;
+			if (isOpen) isGuide = true;
+			btn.setAttribute('aria-pressed', isOpen ? 'true' : 'false');
+		});
+		if (name === DOCUMENTATION) markCurrentSection();
+		if (isGuide) return;
 		lastTab = name;
 		if (name === 'calculations') CalculationsTab.render();
 		else Render.treeShown();
@@ -48,28 +50,11 @@ window.NovaDM = window.NovaDM || {};
 		activateTab('calculations');
 	});
 
-	/* ---------- Tutorial ---------- */
+	/* ---------- Quick start and Documentation ---------- */
 
-	var tutorialPanel = document.getElementById(TUTORIAL);
 	var tutorialText = document.getElementById('tutorial-text');
-	var invite = document.getElementById('tutorial-invite');
 	var contentsLinks = document.querySelectorAll('.tutorial-contents a');
 	var clickedLink = null;
-
-	function inviteDismissed() {
-		try {
-			return localStorage.getItem(INVITE_HIDDEN_KEY) === '1';
-		} catch (e) {
-			return false;
-		}
-	}
-
-	function dismissInvite() {
-		invite.hidden = true;
-		try {
-			localStorage.setItem(INVITE_HIDDEN_KEY, '1');
-		} catch (e) {}
-	}
 
 	function markLink(href) {
 		contentsLinks.forEach(function (link) {
@@ -97,19 +82,26 @@ window.NovaDM = window.NovaDM || {};
 		e.stopPropagation();
 	}
 
-	tutorialBtn.addEventListener('click', function (e) {
-		keepFlyoutsOpen(e);
-		dismissInvite();
-		activateTab(tutorialPanel.hidden ? TUTORIAL : lastTab);
+	guideButtons.forEach(function (btn) {
+		btn.addEventListener('click', function (e) {
+			keepFlyoutsOpen(e);
+			var guide = btn.dataset.guide;
+			activateTab(document.getElementById(guide).hidden ? guide : lastTab);
+		});
 	});
 
-	tutorialPanel.addEventListener('click', keepFlyoutsOpen);
-
-	document.getElementById('tutorial-close').addEventListener('click', function () {
-		activateTab(lastTab);
+	document.querySelectorAll('.tutorial-panel').forEach(function (panel) {
+		panel.addEventListener('click', keepFlyoutsOpen);
 	});
 
-	document.getElementById('tutorial-invite-close').addEventListener('click', dismissInvite);
+	document.querySelectorAll('[data-guide-close]').forEach(function (btn) {
+		btn.addEventListener('click', function () { activateTab(lastTab); });
+	});
+
+	document.getElementById('quick-start-to-documentation').addEventListener('click', function (e) {
+		e.preventDefault();
+		activateTab(DOCUMENTATION);
+	});
 
 	tutorialText.addEventListener('scroll', markCurrentSection);
 
@@ -119,8 +111,6 @@ window.NovaDM = window.NovaDM || {};
 		clickedLink = link.getAttribute('href');
 		markLink(clickedLink);
 	});
-
-	invite.hidden = inviteDismissed();
 
 	/* ---------- Tutorial search ---------- */
 

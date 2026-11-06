@@ -356,7 +356,8 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - **Figures** sit where they help, numbered in order ("Figure 2:") with
   a caption and an alt text, at most 320 pixels tall so they don't take
   over the page, and open at full size in a new tab when clicked. They
-  are plain files in `tutorial/`:
+  are plain files in `resources/tutorial/` (`resources/` holds the site's
+  images; the logos will go in `resources/logos/`):
   - `novadm-concepts.svg` (Figure 1, What the tool is for): NovaDM's six
     concepts as a UML diagram, redrawn by hand as SVG from Figure 5 of
     Schultz and Kamari (2025), the tutorial's reference [1];

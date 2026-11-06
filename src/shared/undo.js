@@ -16,7 +16,6 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 
 	var undoBtns = document.querySelectorAll('[data-undo-action="undo"]');
 	var redoBtns = document.querySelectorAll('[data-undo-action="redo"]');
-	var tutorialPanel = document.getElementById('tutorial');
 
 	var undoStack = [];
 	var redoStack = [];
@@ -129,7 +128,7 @@ NovaDM.Undo = (function (Model, History, Render, EditorForm, Popovers, Calculati
 	});
 
 	document.addEventListener('keydown', function (e) {
-		if (!(e.ctrlKey || e.metaKey) || e.altKey || !tutorialPanel.hidden) return;
+		if (!(e.ctrlKey || e.metaKey) || e.altKey || document.querySelector('.tutorial-panel:not([hidden])')) return;
 		var t = e.target;
 		if (t && (EDITABLE_TAGS.indexOf(t.tagName) !== -1 || t.isContentEditable)) return;
 		var key = e.key.toLowerCase();

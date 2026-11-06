@@ -11,14 +11,11 @@
 <header class="page-header">
 	<h1 id="page-title">NovaDM action tree editor</h1>
 	<div class="tutorial-start">
-		<p id="tutorial-invite" class="tutorial-invite" hidden>
-			New here? Start with the tutorial
-			<button id="tutorial-invite-close" class="tutorial-invite-close" type="button"
-				aria-label="Hide this tip" title="Hide this tip">&times;</button>
-		</p>
-		<button id="tutorial-btn" class="tutorial-btn" type="button" aria-pressed="false"
-			title="Learn how to use the editor: action trees, profiles, versions and the Calculations tab">
-			Tutorial
+		<button id="quick-start-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="quick-start"
+			title="See what the tool does in a few minutes, step by step">Quick start</button>
+		<button id="documentation-btn" class="tutorial-btn" type="button" aria-pressed="false" data-guide="tutorial"
+			title="Look up the details: action trees, profiles, versions, files, calculations and formulas">
+			Documentation
 		</button>
 	</div>
 </header>
@@ -315,16 +312,296 @@
 		<div id="calc-report" class="calc-report" hidden></div>
 	</section>
 
+	<section id="quick-start" class="tab-panel tutorial-panel" aria-labelledby="quick-start-title" hidden>
+		<div class="tutorial-head">
+			<h2 id="quick-start-title">Quick start</h2>
+			<button class="btn" type="button" data-guide-close>Back to the editor</button>
+		</div>
+		<div class="tutorial-body">
+			<div id="quick-start-text" class="tutorial-text quick-text">
+				<section>
+					<p class="quick-lead">See what the tool does in a few minutes.</p>
+					<div class="quick-cards">
+						<div class="quick-card">
+							<h3>Why this tool</h3>
+							<p>A building can be renovated in a great many ways. This tool lays them out, counts them
+								and compares them.</p>
+						</div>
+						<div class="quick-card">
+							<h3>Who it is for</h3>
+							<p>Designers and project teams, early in a renovation project.</p>
+						</div>
+						<div class="quick-card">
+							<h3>How to start</h3>
+							<p>Nothing to install. Start on the <strong>Action tree</strong> tab, and flip with
+								<strong>Back to the editor</strong> and <strong>Quick start</strong>.</p>
+						</div>
+					</div>
+					<p class="quick-goal">&ldquo;As a designer early in a renovation project, I want to see how many
+						ways I could renovate a building, and what they would cost.&rdquo;</p>
+				</section>
+				<section>
+					<div class="tutorial-section-head">
+						<h3>Build the tree</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="1">
+								<li><span class="quick-number">1</span><span>On the <strong>Action tree</strong> tab,
+									click <strong>Clear tree</strong>, then <strong>OK</strong>.</span></li>
+								<li><span class="quick-number">2</span><span>Drag <strong>AND node</strong> onto
+									<strong>Drop here</strong>. This is the top of your tree.</span></li>
+							</ol>
+							<p class="quick-result">Scenario space size <strong>1</strong></p>
+						</div>
+						<a href="resources/tutorial/quick-start-1.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-1.png" width="1228" height="656"
+								alt="The cleared tree. Clear tree is marked 1, AND node is marked 2, with an arrow to
+									Drop here." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="3">
+								<li><span class="quick-number">3</span><span>Drag <strong>AND node</strong> onto an
+									empty part of the tree area.</span></li>
+								<li><span class="quick-number">4</span><span>Set <strong>Class</strong> to
+									<strong>Subject</strong>.</span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-2.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-2.png" width="1228" height="376"
+								alt="A new node under the root node, with an arrow from AND node marked 3. The Class
+									field is marked 4 and reads Subject." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="5">
+								<li><span class="quick-number">5</span><span>Click <strong>Choose a subject</strong>,
+									then <strong>NovaDM</strong>.</span></li>
+								<li><span class="quick-number">6</span><span>Click
+									<strong>Architectural &rsaquo; Windows</strong>.</span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-3.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-3.png" width="604" height="417"
+								alt="The subject menu. NovaDM is marked 5, and Windows, under Architectural, is
+									marked 6." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="7">
+								<li><span class="quick-number">7</span><span>Click <strong>&minus; XOR
+									child</strong>.</span></li>
+								<li><span class="quick-number">8</span><span>Set <strong>Class</strong> to
+									<strong>Feature</strong>.</span></li>
+								<li><span class="quick-number">9</span><span>In <strong>Label</strong>, type
+									<code>glazing</code>.</span></li>
+								<li><span class="quick-number">10</span><span>In <strong>Value / options</strong>, type
+									<code>keep_double; replace_triple</code>.</span></li>
+							</ol>
+							<p class="quick-result">Scenario space size <strong>2</strong></p>
+						</div>
+						<a href="resources/tutorial/quick-start-4.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-4.png" width="422" height="334"
+								alt="The editor panel. XOR child is marked 7, Class 8, Label 9 and Value / options
+									10." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="11">
+								<li><span class="quick-number">11</span><span>Do steps 3 to 10 again for
+									<strong>Individual &rsaquo; Solar shading</strong>, with the label
+									<code>shading</code> and the options <code>none; awnings; shutters</code>.
+									</span></li>
+							</ol>
+							<p class="quick-result">Scenario space size <strong>6</strong></p>
+							<p class="quick-note">2 ways &times; 3 ways = 6 possible renovations.</p>
+						</div>
+						<a href="resources/tutorial/quick-start-5.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-5.png" width="1228" height="656"
+								alt="The finished tree with two subjects. The new subject is marked 11, and the
+									scenario space size at the bottom reads 6." />
+						</a>
+					</div>
+				</section>
+				<section>
+					<div class="tutorial-section-head">
+						<h3>Watch the scenario space</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="12">
+								<li><span class="quick-number">12</span><span>Click the chip <code>shutters</code>:
+									green, every scenario has it. <span class="quick-result">Scenario space size
+									<strong>2</strong></span></span></li>
+								<li><span class="quick-number">13</span><span>Click it again: red, no scenario has it.
+									<span class="quick-result">Scenario space size <strong>4</strong></span></span></li>
+								<li><span class="quick-number">14</span><span>Click it again to open it.
+									<span class="quick-result">Scenario space size <strong>6</strong></span></span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-6.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-6.png" width="612" height="175"
+								alt="The tree with the chip shutters marked 12, red and struck through." />
+						</a>
+					</div>
+				</section>
+				<section>
+					<div class="tutorial-section-head">
+						<h3>Add numbers, read the KPIs</h3>
+						<span class="tutorial-where">Calculations tab</span>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="15">
+								<li><span class="quick-number">15</span><span>Click <strong>Go to Calculations
+									&rarr;</strong> in the bottom bar, then the box <code>glazing</code>.</span></li>
+								<li><span class="quick-number">16</span><span>In the row <code>replace_triple</code>,
+									type <code>52000</code> and <code>3900</code>.</span></li>
+							</ol>
+							<p class="quick-note">These numbers are made up.</p>
+						</div>
+						<a href="resources/tutorial/quick-start-7.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-7.png" width="1228" height="467"
+								alt="The Calculations tab. The box glazing is marked 15, and the row replace_triple in
+									the editor panel is marked 16." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="17">
+								<li><span class="quick-number">17</span><span>Click the box
+									<code>shading</code>.</span></li>
+								<li><span class="quick-number">18</span><span>Type <code>18000</code> and
+									<code>900</code> for <code>awnings</code>, and <code>30000</code> and
+									<code>1500</code> for <code>shutters</code>.</span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-8.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-8.png" width="1228" height="467"
+								alt="The box shading is marked 17, and its table of numbers is marked 18." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="19">
+								<li><span class="quick-number">19</span><span>In the boxes, pick
+									<code>replace_triple</code> and <code>shutters</code>.</span></li>
+							</ol>
+							<p class="quick-result">cost <strong>82,000 DKK</strong></p>
+							<p class="quick-result">gwp <strong>5,400 kg CO&#8322;e</strong></p>
+						</div>
+						<a href="resources/tutorial/quick-start-9.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-9.png" width="820" height="342"
+								alt="The two option pickers, the first marked 19, and the calculated values cost and
+									gwp with their new numbers." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="20">
+								<li><span class="quick-number">20</span><span>Click <strong>Full scenario
+									space</strong>.</span></li>
+							</ol>
+							<p class="quick-note">The report compares all 6 renovations.</p>
+							<p class="quick-result">Mean Cost <strong>42,000 DKK</strong></p>
+							<p class="quick-result">Mean GWP <strong>2,750 kg CO&#8322;e</strong></p>
+						</div>
+						<a href="resources/tutorial/quick-start-10.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-10.png" width="872" height="492"
+								alt="The report. Full scenario space is marked 20, and the means on the two KPI cards
+									are framed." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="21">
+								<li><span class="quick-number">21</span><span>Click the <strong>Action tree</strong>
+									tab. The bottom bar now shows the KPIs too.</span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-11.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-11.png" width="1228" height="108"
+								alt="The bottom bar, with Exact mean, Cost and GWP marked 21." />
+						</a>
+					</div>
+				</section>
+				<section>
+					<div class="tutorial-section-head">
+						<h3>Keep your work</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="22">
+								<li><span class="quick-number">22</span><span>Click
+									<strong>Version: Initial version &middot; unsaved</strong>.</span></li>
+								<li><span class="quick-number">23</span><span>Click <strong>Save as new version</strong>
+									and type a name. The comment can stay empty.</span></li>
+							</ol>
+							<p class="quick-note">The version is now saved in this page.</p>
+						</div>
+						<a href="resources/tutorial/quick-start-12.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-12.png" width="524" height="509"
+								alt="The version history. The Version pill is marked 22 and Save as new version is
+									marked 23." />
+						</a>
+					</div>
+					<div class="quick-row">
+						<div>
+							<ol class="quick-steps" start="24">
+								<li><span class="quick-number">24</span><span>Click <strong>Export file</strong> and
+									save the file. Only a file keeps your work after you close the page.</span></li>
+								<li><span class="quick-number">25</span><span>Click <strong>Load example tree</strong>,
+									then <strong>OK</strong>, to explore a bigger tree.
+									<span class="quick-result">Scenario space size <strong>2,560</strong></span>
+									</span></li>
+							</ol>
+						</div>
+						<a href="resources/tutorial/quick-start-13.png" target="_blank" rel="noopener"
+							title="Open the image at full size">
+							<img src="resources/tutorial/quick-start-13.png" width="818" height="72"
+								alt="The toolbar, with Export file marked 24 and Load example tree marked 25." />
+						</a>
+					</div>
+					<p>
+						That's the tool. Every detail is in the
+						<a id="quick-start-to-documentation" href="#tutorial">Documentation</a>.
+					</p>
+				</section>
+			</div>
+		</div>
+	</section>
+
 	<section id="tutorial" class="tab-panel tutorial-panel" aria-labelledby="tutorial-title" hidden>
 		<div class="tutorial-head">
-			<h2 id="tutorial-title">Tutorial</h2>
+			<h2 id="tutorial-title">Documentation</h2>
 			<div class="tutorial-search">
-				<input id="tutorial-search" type="search" placeholder="Search the tutorial"
-					aria-label="Search the tutorial"
-					title="Type a word to find it in the tutorial; Enter goes to the next match, Shift+Enter back" />
+				<input id="tutorial-search" type="search" placeholder="Search the documentation"
+					aria-label="Search the documentation"
+					title="Type a word to find it in the documentation; Enter goes to the next match,
+						Shift+Enter back" />
 				<span id="tutorial-search-count" class="tutorial-search-count" aria-live="polite"></span>
 			</div>
-			<button id="tutorial-close" class="btn" type="button">Back to the editor</button>
+			<button class="btn" type="button" data-guide-close>Back to the editor</button>
 		</div>
 		<div class="tutorial-body">
 			<nav class="tutorial-contents" aria-label="Contents">
@@ -373,9 +650,9 @@
 						<li><strong>Scenario:</strong> a set of mutually consistent actions.</li>
 					</ul>
 					<figure class="tutorial-figure">
-						<a href="tutorial/novadm-concepts.svg" target="_blank" rel="noopener"
+						<a href="resources/tutorial/novadm-concepts.svg" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/novadm-concepts.svg" width="420" height="501"
+							<img src="resources/tutorial/novadm-concepts.svg" width="420" height="501"
 								alt="UML diagram: a scenario is made of alternatives; an alternative can choose
 									from one or more actions and a scenario selects one of them; an action has a
 									subject, features and approaches, which are all aspects." />
@@ -434,8 +711,8 @@
 							or panel.</li>
 						<li><strong>More on screen:</strong> Ctrl and minus makes the whole page smaller, Ctrl and
 							plus larger, and Ctrl+0 resets it.</li>
-						<li><strong>Search:</strong> type in <strong>Search the tutorial</strong> at the top of this
-							page, or press Ctrl+F to use the browser's own search.</li>
+						<li><strong>Search:</strong> type in <strong>Search the documentation</strong> at the top
+							of this page, or press Ctrl+F to use the browser's own search.</li>
 						<li><strong>Save often:</strong> nothing is saved by itself, so use <strong>Export
 							file</strong> before closing or reloading the page. If you forget, the browser asks
 							before it leaves the page.</li>
@@ -507,7 +784,10 @@
 					</dl>
 				</section>
 				<section id="tutorial-action-trees">
-					<h3>Action trees</h3>
+					<div class="tutorial-section-head">
+						<h3>Action trees</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
 					<p>
 						An action tree is made of <strong>nodes</strong>. In the editor, every line of the tree in
 						the <strong>List</strong> layout is one node (Figure 2), such as
@@ -524,9 +804,9 @@
 						node. The XOR node has two children of its own.
 					</p>
 					<figure class="tutorial-figure">
-						<a href="tutorial/action-tree-tab.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/action-tree-tab.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/action-tree-tab.png" width="1216" height="844"
+							<img src="resources/tutorial/action-tree-tab.png" width="1216" height="844"
 								alt="The Action tree tab: the example tree as an indented list, one node per line, with
 									windows_glazing selected and shown in the editor panel on the right." />
 						</a>
@@ -535,9 +815,9 @@
 							panel on the right shows it.</figcaption>
 					</figure>
 					<figure class="tutorial-figure">
-						<a href="tutorial/diagram-layout.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/diagram-layout.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/diagram-layout.png" width="928" height="658"
+							<img src="resources/tutorial/diagram-layout.png" width="928" height="658"
 								alt="The facade's part of the example in the Diagram layout: an AND root node, the
 									Subject node facade below it, and its children joined by lines." />
 						</a>
@@ -592,7 +872,10 @@
 					</div>
 				</section>
 				<section id="tutorial-starting">
-					<h3>Starting a tree</h3>
+					<div class="tutorial-section-head">
+						<h3>Starting a tree</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
 					<p>An empty tree shows the three ways to start:</p>
 					<ol>
 						<li><strong>Drag a node.</strong> Drag <strong>AND node</strong> or <strong>XOR
@@ -648,7 +931,10 @@
 					</div>
 				</section>
 				<section id="tutorial-editing">
-					<h3>Editing</h3>
+					<div class="tutorial-section-head">
+						<h3>Editing</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
 					<p>
 						Click a node to select it. The editor panel on the right then shows its
 						<strong>Kind</strong> (AND or XOR), its <strong>Class</strong>, its <strong>Label</strong>
@@ -687,7 +973,10 @@
 					</div>
 				</section>
 				<section id="tutorial-profiles">
-					<h3>Profiles</h3>
+					<div class="tutorial-section-head">
+						<h3>Profiles</h3>
+						<span class="tutorial-where">Action tree tab</span>
+					</div>
 					<p>
 						Often some choices are already made: the roof must be insulated, or the doors may not be
 						replaced. You mark such choices as <strong>always</strong> or <strong>never</strong>:
@@ -724,9 +1013,9 @@
 						<em>"the applied constraints are contradictory"</em>.
 					</p>
 					<figure class="tutorial-figure">
-						<a href="tutorial/profile-marks.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/profile-marks.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/profile-marks.png" width="600" height="584"
+							<img src="resources/tutorial/profile-marks.png" width="600" height="584"
 								alt="The example tree with the Energy upgrade profile: the dot of replace_brick_facade
 									and four option chips are green (always), and the chip replace of roof_replacement
 									is red and struck through (never)." />
@@ -764,7 +1053,10 @@
 					</div>
 				</section>
 				<section id="tutorial-versions">
-					<h3>Versions</h3>
+					<div class="tutorial-section-head">
+						<h3>Versions</h3>
+						<span class="tutorial-where">Both tabs</span>
+					</div>
 					<p>
 						A <strong>version</strong> is a snapshot of the whole document: the tree, its profiles and
 						its numbers in the Calculations tab. Versions let you try something without losing what
@@ -778,9 +1070,9 @@
 						saved, its comment and what changed. Then:
 					</p>
 					<figure class="tutorial-figure">
-						<a href="tutorial/version-history.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/version-history.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/version-history.png" width="486" height="445"
+							<img src="resources/tutorial/version-history.png" width="486" height="445"
 								alt="The version history: Initial version with an arrow to Add windows, the version on
 									screen in blue; below, Initial version's details with Open, Restore, Merge and
 									Delete." />
@@ -818,7 +1110,10 @@
 					</div>
 				</section>
 				<section id="tutorial-files">
-					<h3>Files</h3>
+					<div class="tutorial-section-head">
+						<h3>Files</h3>
+						<span class="tutorial-where">Both tabs</span>
+					</div>
 					<p>
 						<strong>Export file</strong> saves the whole document as a <code>.json</code> file: every
 						version with its tree, profiles and numbers. <strong>Import file</strong> opens such a
@@ -860,7 +1155,10 @@
 					</div>
 				</section>
 				<section id="tutorial-calculations">
-					<h3>The Calculations tab</h3>
+					<div class="tutorial-section-head">
+						<h3>The Calculations tab</h3>
+						<span class="tutorial-where">Calculations tab</span>
+					</div>
 					<p>
 						The Calculations tab puts numbers on the tree in the Action tree tab, so you can compare
 						scenarios on, for example, cost and CO&#8322;. It always follows that tree and its
@@ -874,9 +1172,9 @@
 						panel; it also highlights what it uses and what uses it.
 					</p>
 					<figure class="tutorial-figure">
-						<a href="tutorial/calculations-tab.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/calculations-tab.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/calculations-tab.png" width="1216" height="844"
+							<img src="resources/tutorial/calculations-tab.png" width="1216" height="844"
 								alt="The Calculations tab: boxes with an option drop-down and their price and co2 on
 									the left, calculated values on the right with blue arrows into cost, and cost's
 									formula in the editor panel." />
@@ -916,9 +1214,9 @@
 						(in the print dialog, choose "Save as PDF").
 					</p>
 					<figure class="tutorial-figure">
-						<a href="tutorial/report.png" target="_blank" rel="noopener"
+						<a href="resources/tutorial/report.png" target="_blank" rel="noopener"
 							title="Open the image at full size">
-							<img src="tutorial/report.png" width="822" height="358"
+							<img src="resources/tutorial/report.png" width="822" height="358"
 								alt="Two KPI cards, Cost and GWP, each with its mean, min, median, max, standard
 									deviation and a bar chart of the values." />
 						</a>
@@ -945,7 +1243,10 @@
 					</div>
 				</section>
 				<section id="tutorial-formulas">
-					<h3>Formulas (for super users)</h3>
+					<div class="tutorial-section-head">
+						<h3>Formulas (for super users)</h3>
+						<span class="tutorial-where">Calculations tab</span>
+					</div>
 					<p>
 						Feel free to experiment: if a formula goes wrong, undo (&#8630;) and redo (&#8631;) in the
 						toolbar bring back what you had.
