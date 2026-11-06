@@ -241,15 +241,18 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 
 	var TREE_FILE_FORMAT = {
 		id: 'novadm-action-tree',
-		version: 6, /* 6: each snapshot holds its own profiles and the Calculations data; no global `profile`.
-					** 5: the tree is a single AND root node (older files get one added on import).
-					** 4: profiles also hold per-value constraints (currentValues / valueConstraints).
-					** 3: versionControl / profile / actionTree sections. 
-					** 2: single `tree`, value is an array of strings. 
-					** 1: text values. Older files still import. */
+		/*
+		 * 6: each snapshot holds its own profiles and the Calculations data; no global `profile`.
+		 * 5: the tree is a single AND root node (older files get one added on import).
+		 * 4: profiles also hold per-value constraints (currentValues / valueConstraints).
+		 * 3: versionControl / profile / actionTree sections.
+		 * 2: single `tree`, value is an array of strings.
+		 * 1: text values. Older files still import.
+		 */
+		version: 6,
 		extension: '.json',
 		mimeType: 'application/json',
-		defaultName: 'novadm-action-tree',
+		defaultName: 'renata-action-tree',
 
 		/**
 		 * @param {{tree: Array, profile: Object, calculations: Object, history: Object, source: string}} doc
@@ -282,7 +285,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 		/**
 		 * @param {string} text the file's text
 		 * @returns {{tree: Array, history: Object, source: string, addedRoot: boolean}}
-		 * Throws an Error with a readable message if this is not a NovaDM file.
+		 * Throws an Error with a readable message if this is not a RENATA action tree file.
 		 */
 		parse: function (text) {
 			var data = parseJson(text);
@@ -290,7 +293,7 @@ NovaDM.Parser = (function (Model, Calculations, Util) {
 			if (Array.isArray(data)) return singleTreeDocument(data);
 
 			if (!data || data.format !== TREE_FILE_FORMAT.id) {
-				throw new Error('This does not look like a NovaDM action tree file.');
+				throw new Error('This does not look like a RENATA action tree file.');
 			}
 			if (typeof data.version !== 'number' || data.version > TREE_FILE_FORMAT.version) {
 				throw new Error('This file was saved by a newer version of the editor (file version ' +

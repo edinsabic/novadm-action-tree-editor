@@ -44,7 +44,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 	function subjectPickerText(node) {
 		var match = Subjects.find(node.label, node.value);
 		if (match) return match.category.name + ' › ' + match.subject.name;
-		return isCustomSubject(node) ? 'Custom subject' : 'Choose a subject…';
+		return isCustomSubject(node) ? 'Custom subject' : 'Choose a subject';
 	}
 
 	function otherListNoteHtml(node) {
@@ -362,7 +362,7 @@ NovaDM.EditorForm = (function (Model, History, Render, Calculations, Util, Subje
 			'<ul class="subject-menu-list">' + categoriesHtml +
 			'<li class="popover-divider" role="separator"></li>' +
 			'<li><button type="button" class="subject-menu-item" role="menuitem" data-custom-subject="true">' +
-			'+ Custom subject…</button></li>' +
+			'+ Custom subject</button></li>' +
 			'</ul>';
 	}
 

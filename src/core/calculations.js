@@ -414,7 +414,9 @@ NovaDM.Calculations = (function (Util) {
 
 	function renameDerived(data, from, to, shown) {
 		var out = Util.clone(data);
-		var result = from === to ? { derived: out.derived, skipped: [] } : renameInFormulas(out.derived, 'derived', from, to);
+		var result = from === to
+			? { derived: out.derived, skipped: [] }
+			: renameInFormulas(out.derived, 'derived', from, to);
 		out.derived = result.derived.map(function (d) {
 			if (d.name !== from) return d;
 			var copy = Util.clone(d);

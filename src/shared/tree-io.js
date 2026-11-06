@@ -15,6 +15,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	var exportBtns = document.querySelectorAll('[data-file-action="export"]');
 	var importBtns = document.querySelectorAll('[data-file-action="import"]');
 	var importInput = document.getElementById('import-file-input');
+	var textInFile = null;
 
 	function nothingToLose() {
 		return Model.root.children.length === 0 && CalculationsTab.isUntouched() &&
@@ -44,6 +45,17 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 		return history.snapshots.filter(function (s) { return s.id === history.head; })[0] || {};
 	}
 
+	function documentText() {
+		var tree = Model.treeSpecs();
+		return FORMAT.serialize({
+			tree: tree,
+			profile: Model.getProfileState([tree]),
+			calculations: CalculationsTab.getState(),
+			history: History.getState(),
+			source: Model.getSource()
+		});
+	}
+
 	function newDocument(specs, source, history, name) {
 		Model.replaceTree(specs);
 		Model.setSource(source);
@@ -58,6 +70,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			History.reset();
 		}
 		refreshAll();
+		textInFile = documentText();
 	}
 
 	function loadExample(onStart) {
@@ -72,24 +85,24 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	/* ---------- Example and clear buttons ---------- */
 
 	document.getElementById('load-example-btn').addEventListener('click', function () {
-		if (!nothingToLose() && !confirm('Replace the current tree, and the numbers and calculated values in the' +
-			' Calculations tab, with the example?')) {
+		if (!nothingToLose() && !confirm('Replace the current tree, its versions and profiles, and the numbers and' +
+			' calculated values in the Calculations tab, with the example?')) {
 			return;
 		}
 		loadExample();
 	});
 
 	document.getElementById('calc-load-example-btn').addEventListener('click', function () {
-		if (!confirm('Load the example? It replaces the tree in the Action tree tab too, along with the numbers' +
-			' and calculated values here. You can undo this.')) {
+		if (!confirm('Load the example? It replaces the tree in the Action tree tab too, along with its versions' +
+			' and profiles and the numbers and calculated values here. You can undo this.')) {
 			return;
 		}
 		loadExample();
 	});
 
 	document.getElementById('clear-tree-btn').addEventListener('click', function () {
-		if (!nothingToLose() && !confirm('Clear the whole tree?\n\nThe Calculations tab starts over too, with no' +
-			' numbers, only Cost and GWP.')) {
+		if (!nothingToLose() && !confirm('Clear the whole tree?\n\nIts versions and profiles go too, and the' +
+			' Calculations tab starts over, with no numbers, only Cost and GWP.')) {
 			return;
 		}
 		newDocument([], '');
@@ -97,6 +110,7 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 
 	/* ---------- Export ---------- */
 
+	var pickerOpen = false;
 
 	function download(text, fileName, mimeType) {
 		var url = URL.createObjectURL(new Blob([text], { type: mimeType }));
@@ -110,9 +124,10 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 	}
 
 	function exportFile() {
+		if (pickerOpen) return;
 		if (History.isDirty() && !History.canUpdateHead()) {
 			alert('"' + History.getHead() + '" has unsaved changes, but other versions are based on it, so it' +
-				' cannot store them. Save them as a new version first (Version history → Save as new version…).');
+				' cannot store them. Save them as a new version first (Version history → Save as new version).');
 			return;
 		}
 		var others = History.snapshotCount() > 1 ? ' (the other versions are kept as they are)' : '';
@@ -120,20 +135,51 @@ NovaDM.TreeIO = (function (Model, History, Render, EditorForm, Popovers, Calcula
 			' them as that version' + others + '.\n\nExport anyway?')) {
 			return;
 		}
-		var tree = Model.treeSpecs();
-		var text = FORMAT.serialize({
-			tree: tree,
-			profile: Model.getProfileState([tree]),
-			calculations: CalculationsTab.getState(),
-			history: History.getState(),
-			source: Model.getSource()
+		saveDocument(documentText(), (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension);
+	}
+
+	function saveDocument(text, fileName) {
+		function downloadInstead() {
+			download(text, fileName, FORMAT.mimeType);
+			textInFile = text;
+		}
+		if (!window.showSaveFilePicker) {
+			downloadInstead();
+			return;
+		}
+		var accept = {};
+		accept[FORMAT.mimeType] = [FORMAT.extension];
+		var pickedName = null;
+		pickerOpen = true;
+		window.showSaveFilePicker({
+			suggestedName: fileName,
+			types: [{ description: 'RENATA action tree', accept: accept }]
+		}).then(function (handle) {
+			pickedName = handle.name;
+			return handle.createWritable();
+		}).then(function (file) {
+			return file.write(text).then(function () { return file.close(); });
+		}).then(function () {
+			textInFile = text;
+			Model.setDocumentName(nameOf(pickedName));
+		}).catch(function (err) {
+			if (err.name !== 'AbortError') downloadInstead();
+		}).then(function () {
+			pickerOpen = false;
 		});
-		download(text, (Model.getDocumentName() || FORMAT.defaultName) + FORMAT.extension, FORMAT.mimeType);
 	}
 
 	exportBtns.forEach(function (btn) {
 		btn.title = 'Save the tree, its versions, profiles and numbers as a ' + FORMAT.extension + ' file';
 		btn.addEventListener('click', exportFile);
+	});
+
+	/* ---------- Leaving the page ---------- */
+
+	window.addEventListener('beforeunload', function (e) {
+		if (documentText() === textInFile) return;
+		e.preventDefault();
+		e.returnValue = '';
 	});
 
 	/* ---------- Import ---------- */

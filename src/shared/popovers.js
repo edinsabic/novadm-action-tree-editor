@@ -20,8 +20,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	var GONE_PROFILE_TITLE = 'None of its nodes are in this version\'s tree, so it\'s safe to delete';
 	var EMPTY_PROFILE_TITLE = 'It marks no nodes as always or never, so it\'s safe to delete';
 	var SAVE_PROFILE_TITLE = 'Save the always/never marks in the tree as a named profile in this version';
-	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile.' +
-		' Saved profiles stay as they are.';
+	var CLEAR_MARKS_TITLE = 'Set every dot and option in the tree back to default and unload the profile;' +
+		' saved profiles stay as they are';
 
 	var escapeHtml = Util.escapeHtml;
 	var plural = Util.plural;
@@ -83,7 +83,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'<div class="popover-divider"></div>';
 
 		if (profiles.length === 0) {
-			html += '<div class="editor-empty">No profiles saved yet – click the dot on a leaf or an option' +
+			html += '<div class="editor-empty">No profiles saved yet – click the dot on a node or an option' +
 				' (chip) in the Action tree tab\'s Workspace panel to mark it as always/never, then Save profile.' +
 				'</div>';
 		} else {
@@ -116,7 +116,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 
 	function saveProfile() {
 		if (!Model.hasNodeConstraints()) {
-			alert('Mark at least one leaf (click its dot) or option (click its chip) in the Action tree tab' +
+			alert('Mark at least one node (click its dot) or option (click its chip) in the Action tree tab' +
 				' before saving a profile.');
 			return;
 		}
@@ -171,7 +171,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 			'Re-center</button>' +
 			'<button type="button" class="btn" data-vg="save"' +
 			' title="Save the tree and numbers on screen as a new version">' +
-			'Save as new version…</button>' +
+			'Save as new version</button>' +
 			'</div>' +
 			'<div class="vg-box" id="vg-box"></div>' +
 			'<div class="vg-details" id="vg-details"></div>';
@@ -243,7 +243,8 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	function buttonHtml(action, label, title, disabled, extraClass) {
 		return '<button type="button" class="btn' + (extraClass ? ' ' + extraClass : '') + '"' +
 			(action ? ' data-vg="' + action + '"' : '') +
-			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(title) + '">' + label + '</button>';
+			(disabled ? ' disabled' : '') + ' title="' + escapeHtml(Util.tooltipText(title)) + '">' + label +
+			'</button>';
 	}
 
 	function deleteButtonHtml(d) {
@@ -255,7 +256,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		var canUpdate = History.canUpdateHead();
 		return buttonHtml('update', 'Update this version', canUpdate
 			? 'Overwrite this version with the tree and numbers on screen'
-			: 'Other versions are based on this one, so it cannot be changed. Save as a new version instead.',
+			: 'Other versions are based on this one, so it cannot be changed; save as a new version instead',
 			!canUpdate);
 	}
 
@@ -469,9 +470,13 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 		});
 	}
 
+	function openedPill() {
+		return openedFrom === 'calc' ? calcProfileBtn : profileBtn;
+	}
+
 	function placeBelow() {
-		if (openFlyoutName === null) return;
-		var pill = openedFrom === 'calc' ? calcProfileBtn : profileBtn;
+		var pill = openedPill();
+		if (openFlyoutName === null || pill.offsetParent === null) return;
 		var top = pill.offsetTop + pill.offsetHeight + FLYOUT_GAP;
 		[profileFlyout, versionFlyout].forEach(function (flyout) {
 			flyout.style.top = top + 'px';
@@ -541,7 +546,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	});
 
 	document.addEventListener('keydown', function (e) {
-		if (e.key === 'Escape' && openFlyoutName !== null) closeFlyouts();
+		if (e.key === 'Escape' && openFlyoutName !== null && openedPill().offsetParent !== null) closeFlyouts();
 	});
 
 	window.addEventListener('resize', placeBelow);
@@ -549,6 +554,7 @@ NovaDM.Popovers = (function (Model, History, VersionGraph, Render, EditorForm, U
 	return {
 		renderFlyout: renderFlyout,
 		updatePillLabels: updatePillLabels,
-		resetVersionView: resetVersionView
+		resetVersionView: resetVersionView,
+		placeFlyouts: placeBelow
 	};
 })(NovaDM.Model, NovaDM.History, NovaDM.VersionGraph, NovaDM.Render, NovaDM.EditorForm, NovaDM.Util);

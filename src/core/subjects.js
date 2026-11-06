@@ -6,7 +6,7 @@ window.NovaDM = window.NovaDM || {};
 NovaDM.Subjects = (function () {
 	'use strict';
 
-	var DEFAULT_LIST = 'energyAgency'; // 'energyAgency' or 'novadmPaper'
+	var DEFAULT_LIST = 'energyAgency';
 
 	var DEPTHS = [
 		{ key: 'minor', name: 'Minor' },
@@ -62,7 +62,8 @@ NovaDM.Subjects = (function () {
 			]
 		},
 		novadmPaper: {
-			name: 'Constraint-based renovation design support through the renovation domain model, Automation in Construction 104, 2019 (Kamari et al.)',
+			name: 'Constraint-based renovation design support through the renovation domain model, ' +
+				'Automation in Construction 104, 2019 (Kamari et al.)',
 			shortName: 'NovaDM',
 			categories: [
 				{ key: 'architectural_elements', name: 'Architectural', subjects: [

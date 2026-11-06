@@ -45,6 +45,8 @@ NovaDM.Util = (function () {
 
 	function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
+	function tooltipText(text) { return String(text).replace(/\.\s*$/, ''); }
+
 	function csvCell(value) {
 		if (typeof value === 'number') return isFinite(value) ? String(value) : '';
 		if (value === null || value === undefined) return '';
@@ -67,6 +69,7 @@ NovaDM.Util = (function () {
 		setOwn: setOwn,
 		sortedJson: sortedJson,
 		plural: plural,
+		tooltipText: tooltipText,
 		csvText: csvText
 	};
 })();

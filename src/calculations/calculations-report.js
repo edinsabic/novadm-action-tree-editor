@@ -10,9 +10,9 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 
 	var PAGE_SIZE = 100;
 	var PRINT_WIDTH = 1040;
-	var PDF_NAME = 'novadm-report';
+	var PDF_NAME = 'renata-report';
 	var BY_NUMBER = '#';
-	var TABLE_FILE_NAME = 'novadm-scenarios.csv';
+	var TABLE_FILE_NAME = 'renata-scenarios.csv';
 	var PNG_SCALE = 2;
 	var CHART_WIDTH = 300;
 	var CAPTION_HEIGHT = 20;
@@ -395,7 +395,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 			'<span class="calc-scale-legend">lowest' +
 			'<span class="calc-scale-bar" aria-hidden="true"></span>highest</span>' +
 			'<button class="btn" type="button" data-calc-report="csv" title="Save every scenario of the table, in' +
-				' its current order, as a CSV file.">Export table as CSV</button>' +
+				' its current order, as a CSV file">Export table as CSV</button>' +
 			'</div>' +
 			scenarioTableHtml(columns.list) +
 			'</section>';
@@ -445,7 +445,7 @@ NovaDM.CalculationsReport = (function (Model, History, Calculations, Render, Uti
 		var png = e.target.closest('[data-calc-png]');
 		if (e.target.closest('[data-calc-report="csv"]')) exportTable();
 		if (png) {
-			savePng(png.closest('.calc-kpi-card'), 'novadm-' + png.getAttribute('data-calc-png') + '.png',
+			savePng(png.closest('.calc-kpi-card'), 'renata-' + png.getAttribute('data-calc-png') + '.png',
 				'[data-calc-png]');
 		}
 		if (show) {

@@ -291,6 +291,38 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   (a field with a `data-typing-key` counts as one field). Loading the
   example, clearing the tree and importing a file also replace the
   Calculations data, in the same single step.
+- **Drag and drop** (`tree-interactions.js`): an AND or XOR node from the
+  editor panel, or a node of the tree, dropped onto a node becomes that
+  node's last child. Dropped on an empty part of the tree area, it
+  becomes the root node's last child (the end of the top level), so a
+  drop never misses; on an empty tree it becomes the root node. A drop
+  the sibling rule doesn't allow (an AND among XOR siblings) flashes
+  red and changes nothing. The root node itself can't be moved.
+- **Leaving the page** (closing the tab, reloading): the browser's own
+  "Leave site?" box appears when the document differs from what is in a
+  file. `tree-io.js` keeps the text of the last Export file, Import file,
+  Load example or Clear tree (`textInFile`) and compares it with the
+  document written out the same way, so a saved version or a profile that
+  was never exported counts, and undoing back to the file's state doesn't.
+  What the box says is the browser's: pages can't set its text, and the
+  page can't read or remove the checkbox some browsers add to it from the
+  second box on ("Prevent this page from creating additional dialogs").
+  Browsers show the box only after a click or key press on the page.
+- **Export file** (`saveDocument`) uses the browser's Save picker
+  (`showSaveFilePicker`, Chrome and Edge, also from `file://`), which
+  tells the page when it is cancelled: a cancelled save exports nothing
+  and the warning stays. Any other failure, such as the browser refusing
+  the picker because too long has passed since the click, falls back to a
+  plain download. Firefox and Safari have no picker and always use the
+  download, where the page can't tell a cancelled Save dialog, so it
+  counts as exported. A second click while the picker is open does
+  nothing, and the name picked in it becomes the document's name, for the
+  next Export file and the PDF's header. The CSV and PNG exports always
+  use the download.
+- **Tooltips** (`title`) have no full stop at the end; a tooltip of two
+  parts joins them with a semicolon or a colon. Messages that also
+  serve as alerts or notes keep their full stop there and lose it as a
+  tooltip (`Util.tooltipText`); a full stop inside such a message stays.
 - The **selected node** shows a red delete icon in both layouts; it runs
   the same `EditorForm.deleteNode()` as the editor's delete button.
 - The two layouts are called **List** (an indented list, like a file
@@ -311,23 +343,172 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
   "Build a tree in the Action tree tab, or click "Load example"." with
   "(No nodes yet.)" on the next line.
 
+## Quick start and Documentation
+
+The page has two guides for two readers. The **Quick start** is for
+someone who has never seen the tool and has a few minutes, such as a
+reviewer arriving from the PROBONO dashboard. The **Documentation** is
+the detailed reference, for looking things up.
+
+- **Two buttons**, "Quick start" and "Documentation", sit at the top
+  right of the page, level with the RENATA logo. Each opens only its own
+  guide in the place of the two tabs (`data-guide` holds the panel's id:
+  `#quick-start`, `#tutorial`; the Documentation's id and the `tutorial-`
+  classes keep the feature's first name). The button shows pressed and
+  neither tab is highlighted. "Back to the editor" or the button again
+  goes back to the tab that was open; a tab goes to that tab. A guide
+  keeps its scroll position, so a reader can flip between the steps and
+  the editor.
+- **Opening a guide changes nothing in the document:** it is not an undo
+  step and not saved, and the tree, the sample, the report and an open
+  profile or version flyout stay as they were. Ctrl+Z and Ctrl+Y do
+  nothing while a guide is open, so they never change a document that
+  isn't on screen, and Esc leaves an open flyout alone.
+- **Tab labels:** every Quick start part and every Documentation topic
+  has a small grey label beside its heading saying which tab it is about
+  ("Action tree tab", "Calculations tab", "Both tabs"; `.tutorial-where`).
+  What RENATA is for, Tips and Glossary have none.
+- Both guides' text is plain HTML in `index.html`, so it works from
+  `file://` and the browser's own find (Ctrl+F) searches it. It names
+  every control as it reads on screen; note that the same button can read
+  differently per tab ("Load example tree", "Load example").
+
+### Quick start
+
+- **The model** is the SEEDS booklet, in logic rather than in form: an
+  objective in the user's words, task-oriented steps, one sentence per
+  idea, very visual. It opens with three cards (Why RENATA, Who it is
+  for, How to start) and the objective as a quote, followed by four
+  parts: Build the tree, Watch the scenario space, Add numbers, read the
+  KPIs, and Keep your work.
+- **At most 25 steps, a hard limit.** The numbers run on through all the
+  parts, and the marks in the pictures match them. A new step means
+  merging or dropping another. The text says "in a few minutes", not a
+  measured time.
+- **The story** starts from Clear tree and types everything itself, two
+  minor subjects of the NovaDM list (Windows and Solar shading) with made-up
+  numbers, so it needs no local file and also works once the tool is
+  hosted. Save as new version comes before Export file on purpose, so
+  Export file asks nothing; Clear tree and Load example tree do ask, hence
+  "then OK".
+- **The steps quote these numbers**: a scenario space size of 1, 2, 6
+  (2 ways × 3 ways), then 2 (`shutters` always), 4 (never) and 6 again;
+  `cost` 82,000 DKK and `gwp` 5,400 kg CO₂e for `replace_triple` and
+  `shutters`; over all 6 scenarios a mean Cost of 42,000 DKK and a mean GWP
+  of 2,750 kg CO₂e; and 2,560 for the example at the end. Check them when a
+  control's name, the starter data or the example changes.
+- **Pictures** are `resources/tutorial/quick-start-1.png` to `-13.png`:
+  screenshots of the story at each step, taken in headless Chrome at 1,280
+  CSS pixels wide and twice the pixel density, with the marks burnt in
+  (a dashed blue frame, a numbered circle, an arrow). They are cropped
+  below the page's header, so a new title or logo doesn't make them stale,
+  and shown beside their steps, at most 330 pixels tall, opening at full
+  size when clicked. A picture shows the state its number describes:
+  the chip marked 12 is green, because step 12 makes it green. A change to
+  the look of those screens means taking them again.
+- **Layout:** text left, picture right (`.quick-row`), in a column up to
+  1,120 pixels wide. There is no contents list and no search box, as it is
+  short enough to read from the top.
+
+### Documentation
+
+- It has a **contents list** on the left and the text on the right, in
+  sections without numbers (`<section id="tutorial-…">`, reached by plain
+  `#` links, so links between sections need no code). The list has two
+  groups: **Basics** (What RENATA is for, Tips, Glossary) and **Topics**
+  (Action trees, Starting a tree, Editing, Profiles, Versions, Files, The
+  Calculations tab, Formulas), and the text follows that order. It marks
+  the section at the top of the text, the last one once the text is
+  scrolled to the end, and a link just clicked.
+- **Search the documentation**, a box in the head between the title and
+  "Back to the editor", finds a text in the Documentation's text only (not
+  the contents list or the Quick start). It works much like Ctrl+F:
+  - a phrase may run through bold text, code and links, but not from one
+    paragraph, list item or table cell into the next. The text of the
+    whole Documentation is read once, on the first search, as it never
+    changes while the page is open;
+  - it ignores case and treats any run of spaces and line breaks as one
+    space, and look-alike characters as the same: `CO2` finds CO₂, `m2K`
+    finds m²K, straight quotes find curly ones, a hyphen finds a minus sign
+    or a dash, and a plain letter finds its accented form.
+
+  Every match is highlighted, the current one in a stronger colour, and
+  scrolled into view; the box shows "1 of 19", or "No matches". Enter goes
+  to the next match, Shift+Enter back, both wrapping round. The highlights
+  use the CSS Custom Highlight API (`CSS.highlights`, no change to the
+  page's HTML); a browser without it still counts and scrolls, without
+  highlights.
+- **The text** is written for renovation practitioners who don't know
+  NovaDM. Each topic explains in plain words and, where it helps, ends in
+  a "Try it" box (nine in all) with a few steps on the example the editor
+  opens with; the first says that Load example tree brings it back. What
+  RENATA is for opens in plain words, says that RENATA builds on
+  NovaDM, and takes NovaDM's six core concepts word for word from the
+  NovaDM literature; the Glossary uses the same words for those concepts.
+  Profiles shows the dot and the chip in their three states as a small
+  table drawn with the editor's own styles (`.tutorial-marks`), so it
+  can't go out of date. Formulas is the full reference, for super users.
+- **Figures** sit where they help, numbered in order ("Figure 2:") with
+  a caption and an alt text, at most 320 pixels tall so they don't take
+  over the page, and open at full size in a new tab when clicked. They
+  are plain files in `resources/tutorial/` (`resources/` holds the site's
+  images; the logos are in `resources/logos/`):
+  - `novadm-concepts.svg` (Figure 1, What RENATA is for): NovaDM's six
+    concepts as a UML diagram, redrawn by hand as SVG from Figure 5 of
+    Schultz and Kamari (2025), the Documentation's reference [1];
+  - screenshots of the editor on the example it opens with, taken in
+    headless Chrome at 1,280 CSS pixels wide and twice the pixel density
+    (PNG): `action-tree-tab.png` (the List layout with `windows_glazing`
+    selected), `diagram-layout.png` (only the facade's part of the tree,
+    in the Diagram layout fitted to a 1,920-pixel window),
+    `profile-marks.png` ("Energy upgrade" loaded, plus `replace` of
+    `roof_replacement` marked never by hand), `version-history.png`
+    ("Initial version" selected), `calculations-tab.png` (`cost`
+    selected) and `report.png` (the KPI cards of a 30-scenario sample).
+
+  A change to the look of those screens means taking them again.
+- **Citations** are numbered as in LaTeX, "[1, 2]", each number a link to
+  its entry in a "References" list at the end of the section that cites
+  it. The numbers run through the whole Documentation, so a source keeps
+  its number wherever it is cited: [1] Schultz and Kamari (2025), [2] the
+  Danish Energy Agency's page and [3] Kamari et al. (2019), Tables 1 and 2.
+- **The "Try it" steps quote the example's numbers**: 2,560 scenarios,
+  3,840 with a third glazing option, 32 with the "Energy upgrade"
+  profile, 256 with "Low budget", 1,280 with the roof never replaced,
+  +36,000 DKK of `cost` for roof insulation, and the U-values 1.49, 1.36
+  and 0.29 W/m²K of `sample-tree-with-u-value.json`. Check them when the
+  example, a control's name or the formula language changes.
+- Starting a tree, Files and Formulas point to the local `examples`
+  folder, which a hosted copy won't have; the release has to deal with it.
+
 ## Page header
 
-- The page header is a grid that holds the logos and the tabs. The
-  **PROBONO logo** sits in the upper left corner, 12 px from the top
-  (`resources/logos/probono-logo.avif`, 48 px high), with the tabs
+- The page header is a grid that holds the logos, the tabs and the
+  guides' buttons. The **PROBONO logo** sits in the upper left corner,
+  12 px from the top (`resources/logos/probono-logo.avif`, 48 px high),
+  with the tabs
   10 px below it. The **RENATA logo** (`resources/logos/renata-logo.svg`,
   80 px high, inside the page's `<h1>`) is centred horizontally and spans
   both rows instead of taking a row of its own; vertically it is centred
   between the top of the page and the tabs' bottom line (its `-12px` top
   margin cancels the page's 12 px top padding). The logo SVGs are
   outlined (their letters are paths), so they need no font and no
-  internet connection. The header is hidden in the report's PDF.
+  internet connection. The header is hidden in the report's PDF. The
+  README alone uses `renata-logo-dark.svg`, the same logo with colours
+  for GitHub's dark theme; only the colours differ, so change the two
+  together.
+- **The guides' buttons** sit at the right and span both rows with the
+  same top margin as the RENATA logo, so the two are centred on one line.
+  They reach into the tab bar's row, so they come after the tabs in the
+  HTML: the later element sits on top and takes the clicks.
 - **Zoomed in** (a page narrower than 820 CSS pixels, e.g. 300 % on a
   1,920 px wide screen), the RENATA logo would run into the tabs, so it
   moves up into the PROBONO logo's row, 48 px high and centred in the
-  space beside it, and the tabs keep their own row. It shrinks further
-  when even that row is too narrow (500 % on a 1,366 px screen). The rest
+  space beside it, and the tabs keep their own row, with the guides'
+  buttons at its right. On a page narrower than 560 CSS pixels (from about
+  400 % on a 1,920 px screen) the buttons get a row of their own above the
+  tabs, so they never cover them. The logo shrinks further when even its
+  row is too narrow (500 % on a 1,366 px screen). The rest
   of the page is only laid out for the sizes below; at such zoom levels
   it may scroll sideways.
 - The **tab icon** is the tree icon, cropped close so it reads at 16 px
@@ -394,7 +575,7 @@ file format is unchanged.
 
 - **Editor panel** – for a Subject node, the Label and Value fields are
   replaced by a cascading menu (category › subject). Its last entry,
-  "+ Custom subject…", shows the Label and Value fields again for free
+  "+ Custom subject", shows the Label and Value fields again for free
   text. A Subject node from the other list keeps its name, with a note
   saying which list it is from. One that is in neither list (e.g. from
   an older file) shows as a custom subject.
@@ -738,7 +919,7 @@ the Action tree tab (`Render.renderTree()` calls
   each calculated value has its own (`unit`). No unit is an empty or
   missing value.
 - The drop-down offers No unit; Currency: DKK, EUR, USD; Climate:
-  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit…", which
+  kg CO₂e, t CO₂e; Thermal: W/m²K, m²K/W; Other: m², kWh, years; then "Custom unit", which
   shows a text box for any unit of up to 20 characters, like the custom
   subject in the Action tree tab. Currencies use their ISO 4217 codes:
   "kr." and "$" are shared by several currencies, and the codes are
@@ -845,7 +1026,7 @@ direction, and how should ground floors be handled? Should windows and
 doors be included through U_w, and with what areas? Can thermal bridges
 be ignored for now?
 
-**As a worked example** (for the thesis and the tutorial), after
+**As a worked example** (for the thesis and the Documentation), after
 importing `sample-tree-with-u-value.json`:
 
 1. Calculations tab, every picker on `keep_current` / `keep_double`:
@@ -1010,7 +1191,7 @@ panel labels.
 
 The caption's tooltip explains the estimate; each KPI's tooltip names the
 sample ("Cost: mean of a random sample of 30 of the 2,560 scenarios (min
-…, max …). Exact numbers per scenario are in the Calculations tab.").
+…, max …); the exact numbers per scenario are in the Calculations tab").
 The exact KPIs of one picked scenario are not shown here: they couldn't
 follow changes to the tree or the profile.
 
@@ -1048,7 +1229,7 @@ are rounded ("27,868"). Counts have no decimals, and shares one
 ### CSV files
 
 "Export table as CSV" saves the report's scenario table as a CSV file for
-a spreadsheet, `novadm-scenarios.csv`, written by `Util.csvText` and
+a spreadsheet, `renata-scenarios.csv`, written by `Util.csvText` and
 saved through `TreeIO.download`:
 
 - **The format**: a comma between cells, a decimal point and no
@@ -1086,9 +1267,9 @@ saved through `TreeIO.download`:
 
 - **"PNG"** on each KPI card saves that card as it looks on screen (name
   and unit, mean, min/median/max/std dev, histogram, lowest and highest)
-  as `novadm-<kpi>.png`, named after the calculated value's name, not
+  as `renata-<kpi>.png`, named after the calculated value's name, not
   its display name, so the file name is always safe
-  (`novadm-cost.png`), without its PNG button. The graph has no PNG
+  (`renata-cost.png`), without its PNG button. The graph has no PNG
   button.
 - **How** (`savePng` in `calculations-report.js`, its only user; no library;
   saved through `TreeIO.download`): the card is cloned with each
@@ -1138,7 +1319,7 @@ saved through `TreeIO.download`:
   "Version: …". It isn't saved in the file; undo and redo keep it, so
   undoing an import also brings the earlier name back.
 - **The PDF's file name**: browsers suggest the page's title, so while
-  printing the title is `novadm-report-<name>` (`novadm-report` without
+  printing the title is `renata-report-<name>` (`renata-report` without
   a name), and `afterprint` restores "RENATA – Renovation action tree
   authoring".
 - **How**: the button fills the header and the note, marks the columns
@@ -1281,13 +1462,13 @@ importing.
 | – | A bare array of nodes (no wrapper object). | As version 2. |
 
 Export file suggests the document's name (the imported file's, e.g.
-`k45-case.json`), or `defaultName` (`novadm-action-tree.json`) when
+`k45-case.json`), or `defaultName` (`renata-action-tree.json`) when
 it has none (the example, Clear tree, a new document).
 
 To switch to a different file type: edit `extension` / `mimeType` /
 `defaultName` on `TREE_FILE_FORMAT`, and rewrite `serialize()` /
 `parse()`. `parse()` must throw an `Error` with a readable message if
-the text isn't a NovaDM file. (If the new format is binary, the
+the text isn't a RENATA action tree file. (If the new format is binary, the
 `reader.readAsText` / `new Blob` calls in `tree-io.js`'s import/export
 handlers need to change too.)
 
@@ -1335,22 +1516,6 @@ every version; the others have the starter data in every version.
   existing constructions and formulas (see "A custom KPI: U-value").
   It shows how to add a KPI of your own, and is opened with Import file
   only: it is not loaded on open and has no `.js` copy.
-- `examples/novadm-action-tree.json` is the version-history demo: the
-  same tree with five versions – a main line, a branch, and a merge of
-  the branch that applies the branch's added and deleted nodes. It is
-  also a quick manual test of Open, Restore, Merge and Delete. The root node has
-  the same id (`n0`) in every snapshot, so it never shows up as a change.
-- `examples/version-history-test.json` is a test bed for the whole
-  version history, built on the sample tree with six versions: a main
-  line (Initial version, Windows & doors, Roof, and Merge Facade, the
-  current version), a merged branch (Facade) and an unmerged branch
-  (Ground floor). Merging Ground floor gives one conflict
-  (`windows_glazing` changed on both sides). Its two profiles ("Low
-  budget", "Underfloor heating") were one global list in version 5; each
-  version now holds its own copy, pruned to its tree, so "Low budget"
-  never forbids `n11` in Facade, which deleted that node. Use it to try Open,
-  Restore, Merge, Delete (e.g. deleting Facade or Roof), and the rules
-  for Update this version and Export.
 - `examples/k45-case.json` is the K45 case: nine Subjects (roof,
   skylight, roof_cladding, window_frame, brick_facade, ground_floor,
   original_floor, stripped_terrain, layout) with XOR Features, one
@@ -1358,6 +1523,8 @@ every version; the others have the starter data in every version.
   K45 versions) carry a `source` line: "This renovation design concept
   was developed by COWI as part of the Horizon 2020 research project
   PROBONO (No. 101037075) funded by the European Union."
-
-These files aren't unified – known and deliberately deferred, not an
-oversight.
+- `examples/k45-full-case.json` holds all nine K45 versions, with `k45g`
+  on screen.
+- `examples/full-tree.json` is a full NovaDM tree in one version: 28
+  Subjects, 142 Approaches and 163 Features, a scenario space of about
+  4.6 × 10^30.
