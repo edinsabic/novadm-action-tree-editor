@@ -324,9 +324,8 @@ Calculations data through `NovaDM.CalculationsTab`, referenced lazily
 - The **tab icon** is the tree icon, cropped closer than
   `renata-icon.svg` so it reads at 16 px (`renata-favicon.svg`).
 - The PROBONO logo is a link back to the project's **dashboard**, in the
-  same tab. Its address is still a placeholder
-  (`https://probono-dashboard.invalid/`, the `href` of `#project-link` in
-  `index.html`); replace it once the dashboard's address is known.
+  same tab: `https://probono.ebosrndportal.com/` (the `href` of
+  `#project-link` in `index.html`).
 - The page holds the only copy of the open document, so leaving it loses
   what was not exported. `Undo` remembers the document as it was **last
   opened or exported** (`Undo.markKept()`, called by `tree-io.js` after
